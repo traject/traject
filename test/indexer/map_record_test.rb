@@ -95,5 +95,26 @@ describe "Traject::Indexer#map_record" do
       assert_equal ["First", "Second"], output["title"]
     end
   end
+
+  describe "context argument" do
+    it "is third argument to block" do
+      called = false
+      @indexer.to_field("title") do |record, accumulator, context|
+        called = true
+
+        assert_kind_of Traject::Indexer::Context, context
+        
+        assert_kind_of Hash, context.clipboard
+        assert_kind_of Hash, context.output_hash
+
+        assert_same record, context.source_record
+        assert_same @indexer.settings, context.settings
+      end
+
+      @indexer.map_record @record
+
+      assert called
+    end
+  end
   
 end

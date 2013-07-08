@@ -48,7 +48,8 @@ class Traject::Indexer
   # set up in this Indexer. Returns a hash whose values are
   # Arrays, and keys are strings. 
   def map_record(record)
-    output_hash = {}
+    context = Context.new(:source_record => record, :settings => settings)
+    output_hash = context.output_hash
 
     @index_steps.each do |index_step|
       accumulator = []
@@ -57,7 +58,13 @@ class Traject::Indexer
       # Might have a lambda arg AND a block, we execute in order,
       # with same accumulator.
       [index_step[:lambda], index_step[:block]].each do |aProc|
-        aProc.call(record, accumulator) if aProc
+        if aProc
+          case aProc.arity
+          when 1 then aProc.call(record)
+          when 2 then aProc.call(record, accumulator)
+          else        aProc.call(record, accumulator, context)
+          end
+        end
       end
 
       (output_hash[field_name] ||= []).concat accumulator      
@@ -75,4 +82,26 @@ class Traject::Indexer
     # Hashie bug Issue #100 https://github.com/intridea/hashie/pull/100
     alias_method :store, :indifferent_writer
   end
+
+  # Represents the context of a specific record being indexed, passed
+  # to indexing logic blocks
+  class Traject::Indexer::Context
+    def initialize(hash_init = {})
+      # TODO, argument checking for required args?
+
+      self.clipboard   = {}
+      self.output_hash = {}
+
+      hash_init.each_pair do |key, value|
+        self.send("#{key}=", value)
+      end
+    end
+
+    attr_accessor :clipboard
+    attr_accessor :source_record
+    attr_accessor :settings
+    attr_accessor :output_hash
+  end
+
 end
+  
