@@ -76,6 +76,7 @@ class Traject::Indexer
   # Enhanced with a few features from Hashie, to make it for
   # instance string/symbol indifferent
   class Settings < Hash
+    include Hashie::Extensions::MergeInitializer # can init with hash
     include Hashie::Extensions::IndifferentAccess
 
     # Hashie bug Issue #100 https://github.com/intridea/hashie/pull/100
