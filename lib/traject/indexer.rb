@@ -49,7 +49,6 @@ class Traject::Indexer
   # Arrays, and keys are strings. 
   def map_record(record)
     context = Context.new(:source_record => record, :settings => settings)
-    output_hash = context.output_hash
 
     @index_steps.each do |index_step|
       accumulator = []
@@ -67,10 +66,10 @@ class Traject::Indexer
         end
       end
 
-      (output_hash[field_name] ||= []).concat accumulator      
+      (context.output_hash[field_name] ||= []).concat accumulator      
     end
 
-    return output_hash
+    return context.output_hash
   end
 
 
