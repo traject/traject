@@ -5,9 +5,9 @@ describe "Traject::Indexer#settings" do
     @indexer = Traject::Indexer.new
   end
 
-  it "starts out empty hash" do
+  it "starts out default hash" do
     assert_kind_of Hash, @indexer.settings
-    assert_empty @indexer.settings
+    assert_equal Traject::Indexer.default_settings, @indexer.settings
   end
 
   it "can take argument to set" do
@@ -41,8 +41,9 @@ describe "Traject::Indexer#settings" do
 
     @indexer.settings("four" => "fourth")
 
-    expected_hash = {"one" => "original", "two" => "second", "three" => "third", "four" => "fourth"}
-    assert_equal expected_hash, @indexer.settings
+    {"one" => "original", "two" => "second", "three" => "third", "four" => "fourth"}.each_pair do |key, value|
+      assert_equal value, @indexer.settings[key] 
+    end
   end
 
   it "is indifferent between string and symbol" do
