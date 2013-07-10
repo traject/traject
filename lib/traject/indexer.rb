@@ -23,6 +23,7 @@ require 'hashie'
 #  2) Responds to a one argument #put method, where the argument is
 #     a hash of mapped keys/values. The writer should write them
 #     to the appropriate place. 
+#  3) Responds to a #close method, called when we're done. 
 #
 #  The default writer (will be) the SolrWriter , which is configured
 #  through additional Settings as well. A JsonWriter is also available,
@@ -115,6 +116,7 @@ class Traject::Indexer
     reader.each do |record|
       writer.put map_record(record)
     end
+    writer.close if writer.respond_to?(:close)
   end
 
   def reader_class

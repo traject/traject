@@ -11,6 +11,10 @@ memory_writer_class = Class.new do
     def put(hash)
       @settings["memory_writer.added"] << hash
     end
+
+    def close
+      @settings["memory_writer.closed"] = true
+    end
   end
 
 describe "Traject::Indexer#process" do 
@@ -28,8 +32,15 @@ describe "Traject::Indexer#process" do
     @indexer.process( @file )
 
     assert @indexer.settings["memory_writer.added"]
+    assert_equal 30, @indexer.settings["memory_writer.added"].length
+    assert_kind_of Hash, @indexer.settings["memory_writer.added"].first
+    assert_equal ["ADDED TITLE"], @indexer.settings["memory_writer.added"].first["title"]
+
+    assert @indexer.settings["memory_writer.closed"]
 
   end
+
+  
 
 
 end
