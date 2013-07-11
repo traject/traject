@@ -7,7 +7,7 @@ require 'traject/qualified_const_get'
 #
 # settings:
 #   [solrj_writer.url] Your solr url (required)
-#   [solrj_writer.solr_class_name]  Defaults to "HttpSolrServer". You can specify
+#   [solrj_writer.server_class_name]  Defaults to "HttpSolrServer". You can specify
 #                                   another Solr Server sub-class, but it has
 #                                   to take a one-arg url constructor. Maybe
 #                                   subclass this writer class and overwrite
@@ -26,7 +26,7 @@ require 'traject/qualified_const_get'
 #                                    recent version of SolrJ used by default, set to
 #                                    "XMLResponseParser"
 #   [solrj_writer.commit_on_close]  If true (or string 'true'), send a commit to solr
-#                                   at end of #process. 
+#                                   at end of #process.
 class Traject::SolrJWriter
   include Traject::QualifiedConstGet
 
