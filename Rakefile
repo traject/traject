@@ -12,5 +12,5 @@ task :default => [:test]
 
 Rake::TestTask.new do |t|
   t.pattern = 'test/**/*_test.rb'
-  t.libs.push 'test/test_support'
+  t.libs.push 'test', 'test_support'
 end
