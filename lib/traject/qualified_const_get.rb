@@ -2,11 +2,11 @@
 # Adapted into a module, rather than monkey patching it into Kernel
 #
 # Method to take a string constant name, including :: qualifications, and
-# look up the actual constant. Looks up relative to current file. 
-# REspects leading ::. Etc. 
+# look up the actual constant. Looks up relative to current file.
+# REspects leading ::. Etc.
 module Traject::QualifiedConstGet
 
- 
+
   def qualified_const_get(str)
     path = str.to_s.split('::')
     from_root = path[0].empty?
