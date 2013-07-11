@@ -4,7 +4,7 @@ require 'traject/qualified_const_get'
 #  == Readers and Writers
 #
 #  The Indexer has a modularized architecture for readers and writers, for where
-#  source records come from (reader), and where output is sent to (writer). 
+#  source records come from (reader), and where output is sent to (writer).
 #
 #  A Reader is any class that:
 #   1) Has a two-argument initializer taking an IO stream and a Settings hash
@@ -12,27 +12,27 @@ require 'traject/qualified_const_get'
 #      (Including Enumerable is prob a good idea too)
 #
 #  The default reader is the Traject::MarcReader, who's behavior is
-#  further customized by several settings in the Settings hash. 
+#  further customized by several settings in the Settings hash.
 #
 #  Alternate readers can be set directly with the #reader_class= method, or
 #  with the "reader_class_name" Setting, a String name of a class
-#  meeting the reader contract. 
-#   
+#  meeting the reader contract.
+#
 #
 #  A Writer is any class that:
-#  1) Has a one-argument initializer taking a Settings hash. 
+#  1) Has a one-argument initializer taking a Settings hash.
 #  2) Responds to a one argument #put method, where the argument is
 #     a hash of mapped keys/values. The writer should write them
-#     to the appropriate place. 
-#  3) Responds to a #close method, called when we're done. 
+#     to the appropriate place.
+#  3) Responds to a #close method, called when we're done.
 #
 #  The default writer (will be) the SolrWriter , which is configured
 #  through additional Settings as well. A JsonWriter is also available,
-#  which can be useful for debugging your index mappings. 
+#  which can be useful for debugging your index mappings.
 #
 #  You can set alternate writers by setting a Class object directly
 #  with the #writer_class method, or by the 'writer_class_name' Setting,
-#  with a String name of class meeting the Writer contract. 
+#  with a String name of class meeting the Writer contract.
 #
 class Traject::Indexer
   include Traject::QualifiedConstGet
@@ -52,7 +52,7 @@ class Traject::Indexer
   #
   # With a hash and/or block argument, can be used to set
   # new key/values. Each call merges onto the existing settings
-  # hash. 
+  # hash.
   #
   #    indexer.settings("a" => "a", "b" => "b")
   #
@@ -60,19 +60,19 @@ class Traject::Indexer
   #      store "b", "new b"
   #    end
   #
-  #    indexer.settings #=> {"a" => "a", "b" => "new b"} 
+  #    indexer.settings #=> {"a" => "a", "b" => "new b"}
   #
   # even with arguments, returns settings hash too, so can
-  # be chained. 
+  # be chained.
   def settings(new_settings = nil, &block)
     @settings.merge!(new_settings) if new_settings
 
     @settings.instance_eval &block if block
-    
+
     return @settings
   end
 
-  # Used to define an indexing mapping. 
+  # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
     @index_steps << {
       :field_name => field_name.to_s,
@@ -83,14 +83,14 @@ class Traject::Indexer
 
   # Processes a single record, according to indexing rules
   # set up in this Indexer. Returns a hash whose values are
-  # Arrays, and keys are strings. 
+  # Arrays, and keys are strings.
   #
   def map_record(record)
     context = Context.new(:source_record => record, :settings => settings)
 
     @index_steps.each do |index_step|
       accumulator = []
-      field_name  = index_step[:field_name]      
+      field_name  = index_step[:field_name]
       context.field_name = field_name
 
       # Might have a lambda arg AND a block, we execute in order,
@@ -101,12 +101,12 @@ class Traject::Indexer
           when 1 then aProc.call(record)
           when 2 then aProc.call(record, accumulator)
           else        aProc.call(record, accumulator, context)
-          end          
+          end
         end
 
       end
 
-      (context.output_hash[field_name] ||= []).concat accumulator      
+      (context.output_hash[field_name] ||= []).concat accumulator
       context.field_name = nil
     end
 
@@ -115,7 +115,7 @@ class Traject::Indexer
 
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
-  # to configured Writer. 
+  # to configured Writer.
   def process(io_stream)
     reader = self.reader!(io_stream)
     writer = self.writer!
@@ -143,7 +143,7 @@ class Traject::Indexer
   # Instantiate a Traject Reader, using class set
   # in #reader_class, initialized with io_stream passed in
   def reader!(io_stream)
-    return reader_class.new(io_stream, settings)    
+    return reader_class.new(io_stream, settings)
   end
 
   # Instantiate a Traject Writer, suing class set in #writer_class
@@ -189,4 +189,3 @@ class Traject::Indexer
     attr_accessor :field_name, :source_record, :settings
   end
 end
-  
