@@ -81,13 +81,15 @@ class Traject::Indexer
   # Processes a single record, according to indexing rules
   # set up in this Indexer. Returns a hash whose values are
   # Arrays, and keys are strings. 
+  #
   def map_record(record)
     context = Context.new(:source_record => record, :settings => settings)
 
     @index_steps.each do |index_step|
       accumulator = []
-      field_name  = index_step[:field_name]
-      
+      field_name  = index_step[:field_name]      
+      context.field_name = field_name
+
       # Might have a lambda arg AND a block, we execute in order,
       # with same accumulator.
       [index_step[:lambda], index_step[:block]].each do |aProc|
@@ -96,11 +98,13 @@ class Traject::Indexer
           when 1 then aProc.call(record)
           when 2 then aProc.call(record, accumulator)
           else        aProc.call(record, accumulator, context)
-          end
+          end          
         end
+
       end
 
       (context.output_hash[field_name] ||= []).concat accumulator      
+      context.field_name = nil
     end
 
     return context.output_hash
@@ -165,6 +169,7 @@ class Traject::Indexer
 
   # Represents the context of a specific record being indexed, passed
   # to indexing logic blocks
+  #
   class Traject::Indexer::Context
     def initialize(hash_init = {})
       # TODO, argument checking for required args?
@@ -177,10 +182,8 @@ class Traject::Indexer
       end
     end
 
-    attr_accessor :clipboard
-    attr_accessor :source_record
-    attr_accessor :settings
-    attr_accessor :output_hash
+    attr_accessor :clipboard, :output_hash
+    attr_accessor :field_name, :source_record, :settings
   end
 
   protected

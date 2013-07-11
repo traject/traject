@@ -25,8 +25,9 @@ describe "Traject::Indexer#process" do
   end
 
   it "works" do
-    @indexer.to_field("title") do |record, accumulator|
+    @indexer.to_field("title") do |record, accumulator, context|
       accumulator << "ADDED TITLE"
+      assert_equal "title", context.field_name
     end
 
     @indexer.process( @file )
