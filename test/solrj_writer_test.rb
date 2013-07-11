@@ -17,7 +17,7 @@ describe "Traject::SolrJWriter" do
     assert_raises(ArgumentError) { Traject::SolrJWriter.new("solrj_writer.url" => nil) }
   end
 
-  describe "with a solr url" do
+  describe "with good setup" do
     before do
       @settings = {
         # Use XMLResponseParser just to test, and so it will work
@@ -25,17 +25,16 @@ describe "Traject::SolrJWriter" do
         "solrj_writer.parser_class_name" => "XMLResponseParser",
         "solrj_writer.commit_on_close" => "true"
       }
+
       if ENV["solrj_writer_url"]
         @settings["solrj_writer.url"] = ENV["solrj_writer_url"]
-        @writer = Traject::SolrJWriter.new(@settings)
       else
-        # MOCK!!!
         $stderr.puts "WARNING: Testing SolrJWriter with mock instance"
         @settings["solrj_writer.url"] = "http://example.org/solr"
-        @writer = Traject::SolrJWriter.new(@settings)
-        @mock = MockSolrServer.new("http://example.org/solr")
-        @writer.solr_server = @mock
+        @settings["solrj_writer.server_class_name"] = "MockSolrServer"
       end
+
+      @writer = Traject::SolrJWriter.new(@settings)
     end
 
     it "writes a simple document" do
@@ -44,7 +43,7 @@ describe "Traject::SolrJWriter" do
 
 
       if @mock
-        #assert_kind_of org.apache.solr.client.solrj.impl.XMLResponseParser, @mock.parser
+        assert_kind_of org.apache.solr.client.solrj.impl.XMLResponseParser, @mock.parser
         assert_equal @settings["solrj_writer.url"], @mock.url
 
         assert_equal 1, @mock.docs_added.length
@@ -77,8 +76,6 @@ class MockSolrServer
   end
 
   def setParser(parser)
-    require 'pry'
-    binding.pry 
     @parser = parser
   end
 
