@@ -1,12 +1,10 @@
 # encoding: UTF-8
 
 require 'test_helper'
-require 'traject/macros/marc21'
+require 'traject/marc_extractor'
 
 
-describe "Traject::Macros::Marc21" do
-  Marc21 = Traject::Macros::Marc21 # so we can just call it 'Marc21' in code below
-
+describe "Traject::MarcExtractor" do
   describe "#parse_marc_spec" do
     it "parses single spec with all elements" do
       parsed = Traject::MarcExtractor.parse_string_spec("245-1*abcg")
