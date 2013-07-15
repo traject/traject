@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'test_helper'
 require 'traject/macros/marc21'
 
@@ -108,6 +110,32 @@ describe "Traject::Macros::Marc21" do
         values = Marc21.extract_by_spec(@record, parsed_spec)
 
         assert_equal ["2002"], values
+      end
+    end
+
+    describe "extracts alternate script" do
+      before do
+        @record = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
+        @parsed_spec = Marc21.parse_string_spec("245b")
+      end
+      it "from default :include" do
+
+        values = Marc21.extract_by_spec(@record, @parsed_spec)
+
+        assert_length 2, values # both the original and the 880
+        assert_equal ["ben Marṭin Buber le-Aharon Daṿid Gordon /", "בין מרטין בובר לאהרן דוד גורדון /"], values
+      end
+      it "with :only" do
+        values = Marc21.extract_by_spec(@record, @parsed_spec, :alternate_script => :only)
+
+        assert_length 1, values
+        assert_equal ["בין מרטין בובר לאהרן דוד גורדון /"], values
+      end
+      it "with false" do
+        values = Marc21.extract_by_spec(@record, @parsed_spec, :alternate_script => false)
+
+        assert_length 1, values
+        assert_equal ["ben Marṭin Buber le-Aharon Daṿid Gordon /"], values
       end
     end
 

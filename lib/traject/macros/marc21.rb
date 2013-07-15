@@ -4,12 +4,11 @@ module Traject::Macros
   # def specific to Marc21.
   module Marc21
 
-    def marc(spec, options = {})
-
-    end
-
-    def self.marc_extract(spec, options)
-
+    # A combo function that will extract data from marc according to a string field/substring
+    # spec, then apply various optional post-processing to it too. 
+    def extract_marc(spec, options = {})
+      lambda do |record, accumulator, context|        
+      end
     end
 
     # a spec is a string of form:
@@ -84,6 +83,8 @@ module Traject::Macros
     #
     # uses the MarcSpecExtractor helper class
     def self.extract_by_spec(marc_record, spec_hash, options = {})
+      (raise IllegalArgument, "first argument must not be nil") if marc_record.nil?
+
       MarcExtractorBySpec.new(marc_record, spec_hash, options).extract
     end
 
@@ -102,9 +103,15 @@ module Traject::Macros
       #
       # [:seperator]  default ' ' (space), what to use to seperate
       #               subfield values when joining strings
+      #
+      # [:alternate_script] default :include, include linked 880s for tags
+      #                     that match spec. Also:
+      #                     * false => do not include. 
+      #                     * :only => only include linked 880s, not original
       def initialize(marc_record, spec_hash, options = {})
         self.options = {
-          :seperator => ' '
+          :seperator => ' ',
+          :alternate_script => :include
         }.merge(options)
 
         self.marc_record = marc_record
@@ -115,8 +122,8 @@ module Traject::Macros
       def extract
         results = []
 
-        marc_record.each do |field|
-          if (spec = spec_hash[field.tag]) && matches_indicators(field, spec)
+        self.marc_record.each do |field|
+          if (spec = spec_covering_field(field)) && matches_indicators(field, spec)
             if control_field?(field)
               results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
             else
@@ -130,6 +137,27 @@ module Traject::Macros
         end
 
         return results
+      end
+
+      # Is there a spec covering extraction from this field?
+      # May return true on 880's matching other tags depending
+      # on value of :alternate_script
+      # if :alternate_script is :only, will return original spec when field is an 880.
+      # otherwise will always return nil for 880s, you have to handle :alternate_script :include
+      # elsewhere, to add in the 880 in the right order
+      def spec_covering_field(field)
+        #require 'pry'
+        #binding.pry if field.tag == "880"
+
+        if field.tag == "880" && options[:alternate_script] != false
+          # pull out the spec for corresponding original marc tag this 880 corresponds to
+          # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
+          # to do this weird encode gymnastics
+          orig_field = field["6"].encode("ascii").byteslice(0,3)
+          field["6"] && self.spec_hash[  orig_field  ]
+        elsif options[:alternate_script] != :only
+          self.spec_hash[field.tag]
+        end
       end
 
       def control_field?(field)
