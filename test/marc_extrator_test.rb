@@ -154,6 +154,15 @@ describe "Traject::MarcExtractor" do
       end
     end
 
+    it "works with string second arg too" do
+      values = Traject::MarcExtractor.extract_by_spec(@record, "245abc")
+
+      assert_length 1, values
+      assert values.first.include?("Manufacturing consent"), "Extracted value includes title"
+    end
+
   end
+
+
 
 end
