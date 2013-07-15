@@ -9,7 +9,7 @@ describe "Traject::Macros::Marc21" do
 
   describe "#parse_marc_spec" do
     it "parses single spec with all elements" do
-      parsed = Marc21.parse_string_spec("245-1*abcg")
+      parsed = Traject::MarcExtractor.parse_string_spec("245-1*abcg")
 
       assert_kind_of Hash, parsed
       assert_equal 1, parsed.keys.length
@@ -25,7 +25,7 @@ describe "Traject::Macros::Marc21" do
     end
 
     it "parses a mixed bag" do
-      parsed = Marc21.parse_string_spec("245abcde:810:700-*4bcd")
+      parsed = Traject::MarcExtractor.parse_string_spec("245abcde:810:700-*4bcd")
 
       assert_length 3, parsed
 
@@ -46,7 +46,7 @@ describe "Traject::Macros::Marc21" do
     end
 
     it "parses fixed field byte offsets" do
-      parsed = Marc21.parse_string_spec("005[5]:008[7-10]")
+      parsed = Traject::MarcExtractor.parse_string_spec("005[5]:008[7-10]")
 
       assert_equal 5, parsed["005"][:bytes]
       assert_equal 7..10, parsed["008"][:bytes]
@@ -60,8 +60,8 @@ describe "Traject::Macros::Marc21" do
 
     describe "extracts a basic case" do
       before do
-        parsed_spec = Marc21.parse_string_spec("700abcdef:856-*2:505-1*:245ba")
-        @values = Marc21.extract_by_spec(@record, parsed_spec)
+        parsed_spec = Traject::MarcExtractor.parse_string_spec("700abcdef:856-*2:505-1*:245ba")
+        @values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
       end
 
       it "returns an array" do
@@ -94,20 +94,20 @@ describe "Traject::Macros::Marc21" do
 
     describe "extracts fixed fields" do
       it ", complete" do
-        parsed_spec = Marc21.parse_string_spec("001")
-        values = Marc21.extract_by_spec(@record, parsed_spec)
+        parsed_spec = Traject::MarcExtractor.parse_string_spec("001")
+        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
 
         assert_equal ["2710183"], values
       end
       it ", single byte offset" do
-        parsed_spec = Marc21.parse_string_spec("008[5]")
-        values = Marc21.extract_by_spec(@record, parsed_spec)
+        parsed_spec = Traject::MarcExtractor.parse_string_spec("008[5]")
+        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
 
         assert_equal ["1"], values
       end
       it ", byte range" do
-        parsed_spec = Marc21.parse_string_spec("008[7-10]")
-        values = Marc21.extract_by_spec(@record, parsed_spec)
+        parsed_spec = Traject::MarcExtractor.parse_string_spec("008[7-10]")
+        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
 
         assert_equal ["2002"], values
       end
@@ -115,15 +115,15 @@ describe "Traject::Macros::Marc21" do
 
     describe "seperator argument" do
       it "causes non-join when nil" do
-        parsed_spec = Marc21.parse_string_spec("245")
-        values = Marc21.extract_by_spec(@record, parsed_spec, :seperator => nil)
+        parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
+        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec, :seperator => nil)
 
         assert_length 3, values
       end
 
       it "can be non-default" do
-        parsed_spec = Marc21.parse_string_spec("245")
-        values = Marc21.extract_by_spec(@record, parsed_spec, :seperator => "!! ")
+        parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
+        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec, :seperator => "!! ")
 
         assert_length 1, values
         assert_equal "Manufacturing consent :!! the political economy of the mass media /!! Edward S. Herman and Noam Chomsky ; with a new introduction by the authors.", values.first
@@ -133,23 +133,23 @@ describe "Traject::Macros::Marc21" do
     describe "extracts alternate script" do
       before do
         @record = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
-        @parsed_spec = Marc21.parse_string_spec("245b")
+        @parsed_spec = Traject::MarcExtractor.parse_string_spec("245b")
       end
       it "from default :include" do
 
-        values = Marc21.extract_by_spec(@record, @parsed_spec)
+        values = Traject::MarcExtractor.extract_by_spec(@record, @parsed_spec)
 
         assert_length 2, values # both the original and the 880
         assert_equal ["ben Marṭin Buber le-Aharon Daṿid Gordon /", "בין מרטין בובר לאהרן דוד גורדון /"], values
       end
       it "with :only" do
-        values = Marc21.extract_by_spec(@record, @parsed_spec, :alternate_script => :only)
+        values = Traject::MarcExtractor.extract_by_spec(@record, @parsed_spec, :alternate_script => :only)
 
         assert_length 1, values
         assert_equal ["בין מרטין בובר לאהרן דוד גורדון /"], values
       end
       it "with false" do
-        values = Marc21.extract_by_spec(@record, @parsed_spec, :alternate_script => false)
+        values = Traject::MarcExtractor.extract_by_spec(@record, @parsed_spec, :alternate_script => false)
 
         assert_length 1, values
         assert_equal ["ben Marṭin Buber le-Aharon Daṿid Gordon /"], values
