@@ -122,25 +122,39 @@ module Traject::Macros
       def extract
         results = []
 
-        self.marc_record.each do |field|
-          if (spec = spec_covering_field(field)) && matches_indicators(field, spec)
-            if control_field?(field)
-              results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
-            else
-              subfields = 
-                field.subfields.collect do |subfield|
-                    subfield.value if spec[:subfields].nil? || spec[:subfields].include?(subfield.code)
-                end.compact
-              if options[:seperator]
-                results << subfields.join( options[:seperator])
-              else
-                results.concat subfields
-              end
-            end
+        self.each_matching_line do |field, spec|
+          if control_field?(field)
+            results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
+          else
+            results.concat collect_subfields(field, spec)
           end
         end
 
         return results
+      end
+
+      # Yields a block for every line in source record that matches
+      # spec. First arg to block is MARC::Field (control or data), second
+      # is the hash specification that it matched on. May take account
+      # of options such as :alternate_script
+      def each_matching_line
+        self.marc_record.each do |field|
+          if (spec = spec_covering_field(field)) && matches_indicators(field, spec)
+            yield(field, spec)
+          end
+        end
+      end
+
+      # Pass in a marc data field and a hash spec, returns
+      # an ARRAY of one or more strings, subfields extracted
+      # and processed per spec. Takes account of options such
+      # as :seperator
+      def collect_subfields(field, spec)
+        subfields = field.subfields.collect do |subfield|
+          subfield.value if spec[:subfields].nil? || spec[:subfields].include?(subfield.code)
+        end.compact
+
+        return options[:seperator] ? [ subfields.join( options[:seperator]) ] : subfields
       end
 
       # Is there a spec covering extraction from this field?
