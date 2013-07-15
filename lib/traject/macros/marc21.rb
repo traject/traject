@@ -127,11 +127,15 @@ module Traject::Macros
             if control_field?(field)
               results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
             else
-              results << (
+              subfields = 
                 field.subfields.collect do |subfield|
                     subfield.value if spec[:subfields].nil? || spec[:subfields].include?(subfield.code)
-                end.compact.join( options[:seperator])
-              )
+                end.compact
+              if options[:seperator]
+                results << subfields.join( options[:seperator])
+              else
+                results.concat subfields
+              end
             end
           end
         end

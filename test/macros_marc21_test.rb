@@ -113,6 +113,23 @@ describe "Traject::Macros::Marc21" do
       end
     end
 
+    describe "seperator argument" do
+      it "causes non-join when nil" do
+        parsed_spec = Marc21.parse_string_spec("245")
+        values = Marc21.extract_by_spec(@record, parsed_spec, :seperator => nil)
+
+        assert_length 3, values
+      end
+
+      it "can be non-default" do
+        parsed_spec = Marc21.parse_string_spec("245")
+        values = Marc21.extract_by_spec(@record, parsed_spec, :seperator => "!! ")
+
+        assert_length 1, values
+        assert_equal "Manufacturing consent :!! the political economy of the mass media /!! Edward S. Herman and Noam Chomsky ; with a new introduction by the authors.", values.first
+      end
+    end
+
     describe "extracts alternate script" do
       before do
         @record = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
