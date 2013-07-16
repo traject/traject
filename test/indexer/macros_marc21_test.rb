@@ -3,6 +3,9 @@ require 'test_helper'
 require 'traject/indexer'
 require 'traject/macros/marc21'
 
+require 'json'
+require 'marc/record'
+
 # See also marc_extractor_test.rb for more detailed tests on marc extraction,
 # this is just a basic test to make sure our macro works passing through to there
 # and other options.
@@ -36,7 +39,7 @@ describe "Traject::Macros::Marc21" do
   end
 
   it "trims punctuation with :trim_punctuation => true" do
-    @indexer.instance_eval do 
+    @indexer.instance_eval do
       to_field "title", extract_marc("245ab", :trim_punctuation => true)
     end
 
@@ -60,5 +63,64 @@ describe "Traject::Macros::Marc21" do
     assert_equal "one two three", Marc21.trim_punctuation("[one two three")
     assert_equal "one two three", Marc21.trim_punctuation("[one two three]")
   end
+
+  describe "serialized_marc" do
+    it "serializes xml" do
+      @indexer.instance_eval do
+        to_field "marc_record", serialized_marc(:format => "xml")
+      end
+      output = @indexer.map_record(@record)
+
+      assert_length 1, output["marc_record"]
+      assert_kind_of String, output["marc_record"].first
+      assert output["marc_record"].first.start_with?("<record xmlns='http://www.loc.gov/MARC21/slim'>"), "looks like serialized MarcXML"
+    end
+
+    it "serializes binary UUEncoded" do
+      @indexer.instance_eval do
+        to_field "marc_record", serialized_marc(:format => "binary")
+      end
+      output = @indexer.map_record(@record)
+
+      assert_length 1, output["marc_record"]
+      assert_kind_of String, output["marc_record"].first
+
+      decoded = Base64.decode64( output["marc_record"].first )
+
+      # just check the marc header for now
+      assert_start_with "02067cam a2200469", decoded
+    end
+
+    it "serializes binary raw" do
+      @indexer.instance_eval do
+        to_field "marc_record", serialized_marc(:format => "binary", :binary_escape => false)
+      end
+      output = @indexer.map_record(@record)
+
+      assert_length 1, output["marc_record"]
+      assert_kind_of String, output["marc_record"].first
+
+      # just check the marc header for now
+      assert_start_with "02067cam a2200469", output["marc_record"].first
+    end
+
+    it "serializes json" do
+      @indexer.instance_eval do
+        to_field "marc_record", serialized_marc(:format => "json")
+      end
+      output = @indexer.map_record(@record)
+
+      assert_length 1, output["marc_record"]
+
+      # okay, let's actually deserialize it, why not
+
+      hash = JSON.parse( output["marc_record"].first )
+
+      deserialized = MARC::Record.new_from_hash(hash)
+
+      assert_equal @record, deserialized
+    end
+  end
+
 
 end

@@ -55,6 +55,26 @@ describe "Traject::SolrJWriter" do
       else
       end
     end
+
+
+
+    # I got to see what serialized marc binary does against a real solr server,
+    # sorry this is a bit out of place, but this is the class that talks to real
+    # solr server right now. This test won't do much unless you have
+    # real solr server set up.
+    #
+    # Not really a good test right now, just manually checking my solr server,
+    # using this to make the add reproducible at least. 
+    describe "Serialized MARC" do
+      it "goes to real solr somehow" do
+        record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+
+        serialized = record.to_marc # straight binary
+        @writer.put "marc_record_t" => [serialized], "id" => ["TEST_TEST_TEST_MARC_BINARY"]
+        @writer.close
+      end
+    end
+
   end
 
 end

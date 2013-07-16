@@ -20,3 +20,9 @@ def assert_length(length, obj, msg = nil)
 
   assert_equal(length, obj.length, msg.to_s )
 end
+
+def assert_start_with(start_with, obj, msg = nil)
+  msg ||= "expected #{obj} to start with #{start_with}"
+
+  assert obj.start_with?(start_with), msg
+end
