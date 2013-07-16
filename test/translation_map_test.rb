@@ -51,4 +51,31 @@ describe "TranslationMap" do
 
   end
 
+  it "raises for not found" do
+    assert_raises(Traject::TranslationMap::NotFound) { Traject::TranslationMap.new("this_does_not_exist") }
+  end
+
+  it "finds ruby defn" do
+    map = Traject::TranslationMap.new("test_support/translation_maps/ruby_map")
+
+    assert_equal "value1", map["key1"]
+  end
+
+  it "finds yaml defn" do
+    map = Traject::TranslationMap.new("test_support/translation_maps/yaml_map")
+
+    assert_equal "value1", map["key1"]
+  end
+
+  it "respects __default__ literal" do
+    map = Traject::TranslationMap.new("test_support/translation_maps/default_literal")
+
+    assert_equal "DEFAULT LITERAL", map["not in the map"]
+  end
+
+  it "respects __default__ __passthrough__" do
+    map = Traject::TranslationMap.new("test_support/translation_maps/default_passthrough")
+
+    assert_equal "pass this through", map["pass this through"]
+  end
 end

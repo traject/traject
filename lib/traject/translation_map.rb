@@ -97,6 +97,10 @@ module Traject
         return found
       end
 
+      def reset_cache!
+        @cached.clear
+      end
+
     end
 
     attr_reader :hash
@@ -104,17 +108,43 @@ module Traject
 
     class << self
       attr_accessor :cache
+      def reset_cache!
+        cache.reset_cache!
+      end
     end
     self.cache = Cache.new
 
 
     def initialize(defn, options = {})
-      @default = options[:default]
-
       if defn.kind_of? Hash
         @hash = defn
       else
-        @hash = lookup(defn)
+        @hash = self.class.cache.lookup(defn)
+        raise NotFound.new(defn) if @hash.nil?
+      end
+
+      if options[:default]
+        @default = options[:default]
+      elsif @hash.has_key? "__default__"
+        @default = @hash.delete("__default__")
+      end
+    end
+
+    def [](key)
+      if self.default && (! @hash.has_key?(key))
+        if self.default == "__passthrough__"
+          return key
+        else
+          return self.default
+        end
+      end
+
+      @hash[key]
+    end
+
+    class NotFound < Exception
+      def initialize(path)
+        super("No translation map definition file found at '#{path}[.rb|.yaml]' in load path")
       end
     end
 
