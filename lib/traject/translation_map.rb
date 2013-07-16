@@ -155,7 +155,7 @@ module Traject
     def translate_array(array)
       array.each_with_object([]) do |input_element, output_array|
         output_element = self.map(input_element)
-        if input.kind_of? Array
+        if output_element.kind_of? Array
           output_array.concat output_element
         elsif ! output_element.nil?
           output_array << output_element

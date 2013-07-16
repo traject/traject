@@ -26,6 +26,11 @@ module Traject::Macros
     def extract_marc(spec, options = {})
       only_first              = options.delete(:first)
       trim_punctuation        = options.delete(:trim_punctuation)
+
+      # We create the TranslationMap here on load, not inside the closure
+      # where it'll be called for every record. Since TranslationMap is supposed
+      # to cache, prob doesn't matter, but doens't hurt. Also causes any syntax
+      # exceptions to raise on load. 
       if translation_map_arg  = options.delete(:translation_map)
         translation_map = Traject::TranslationMap.new(translation_map_arg)
       end
@@ -38,7 +43,7 @@ module Traject::Macros
         end
 
         if translation_map
-          translation_map.translate! accumulator
+          translation_map.translate_array! accumulator
         end
 
         if trim_punctuation

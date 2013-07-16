@@ -18,50 +18,61 @@ describe "Traject::Macros::Marc21" do
     @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
   end
 
-  it "extracts marc" do
-    @indexer.instance_eval do
-      to_field "title", extract_marc("245ab")
+  describe "extract_marc" do
+    it "extracts marc" do
+      @indexer.instance_eval do
+        to_field "title", extract_marc("245ab")
+      end
+
+      output = @indexer.map_record(@record)
+
+      assert_equal ["Manufacturing consent : the political economy of the mass media /"], output["title"]
     end
 
-    output = @indexer.map_record(@record)
+    it "respects :first=>true option" do
+      @indexer.instance_eval do
+        to_field "other_id", extract_marc("035a", :first => true)
+      end
 
-    assert_equal ["Manufacturing consent : the political economy of the mass media /"], output["title"]
-  end
+      output = @indexer.map_record(@record)
 
-  it "respects :first=>true option" do
-    @indexer.instance_eval do
-      to_field "other_id", extract_marc("035a", :first => true)
+      assert_length 1, output["other_id"]
     end
 
-    output = @indexer.map_record(@record)
+    it "trims punctuation with :trim_punctuation => true" do
+      @indexer.instance_eval do
+        to_field "title", extract_marc("245ab", :trim_punctuation => true)
+      end
 
-    assert_length 1, output["other_id"]
-  end
+      output = @indexer.map_record(@record)
 
-  it "trims punctuation with :trim_punctuation => true" do
-    @indexer.instance_eval do
-      to_field "title", extract_marc("245ab", :trim_punctuation => true)
+      assert ! output["title"].first.end_with?("/"), "does not end with /"
     end
 
-    output = @indexer.map_record(@record)
+    it "Marc21::trim_punctuation class method" do
+      assert_equal "one two three", Marc21.trim_punctuation("one two three")
 
-    assert ! output["title"].first.end_with?("/"), "does not end with /"
-  end
+      assert_equal "one two three", Marc21.trim_punctuation("one two three,")
+      assert_equal "one two three", Marc21.trim_punctuation("one two three/")
+      assert_equal "one two three", Marc21.trim_punctuation("one two three;")
+      assert_equal "one two three", Marc21.trim_punctuation("one two three:")
+      assert_equal "one two three .", Marc21.trim_punctuation("one two three .")
+      assert_equal "one two three", Marc21.trim_punctuation("one two three.")
 
-  it "Marc21::trim_punctuation class method" do
-    assert_equal "one two three", Marc21.trim_punctuation("one two three")
+      assert_equal "one two [three]", Marc21.trim_punctuation("one two [three]")
+      assert_equal "one two three", Marc21.trim_punctuation("one two three]")
+      assert_equal "one two three", Marc21.trim_punctuation("[one two three")
+      assert_equal "one two three", Marc21.trim_punctuation("[one two three]")
+    end
 
-    assert_equal "one two three", Marc21.trim_punctuation("one two three,")
-    assert_equal "one two three", Marc21.trim_punctuation("one two three/")
-    assert_equal "one two three", Marc21.trim_punctuation("one two three;")
-    assert_equal "one two three", Marc21.trim_punctuation("one two three:")
-    assert_equal "one two three .", Marc21.trim_punctuation("one two three .")
-    assert_equal "one two three", Marc21.trim_punctuation("one two three.")
+    it "uses :translation_map" do
+      @indexer.instance_eval do
+        to_field "cataloging_agency", extract_marc("040a", :seperator => nil, :translation_map => "test_support/translation_maps/marc_040a_translate_test")
+      end
+      output = @indexer.map_record(@record)
 
-    assert_equal "one two [three]", Marc21.trim_punctuation("one two [three]")
-    assert_equal "one two three", Marc21.trim_punctuation("one two three]")
-    assert_equal "one two three", Marc21.trim_punctuation("[one two three")
-    assert_equal "one two three", Marc21.trim_punctuation("[one two three]")
+      assert_equal ["Library of Congress"], output["cataloging_agency"]
+    end
   end
 
   describe "serialized_marc" do

@@ -67,6 +67,14 @@ describe "TranslationMap" do
     assert_equal "value1", map["key1"]
   end
 
+  it "can use a hash instance too" do
+    map = Traject::TranslationMap.new(
+      "input_value" => "output_value"
+    )
+
+    assert_equal "output_value", map["input_value"]
+  end
+
   it "respects __default__ literal" do
     map = Traject::TranslationMap.new("test_support/translation_maps/default_literal")
 
