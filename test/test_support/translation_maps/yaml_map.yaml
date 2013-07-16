@@ -1,0 +1,7 @@
+key1: value1
+array_key:
+  -one
+  -two
+  -three
+# comment
+other: yes
