@@ -23,4 +23,14 @@ describe "Traject::Macros::Marc21" do
     assert_equal ["Manufacturing consent : the political economy of the mass media /"], output["title"]
   end
 
+  it "respects :first=>true option" do
+    @indexer.instance_eval do
+      to_field "other_id", extract_marc("035a", :first => true)
+    end
+
+    output = @indexer.map_record(@record)
+
+    assert_length 1, output["other_id"]
+  end
+
 end

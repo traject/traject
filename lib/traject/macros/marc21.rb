@@ -26,7 +26,8 @@ module Traject::Macros
       lambda do |record, accumulator, context|
         accumulator.concat Traject::MarcExtractor.extract_by_spec(record, spec, options)
 
-        accumulator.first! if only_first
+        # yeah, kind of esoteric, sorry. If ruby had an array.first! mutator, we'd use it.
+        accumulator.slice!(1, accumulator.length) if only_first
       end
     end
 
