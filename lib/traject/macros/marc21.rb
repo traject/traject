@@ -72,12 +72,44 @@ module Traject::Macros
           accumulator << binary
         when "xml"
           # ruby-marc #to_xml returns a REXML object at time of this writing, bah!@
-          # call #to_s on it. Hopefully that'll be forward compatible. 
+          # call #to_s on it. Hopefully that'll be forward compatible.
           accumulator << record.to_xml.to_s
         when "json"
           accumulator << JSON.dump(record.to_hash)
         end
       end
+    end
+
+    # Takes the whole record, by default from tags 100 to 899 inclusive,
+    # all subfields, and adds them to output. Subfields in a record are all
+    # joined by space by default.
+    #
+    # options
+    # [:from] default 100, only tags >= lexicographically
+    # [:to]   default 899, only tags <= lexicographically
+    # [:seperator] how to join subfields, default space, nil means don't join
+    #
+    # All fields in from-to must be marc DATA (not control fields), or weirdness
+    #
+    # Can always run this thing multiple times on the same field if you need
+    # non-contiguous ranges of fields. 
+    def extract_all_marc_values(options = {})
+      options = {:from => "100", :to => "899", :seperator => ' '}.merge(options)
+
+      lambda do |record, accumulator, context|
+        record.each do |field|
+          next unless field.tag >= options[:from] && field.tag <= options[:to]
+          subfield_values = field.subfields.collect {|sf| sf.value}
+          next unless subfield_values.length > 0
+
+          if options[:seperator]
+            accumulator << subfield_values.join( options[:seperator])
+          else
+            accumulator.concat subfield_values
+          end
+        end
+      end
+
     end
 
 

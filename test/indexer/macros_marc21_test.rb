@@ -122,5 +122,14 @@ describe "Traject::Macros::Marc21" do
     end
   end
 
+  it "#extract_all_marc_values" do
+    @indexer.instance_eval do
+      to_field "text", extract_all_marc_values
+    end
+    output = @indexer.map_record(@record)
+
+    assert_length 13, output["text"]
+  end
+
 
 end
