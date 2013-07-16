@@ -141,6 +141,31 @@ module Traject
 
       @hash[key]
     end
+    alias_method :map, :[]
+
+    # Run every element of an array through this translation map,
+    # return the resulting array. If translation map returns nil,
+    # original element will be missing from output. 
+    #
+    # If an input maps to an array, each element of the array will be flattened
+    # into the output. 
+    #
+    # If an input maps to nil, it will cause the input element to be removed
+    # entirely. 
+    def translate_array(array)
+      array.each_with_object([]) do |input_element, output_array|
+        output_element = self.map(input_element)
+        if input.kind_of? Array
+          output_array.concat output_element
+        elsif ! output_element.nil?
+          output_array << output_element
+        end
+      end
+    end
+
+    def translate_array!(array)
+      array.replace( self.translate_array(array))
+    end
 
     class NotFound < Exception
       def initialize(path)

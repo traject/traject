@@ -78,4 +78,13 @@ describe "TranslationMap" do
 
     assert_equal "pass this through", map["pass this through"]
   end
+
+  it "translate_array!" do
+    map = Traject::TranslationMap.new("test_support/translation_maps/translate_array_test")
+    arr = ["hello", "multiple", "goodbye", "nothing", "hello", "not present"]
+
+    map.translate_array!(arr)
+
+    assert_equal ["hola", "first", "second", "last thing", "buenas noches", "hola", "everything else"], arr
+  end
 end
