@@ -53,6 +53,8 @@ module Traject
         :alternate_script => :include
       }.merge(options)
 
+      raise IllegalArgumentException("second arg to MarcExtractor.new must be a Hash specification object") unless spec_hash.kind_of? Hash
+
       self.marc_record = marc_record
       self.spec_hash = spec_hash
     end
