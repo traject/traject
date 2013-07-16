@@ -7,7 +7,7 @@ require 'traject/marc_extractor'
 describe "Traject::MarcExtractor" do
   describe "#parse_marc_spec" do
     it "parses single spec with all elements" do
-      parsed = Traject::MarcExtractor.parse_string_spec("245-1*abcg")
+      parsed = Traject::MarcExtractor.parse_string_spec("245|1*|abcg")
 
       assert_kind_of Hash, parsed
       assert_equal 1, parsed.keys.length
@@ -23,7 +23,7 @@ describe "Traject::MarcExtractor" do
     end
 
     it "parses a mixed bag" do
-      parsed = Traject::MarcExtractor.parse_string_spec("245abcde:810:700-*4bcd")
+      parsed = Traject::MarcExtractor.parse_string_spec("245abcde:810:700|*4|bcd")
 
       assert_length 3, parsed
 
@@ -58,7 +58,7 @@ describe "Traject::MarcExtractor" do
 
     describe "extracts a basic case" do
       before do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("700abcdef:856-*2:505-1*:245ba")
+        parsed_spec = Traject::MarcExtractor.parse_string_spec("700abcdef:856|*2|:505|1*|:245ba")
         @values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
       end
 

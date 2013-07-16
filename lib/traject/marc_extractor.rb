@@ -63,7 +63,7 @@ module Traject
     # to represent the specification.
     #
     # a String specification is a string of form:
-    #  {tag}-{indicators}{subfields} seperated by colons
+    #  {tag}{|indicators|}{subfields} seperated by colons
     # tag is three chars (usually but not neccesarily numeric),
     # indicators are optional two chars prefixed by hyphen,
     # subfields are optional list of chars (alphanumeric)
@@ -71,7 +71,7 @@ module Traject
     # indicator spec must be two chars, but one can be * meaning "don't care".
     # space to mean 'blank'
     #
-    # "245-01abc65:345abc:700-*5:800"
+    # "245|01|abc65:345abc:700|*5|:800"
     #
     # Or, for control (fixed) fields (ordinarily fields 001-010), you can include a byte slice specification,
     # but can NOT include subfield or indicator specifications. Plus can use special tag "LDR" for
@@ -96,7 +96,7 @@ module Traject
       hash = {}
 
       spec_string.split(":").each do |part|
-        if (part =~ /\A([a-zA-Z0-9]{3})(-([a-z0-9\ \*]{2}))?([a-z0-9]*)?\Z/)
+        if (part =~ /\A([a-zA-Z0-9]{3})(\|([a-z0-9\ \*]{2})\|)?([a-z0-9]*)?\Z/)
           # variable field
           tag, indicators, subfields = $1, $3, $4
 
