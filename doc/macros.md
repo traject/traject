@@ -25,6 +25,7 @@ my_var = "FIXED LITERAL"
 to_field("title") do |record, accumulator, context|
   accumulator << my_var
 end
+~~~
 
 So that's the way to provide direct logic for mapping rules. 
 
