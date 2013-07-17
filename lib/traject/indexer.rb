@@ -139,7 +139,7 @@ class Traject::Indexer
   end
 
   def writer_class
-    unless defined? @reader_class
+    unless defined? @writer_class
       @writer_class = qualified_const_get(settings["writer_class_name"])
     end
     return @writer_class
@@ -159,7 +159,7 @@ class Traject::Indexer
   def self.default_settings
     {
       "reader_class_name" => "Traject::MarcReader",
-      "writer_class_name" => "Traject::JsonWriter"
+      "writer_class_name" => "Traject::SolrJWriter"
     }
   end
 
