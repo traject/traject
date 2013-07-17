@@ -181,8 +181,8 @@ module Traject
       if field.tag == "880" && options[:alternate_script] != false
         # pull out the spec for corresponding original marc tag this 880 corresponds to
         # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
-        # to do this weird encode gymnastics
-        orig_field = field["6"].encode("ascii").byteslice(0,3)
+        # to do this weird encode gymnastics, which fixes it for mysterious reasons. 
+        orig_field = field["6"].encode(field["6"].encoding).byteslice(0,3)
         field["6"] && self.spec_hash[  orig_field  ]
       elsif options[:alternate_script] != :only
         self.spec_hash[field.tag]
