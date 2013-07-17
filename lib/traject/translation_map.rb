@@ -1,4 +1,7 @@
+require 'traject'
+
 require 'yaml'
+
 
 module Traject
   # A TranslationMap is basically just something that has a hash-like #[]

@@ -1,5 +1,10 @@
 require 'hashie'
+
+require 'traject'
 require 'traject/qualified_const_get'
+require 'traject/marc_reader'
+require 'traject/json_writer'
+require 'traject/solrj_writer'
 #
 #  == Readers and Writers
 #
