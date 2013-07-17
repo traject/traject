@@ -53,7 +53,11 @@ class Traject::SolrJWriter
         java_import org.apache.solr.client.solrj.impl.HttpSolrServer
         java_import org.apache.solr.common.SolrInputDocument
       rescue NameError  => e
-        jardir = settings["solrj.jar_dir"] || "/Users/jrochkind/code/solrj-gem/lib"
+        # /Users/jrochkind/code/solrj-gem/lib"
+
+        included_jar_dir = File.expand_path("../../vendor/solrj/lib", File.dirname(__FILE__))
+
+        jardir = settings["solrj.jar_dir"] || included_jar_dir
         Dir.glob("#{jardir}/*.jar") do |x|
           require x
         end

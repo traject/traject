@@ -1,0 +1,8 @@
+Inside ./lib are all the jar files neccesary for solrj. They are used by the SolrJWriter.
+
+The build.xml and ivy.xml file included here were used to download the jars, and
+can be used to re-download them. Just run `ant` in this directory, and the contents of `./lib` will be replaced by the current latest release of solrj. Or edit ivy.xml to download a specific solrj version (perhaps change ivy.xml to use a java prop for release, defaulting to latest! ha.)  And then commit changes to repo, etc, to update solrj distro'd with traject.
+
+This is not neccesarily a great way to provide access to solrj .jars. It's just what we're doing now, and it works. See main project README.md for discussion and other potential ideas.
+
+Note, the ivy.xml in here currently downloads a bit MORE than we really need, like .jars of docs and source. Haven't yet figured out how to tell it to download all maven-specified solrj jars that we really need, but not the ones we don't need. (we DO need logging-related ones to properly get logging working!) If you can figure it out, it'd be an improvement, as ALL jars in this dir are by default loaded by traject at runtime.

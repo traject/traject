@@ -1,0 +1,16 @@
+<ivy-module version="2.0">
+    <info organisation="org.code4lib" module="traject"/>
+
+    <dependencies>
+      <!-- downloads EVERYTHING including docs and source we don't need. Oh well, it
+      works for prototyping at least...  -->
+      <dependency org="org.apache.solr" name="solr-solrj" rev="latest.release"/>
+
+
+      <!-- Attempts to give us just what we need, including working logging, still
+           not quite right, but leaving here for thinking... -->
+      <!-- <dependency org="org.apache.solr" name="solr-solrj" rev="latest.release" conf="default" />
+      <dependency org="org.slf4j" name="slf4j-simple" rev="latest.release"/>       -->
+    </dependencies>
+</ivy-module>
+
