@@ -14,21 +14,21 @@ describe "TranslationMap" do
 
     it "looks up ruby definitions" do
       # ./test is on load path for testing, so...
-      found = @cache.lookup("test_support/translation_maps/ruby_map")
+      found = @cache.lookup("ruby_map")
 
       assert_kind_of Hash, found
       assert_equal "value1", found["key1"]
     end
 
     it "looks up yaml definitions" do
-      found = @cache.lookup("test_support/translation_maps/yaml_map")
+      found = @cache.lookup("yaml_map")
 
       assert_kind_of Hash, found
       assert_equal "value1", found["key1"]
     end
 
     it "finds .rb over .yaml" do
-      found = @cache.lookup("test_support/translation_maps/both_map")
+      found = @cache.lookup("both_map")
 
       assert_equal "ruby", found["ruby"]
       assert_nil found["yaml"]
@@ -36,17 +36,17 @@ describe "TranslationMap" do
 
     it "raises on syntax error in yaml" do
       exception = assert_raises(Psych::SyntaxError) do
-        found = @cache.lookup("test_support/translation_maps/bad_yaml")
+        found = @cache.lookup("bad_yaml")
       end
 
-      assert  exception.message.include?("test/test_support/translation_maps/bad_yaml.yaml"), "exception message includes source file"
+      assert  exception.message.include?("bad_yaml.yaml"), "exception message includes source file"
     end
 
     it "raises on syntax error in ruby" do
       exception = assert_raises(SyntaxError) do
-        found = @cache.lookup("test_support/translation_maps/bad_ruby")
+        found = @cache.lookup("bad_ruby")
       end
-      assert  exception.message.include?("test/test_support/translation_maps/bad_ruby.rb"), "exception message includes source file"
+      assert  exception.message.include?("bad_ruby.rb"), "exception message includes source file"
     end
 
   end
@@ -56,13 +56,13 @@ describe "TranslationMap" do
   end
 
   it "finds ruby defn" do
-    map = Traject::TranslationMap.new("test_support/translation_maps/ruby_map")
+    map = Traject::TranslationMap.new("ruby_map")
 
     assert_equal "value1", map["key1"]
   end
 
   it "finds yaml defn" do
-    map = Traject::TranslationMap.new("test_support/translation_maps/yaml_map")
+    map = Traject::TranslationMap.new("yaml_map")
 
     assert_equal "value1", map["key1"]
   end
@@ -76,19 +76,19 @@ describe "TranslationMap" do
   end
 
   it "respects __default__ literal" do
-    map = Traject::TranslationMap.new("test_support/translation_maps/default_literal")
+    map = Traject::TranslationMap.new("default_literal")
 
     assert_equal "DEFAULT LITERAL", map["not in the map"]
   end
 
   it "respects __default__ __passthrough__" do
-    map = Traject::TranslationMap.new("test_support/translation_maps/default_passthrough")
+    map = Traject::TranslationMap.new("default_passthrough")
 
     assert_equal "pass this through", map["pass this through"]
   end
 
   it "translate_array!" do
-    map = Traject::TranslationMap.new("test_support/translation_maps/translate_array_test")
+    map = Traject::TranslationMap.new("translate_array_test")
     arr = ["hello", "multiple", "goodbye", "nothing", "hello", "not present"]
 
     map.translate_array!(arr)

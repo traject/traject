@@ -18,8 +18,12 @@ module Traject
   #
   # TranslationMap.new("dir/some_file")
   #
-  # Will look through the entire ruby $LOAD_PATH for either some_file.rb OR
-  # some_file.yaml . Note you do NOT supply the ".rb" or ".yaml" suffix yourself,
+  # Will look through the entire ruby $LOAD_PATH, for a translation_maps subdir
+  # that contains either some_file.rb OR  some_file.yaml 
+  # * Looks for "/translation_maps" subdir in load paths, so
+  #   for instance you can have a gem that keeps translation maps
+  #   in ./lib/translation_maps, and it Just Works. 
+  # * Note you do NOT supply the ".rb" or ".yaml" suffix yourself,
   # it'll use whichever it finds (allows calling code to not care which is used).
   #
   # Ruby files just need to have their last line eval to a hash. They file
@@ -86,8 +90,8 @@ module Traject
         found = nil
 
         $LOAD_PATH.each do |base|
-          rb_file = File.join( base, "#{path}.rb"  )
-          yaml_file = File.join( base, "#{path}.yaml"  )
+          rb_file = File.join( base,  "translation_maps",  "#{path}.rb"  )
+          yaml_file = File.join( base, "translation_maps", "#{path}.yaml"  )
 
           if File.exists? rb_file
             found = eval( File.open(rb_file).read , binding, rb_file )
