@@ -5,6 +5,9 @@ require 'traject/qualified_const_get'
 require 'traject/marc_reader'
 require 'traject/json_writer'
 require 'traject/solrj_writer'
+
+require 'traject/macros/marc21'
+require 'traject/macros/basic'
 #
 #  == Readers and Writers
 #
@@ -43,6 +46,14 @@ class Traject::Indexer
   include Traject::QualifiedConstGet
 
   attr_writer :reader_class, :writer_class
+
+  # For now we hard-code these basic macro's included
+  # TODO, make these added with extend per-indexer,
+  # added by default but easily turned off (or have other
+  # default macro modules provided)
+  include Traject::Macros::Marc21
+  include Traject::Macros::Basic
+
 
   def initialize
     @settings = Settings.new(self.class.default_settings)

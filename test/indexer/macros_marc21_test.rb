@@ -14,7 +14,6 @@ describe "Traject::Macros::Marc21" do
 
   before do
     @indexer = Traject::Indexer.new
-    @indexer.extend Traject::Macros::Marc21
     @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
   end
 
