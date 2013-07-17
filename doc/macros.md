@@ -56,7 +56,7 @@ However, for convenience, the `to_field` method can take a lambda directly (with
 to_field "color", always_add_black
 ~~~
 
-And now we pretty much know what a macro is:  It's just a ruby method that **returns** a lambda, a three-arg lambda like `to_field` wants. 
+A macro is jus more step, using a method to create lambdas dynamically:  A Traject macro is just a ruby method that **returns** a lambda, a three-arg lambda like `to_field` wants. 
 
 Here is in fact how the `literal` function is implemented:
 
