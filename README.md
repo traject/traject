@@ -94,6 +94,10 @@ Which can be used with a few standard functions.
 # constant string literal.
 to_field "source", literal("LIB_CATALOG")
 
+# you can call 'to_field' multiple times, additional values
+# are concatenated
+to_field "source", literal("ANOTHER ONE")
+
 # Serialize the marc record back out and
 # put it in a solr field.
 to_field "marc_record", serialized_marc(:format => "xml")
@@ -151,7 +155,7 @@ for mapping form MARC codes to user-displayable strings. See Traject::Translatio
     # and the created map used to translate all values
     to_field "language", extract_marc("008[35-37]:041a:041d", :translation_map => "marc_language_code")
 
-#### Macros vs. basic functionality
+#### Direct indexing logic vs. Macros
 
 It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values, and `extract_marc` -- are what Traject calls 'macros'.
 
