@@ -14,10 +14,11 @@ Based on both the successes and failures of previous MARC indexing attempts -- i
 Traject aims to:
 
 * Be simple and straightforward for simple use cases, hopefully being accessible even to non-rubyists, although it's in ruby
-* Be composed of modular and re-composible elements, to provide flexibility for non-common use cases. You should be able to 
+* Be composed of modular and re-composible elements, to provide flexibility for non-common use cases. You should be able to
 do your own thing wherever you want, without having to give up
-the already implemented parts you still do want, mixing and matching at all. 
-* Have a parsimonious or 'elegant' internal architecture, only a few architectural concepts to understand that everything else is built on, to hopefully make the internals easy to work with and maintain. 
+the already implemented parts you still do want, mixing and matching at will.
+* Easily support re-use and sharing of mapping rules, within an installation and between organizations.
+* Have a parsimonious or 'elegant' internal architecture, only a few architectural concepts to understand that everything else is built on, to hopefully make the internals easy to work with and maintain.
 
 
 ## Installation
@@ -330,7 +331,7 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
 * Reading Marc8. It can't do it yet. Easiest way would be using Marc4j to read, or using it as a transcoder anyway. Don't really want to write marc8 transcoder in ruby.
 
 * We need something like `to_field`, but without actually being
-for mapping to a specific output field. For generic pre or post-processing, or multi-output-field logic. `before_record do &block`, `after_record do &block` , `on_each_record do &block`, one or more of those. 
+for mapping to a specific output field. For generic pre or post-processing, or multi-output-field logic. `before_record do &block`, `after_record do &block` , `on_each_record do &block`, one or more of those.
 
 * Unicode normalization. Has to normalize to NFKC on way out to index. Except for serialized marc field and other exceptions? Except maybe don't have to, rely on solr analyzer to do it?
 
