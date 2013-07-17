@@ -9,6 +9,17 @@ them somewhere.
 
 ## Background/Goals
 
+Based on both the successes and failures of previous MARC indexing attempts -- including the venerable SolrMarc which we greatly appreciate and from which we've learned a lot -- I decided that to create a solution that worked at remaining pain points, I needed jruby -- ruby on the JVM.
+
+Traject aims to:
+
+* Be simple and straightforward for simple use cases, hopefully being accessible even to non-rubyists, although it's in ruby
+* Be composed of modular and re-composible elements, to provide flexibility for non-common use cases. You should be able to 
+do your own thing wherever you want, without having to give up
+the already implemented parts you still do want, mixing and matching at all. 
+* Have a parsimonious or 'elegant' internal architecture, only a few architectural concepts to understand that everything else is built on, to hopefully make the internals easy to work with and maintain. 
+
+
 ## Installation
 
 Traject runs under jruby (ruby on the JVM). I recommend [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme) for installing and managing ruby installations.
@@ -247,6 +258,18 @@ Also see `-I load_path` and `-g Gemfile` options under Extending Logic
 
 ## Extending Logic
 
+TODO fill out nicer.
+
+Basically:
+
+command line `-I` can be used to append to the ruby $LOAD_PATH, and then you can simply `require` your local files, and then use them for
+whatever. Macros, utility functions, translation maps, whatever.
+
+If you want to use logic from other gems in your configuration mapping, you can do that too. This works for traject-specific
+functionality like translation maps and macros, or for anything else.
+To use gems, you can _either_ use straight rubygems, simply by
+installing gems in your system and using `require` or `gem` commands... **or** you can use Bundler for dependency locking and other dependency management. To have traject use Bundler, create a `Gemfile` and then call traject command line with the `-g` option. With the `-g` option alone, Bundler will look in the CWD and parents for the first `Gemfile` it finds. Or supply `-g ./somewhere/MyGemfile` to anywhere.
+
 
 # Development
 
@@ -301,6 +324,9 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
       continued processing doesn't block?
 
 * Reading Marc8. It can't do it yet. Easiest way would be using Marc4j to read, or using it as a transcoder anyway. Don't really want to write marc8 transcoder in ruby.
+
+* We need something like `to_field`, but without actually being
+for mapping to a specific output field. For generic pre or post-processing, or multi-output-field logic. `before_record do &block`, `after_record do &block` , `on_each_record do &block`, one or more of those. 
 
 * Unicode normalization. Has to normalize to NFKC on way out to index. Except for serialized marc field and other exceptions? Except maybe don't have to, rely on solr analyzer to do it?
 
