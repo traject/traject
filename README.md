@@ -5,7 +5,7 @@ Tools for indexing MARC records to Solr.
 Generalizable to tools for configuring mapping records to associative array data structures, and sending
 them somewhere.
 
-*Currently under development, not production ready*
+**Currently under development, not production ready**
 
 ## Background/Goals
 
@@ -15,7 +15,7 @@ Traject runs under jruby (ruby on the JVM). I recommend [chruby](https://github.
 
 Then just `gem install traject`.
 
-(*Note*: We may later provide an all-in-one .jar distribution, which does not require you to install jruby or use on your system. This is hypothetically possible. Is it a good idea?)
+( **Note**: We may later provide an all-in-one .jar distribution, which does not require you to install jruby or use on your system. This is hypothetically possible. Is it a good idea?)
 
 # Usage
 
@@ -28,11 +28,11 @@ Configuration files are actually just ruby -- so by convention they end in `.rb`
 Don't worry, you don't neccesarily need to know ruby well to write them, they give you a subset of ruby to work with. But the full power
 of ruby is available to you.
 
-**rubyist tip**: Technically, config files are `instance_eval`d in a Traject::Indexer instance, so the special commands you see are just methods on Traject::Indexer (or mixed into it). But you can
+**rubyist tip**: Technically, config files are executed with `instance_eval` in a Traject::Indexer instance, so the special commands you see are just methods on Traject::Indexer (or mixed into it). But you can
 call ordinary ruby `require` in config files, etc., too, to load
 external functionality. See more at Extending Logic below.
 
-There are two main categories of things in your configuration files: Settings, and Indexing Rules.
+There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
 ### Settings
 
@@ -65,7 +65,7 @@ end
 ~~~
 
 See, docs page on [Settings][./doc/settings.md] for list
-of all standardized settings. 
+of all standardized settings.
 
 ### Indexing Rules
 
@@ -91,7 +91,7 @@ to_field "marc_record", serialized_marc(:format => "xml")
 # or :format => "binary", by default Base64-encoded for Solr
 # 'binary' field, or, for more like what SolrMarc did, without
 # escaping:
-to_field("marc_record_raw"), serialized_marc(:format => "binary", :binary_escape => false)
+to_field "marc_record_raw", serialized_marc(:format => "binary", :binary_escape => false)
 
 # Take ALL of the text from the marc record, useful for
 # a catch-all field. Actually by default only takes
@@ -112,7 +112,7 @@ Other examples of the specification string, which can include multiple tag menti
 
 ~~~ruby
   # 245 subfields a, p, and s. 130, all subfields.
-  # built-in punctuation trimming routine. 
+  # built-in punctuation trimming routine.
   to_field "title_t", extract_marc("245nps:130", :trim_punctuation => true)
 
   # Can limit to certain indicators with || chars.
@@ -142,7 +142,7 @@ for mapping form MARC codes to user-displayable strings. See Traject::Translatio
 
 #### Macros vs. basic functionality
 
-It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values, and `extract_marc` -- are what Traject calls 'macros'. 
+It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values, and `extract_marc` -- are what Traject calls 'macros'.
 
 They are all actually built based upon a more basic element of
 indexing functionality, which you can always drop down to, and
@@ -249,6 +249,18 @@ Also see `-I load_path` and `-g Gemfile` options under Extending Logic
 
 
 # Development
+
+Run tests with `rake test` or just `rake`.  Tests are written using Minitest (please, no rspec).  We use the spec-style describe/it to
+list the tests -- but generally prefer unit-style "assert_*" methods
+to make actual assertions, for clarity.
+
+Some tests need to run against a solr instance. Currently no solr
+instance is baked in.  You can provide your own solr instance to test against and set shell ENV variable
+"solr_url", and the tests will use it. Otherwise, tests will
+use a mocked up Solr instance.
+
+Pull requests should come with tests, as well as docs where applicable. Docs can be inline rdoc-style, edits to this README,
+and/or extra files in ./docs -- as appropriate for what needs to be docs.
 
 ## TODO
 
