@@ -217,7 +217,7 @@ end
 
 If you find yourself repeating code a lot in direct blocks, you
 can supply your _own_ macros, for local use, or even to share
-with others in a ruby gem. See docs [Macros](./docs/macros.md)
+with others in a ruby gem. See docs [Macros](./doc/macros.md)
 
 ## Command Line
 
