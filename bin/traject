@@ -20,7 +20,7 @@ opts = Slop.new(:strict => true) do
 
   on 'v', 'version', "print version information to stderr"
   on 'h', 'help', "print usage information to stderr"
-  on 'c', 'conf', 'configuration file path (repeatable)', :argument => true, :as => Array, :required => true
+  on 'c', 'conf', 'configuration file path (repeatable)', :argument => true, :as => Array
   on :s, :setting, "settings: `-s key=value` (repeatable)", :argument => true, :as => Array
   on :r, :reader, "Set reader class, shortcut for `-s reader_class_name=*`", :argument => true
   on :w, :writer, "Set writer class, shortcut for `-s writer_class_name=*`", :argument => true
@@ -48,11 +48,12 @@ options = opts.to_hash
 
 if options[:version]
   $stderr.puts "traject version #{Traject::VERSION}"
+  exit 1
 end
 
 if options[:help]
   $stderr.puts opts.help
-  exit 0
+  exit 1
 end
 
 # have to use Slop object to tell diff between
@@ -111,6 +112,14 @@ end
 
 indexer = Traject::Indexer.new
 indexer.settings( settings )
+
+unless options[:conf] && options[:conf].length > 0
+  $stderr.puts "Error: Missing required configuration file"
+  $stderr.puts "Exiting..."
+  $stderr.puts
+  $stderr.puts opts.help
+  exit 2
+end
 
 options[:conf].each do |conf_path|
   begin
