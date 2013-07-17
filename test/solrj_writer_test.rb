@@ -4,7 +4,7 @@ require 'traject/solrj_writer'
 
 # WARNING. The SolrJWriter talks to a running Solr server.
 #
-# set ENV['solrj_writer_url'] to run tests against a real solr server
+# set ENV['solr_url'] to run tests against a real solr server
 # OR
 # the tests will run against a mock SolrJ server instead.
 #
@@ -14,7 +14,7 @@ describe "Traject::SolrJWriter" do
 
   it "raises on missing url" do
     assert_raises(ArgumentError) { Traject::SolrJWriter.new }
-    assert_raises(ArgumentError) { Traject::SolrJWriter.new("solrj_writer.url" => nil) }
+    assert_raises(ArgumentError) { Traject::SolrJWriter.new("solr.url" => nil) }
   end
 
   describe "with good setup" do
@@ -26,11 +26,11 @@ describe "Traject::SolrJWriter" do
         "solrj_writer.commit_on_close" => "true"
       }
 
-      if ENV["solrj_writer_url"]
-        @settings["solrj_writer.url"] = ENV["solrj_writer_url"]
+      if ENV["solr_url"]
+        @settings["solr.url"] = ENV["solr_url"]
       else
         $stderr.puts "WARNING: Testing SolrJWriter with mock instance"
-        @settings["solrj_writer.url"] = "http://example.org/solr"
+        @settings["solr.url"] = "http://example.org/solr"
         @settings["solrj_writer.server_class_name"] = "MockSolrServer"
       end
 
@@ -44,7 +44,7 @@ describe "Traject::SolrJWriter" do
 
       if @mock
         assert_kind_of org.apache.solr.client.solrj.impl.XMLResponseParser, @mock.parser
-        assert_equal @settings["solrj_writer.url"], @mock.url
+        assert_equal @settings["solr.url"], @mock.url
 
         assert_equal 1, @mock.docs_added.length
         assert_kind_of SolrInputDocument, @mock.docs_added.first

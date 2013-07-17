@@ -24,7 +24,7 @@ opts = Slop.new(:strict => true) do
   on :s, :setting, "settings: `-s key=value` (repeatable)", :argument => true, :as => Array
   on :r, :reader, "Set reader class, shortcut for `-s reader_class_name=*`", :argument => true
   on :w, :writer, "Set writer class, shortcut for `-s writer_class_name=*`", :argument => true
-  on :u, :solr, "Set solr url, shortcut for `-s solrj_writer.url=*`", :argument => true
+  on :u, :solr, "Set solr url, shortcut for `-s solr.url=*`", :argument => true
   on :j, "output as pretty printed json, shortcut for `-s writer_class_name=JsonWriter -s json_writer.pretty_print=true`"
   on :t, :marc_type, "xml, json or binary. shortcut for `-s marc_source.type=*`", :argument => true
   on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
@@ -94,7 +94,7 @@ if options[:reader]
   settings["reader_class_name"] = options[:reader]
 end
 if options[:solr]
-  settings["solrj_writer.url"] = options[:solr]
+  settings["solr.url"] = options[:solr]
 end
 if options[:j]
   settings["writer_class_name"] = "JsonWriter"

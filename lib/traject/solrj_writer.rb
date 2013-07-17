@@ -6,7 +6,7 @@ require 'traject/qualified_const_get'
 #  (sub-class later for the ConcurrentUpdate server?)
 #
 # settings:
-#   [solrj_writer.url] Your solr url (required)
+#   [solr.url] Your solr url (required)
 #   [solrj_writer.server_class_name]  Defaults to "HttpSolrServer". You can specify
 #                                   another Solr Server sub-class, but it has
 #                                   to take a one-arg url constructor. Maybe
@@ -94,10 +94,10 @@ class Traject::SolrJWriter
   attr_writer :solr_server # mainly for testing
 
   # Instantiates a solr server of class settings["solrj_writer.server_class_name"] or "HttpSolrServer"
-  # and initializes it with settings["solrj_writer.url"]
+  # and initializes it with settings["solr.url"]
   def instantiate_solr_server!
     server_class  = qualified_const_get( settings["solrj_writer.server_class_name"] || "HttpSolrServer" )
-    server        = server_class.new( settings["solrj_writer.url"].to_s );
+    server        = server_class.new( settings["solr.url"].to_s );
 
     if parser_name = settings["solrj_writer.parser_class_name"]
       parser = org.apache.solr.client.solrj.impl.const_get(parser_name).new
@@ -108,8 +108,8 @@ class Traject::SolrJWriter
   end
 
   def settings_check!(settings)
-    unless settings.has_key?("solrj_writer.url") && ! settings["solrj_writer.url"].nil?
-      raise ArgumentError.new("SolrJWriter requires a 'solrj_writer.url' solr url in settings")
+    unless settings.has_key?("solr.url") && ! settings["solr.url"].nil?
+      raise ArgumentError.new("SolrJWriter requires a 'solr.url' solr url in settings")
     end
   end
 
