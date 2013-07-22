@@ -345,3 +345,5 @@ for mapping to a specific output field. For generic pre or post-processing, or m
 * Command line code. It's only 150 lines, but it's kind of messy
 jammed into one file *and lacks tests*. I couldn't figure out
 what to do with it or how to test it. Needs a bit of love.
+
+* Optional built-in jetty stop/start to allow indexing to Solr that wasn't running before. maybe https://github.com/projecthydra/jettywrapper ?
