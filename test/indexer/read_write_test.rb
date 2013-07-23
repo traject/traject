@@ -4,7 +4,8 @@ require 'test_helper'
 # in an array, just added to settings for easy access
 memory_writer_class = Class.new do
     def initialize(settings)
-      @settings = settings
+      # store them in a class variable so we can test em later
+      @@last_writer_settings = @settings = settings
       @settings["memory_writer.added"] = []
     end
 
@@ -36,12 +37,16 @@ describe "Traject::Indexer#process" do
 
     @indexer.process( @file )
 
-    assert @indexer.settings["memory_writer.added"]
-    assert_equal 30, @indexer.settings["memory_writer.added"].length
-    assert_kind_of Hash, @indexer.settings["memory_writer.added"].first
-    assert_equal ["ADDED TITLE"], @indexer.settings["memory_writer.added"].first["title"]
+    # Grab the settings out of a class variable where we left em,
+    # as a convenient place to store outcomes so we can test em. 
+    writer_settings = memory_writer_class.class_variable_get("@@last_writer_settings")
 
-    assert @indexer.settings["memory_writer.closed"]
+    assert writer_settings["memory_writer.added"]
+    assert_equal 30, writer_settings["memory_writer.added"].length
+    assert_kind_of Hash, writer_settings["memory_writer.added"].first
+    assert_equal ["ADDED TITLE"], writer_settings["memory_writer.added"].first["title"]
+
+    assert writer_settings["memory_writer.closed"]
 
   end
 
