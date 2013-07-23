@@ -1,4 +1,5 @@
 require 'hashie'
+require 'yell'
 
 require 'traject'
 require 'traject/qualified_const_get'
@@ -88,6 +89,41 @@ class Traject::Indexer
     return @settings
   end
 
+  def logger
+    @logger ||= create_logger
+  end
+  attr_writer :logger
+
+
+  # Just calculates the arg that's gonna be given to Yell.new
+  # or SomeLogger.new
+  def logger_argument
+    specified = settings["log.file"] || "STDERR"
+
+    return case specified
+    when "STDOUT" then STDOUT
+    when "STDERR" then STDERR
+    else specified
+    end
+  end
+
+  # Create logger according to settings
+  def create_logger
+    # log everything to STDERR or specified logfile
+    logger = Yell.new( logger_argument )
+    # ADDITIONALLY log error and higher to....
+    if settings["log.error_file"]
+      logger.adapter :file, settings["error_logfile"], 'gte.error'
+    end
+
+    # level?
+    if settings["log.level"]
+      logger.level = settings["log.level"]
+    end
+    return logger
+  end
+
+
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
     @index_steps << {
@@ -133,6 +169,8 @@ class Traject::Indexer
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
   def process(io_stream)
+    logger.info "beginning Indexer#process: #{io_stream}"
+
     reader = self.reader!(io_stream)
     writer = self.writer!
 
@@ -140,6 +178,8 @@ class Traject::Indexer
       writer.put map_record(record)
     end
     writer.close if writer.respond_to?(:close)
+
+    logger.info "finished Indexer#process"
   end
 
   def reader_class
