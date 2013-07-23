@@ -245,7 +245,7 @@ If you leave off the marc_file, traject will try to read from stdin. You can onl
     cat some/dir/*.marc | traject -c conf_file.rb
 
 You can set any setting on the command line with `-s key=value`.
-This will over-ride any settings set with `provide` in conf files. 
+This will over-ride any settings set with `provide` in conf files.
 
     traject -c conf_file.rb marc_file -s solr.url=http://somehere/solr -s solr.url=http://example.com/solr -s solrj_writer.commit_on_close=true
 
@@ -296,11 +296,14 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
 ## TODO
 
 * Logging
-  * it's doing no logging of it's own
-  * It's not properly setting up the solrj logging
-  * Making solrj and it's own logging go to same place, accross jruby bridge, not sure
+  * Logging is currently... okay, not great.
+  * Currently silencing SolrJ's own logging (by silencing log4j root logger) Think
+    that may actually be okay -- we still log any exceptions solrj throws.
+    * Cause, making solrj and it's own logging go to same place, accross jruby bridge, not sure
     (I want all of this code BUT the Solr writing stuff to be usable under MRI too,
      I want to repurpose the mapping code for DISPLAY too)
+  * Do need to get SolrJWriter error logging to log recordID and position number
+    of skipped record. A pain cause of current seperation of concerns architecture. 
 
 * Error handling. Related to logging. Catch errors indexing
   particular records, make

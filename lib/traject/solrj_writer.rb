@@ -75,6 +75,9 @@ class Traject::SolrJWriter
         end
       end
     end
+
+    # And for now, SILENCE SolrJ logging
+    org.apache.log4j.Logger.getRootLogger().addAppender(org.apache.log4j.varia.NullAppender.new)
   end
 
   def put(hash)
