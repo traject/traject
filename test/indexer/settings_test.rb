@@ -68,8 +68,8 @@ describe "Traject::Indexer#settings" do
       provide :b, "new"
     end
 
-    assert_equal "original", settings[:a]
-    assert_equal "new", settings[:b]
+    assert_equal "original", @indexer.settings[:a]
+    assert_equal "new", @indexer.settings[:b]
   end 
 
 
