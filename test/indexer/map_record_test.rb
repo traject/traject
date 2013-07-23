@@ -109,9 +109,11 @@ describe "Traject::Indexer#map_record" do
 
         assert_same record, context.source_record
         assert_same @indexer.settings, context.settings
+
+        assert_equal 10, context.position
       end
 
-      @indexer.map_record @record
+      @indexer.map_record @record, :position => 10
 
       assert called
     end
