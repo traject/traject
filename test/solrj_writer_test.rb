@@ -17,6 +17,11 @@ describe "Traject::SolrJWriter" do
     assert_raises(ArgumentError) { Traject::SolrJWriter.new("solr.url" => nil) }
   end
 
+  it "raises on malformed URL" do
+    assert_raises(ArgumentError) { Traject::SolrJWriter.new("solr.url" => "") }
+    assert_raises(ArgumentError) { Traject::SolrJWriter.new("solr.url" => "adfadf") }
+  end
+
   describe "with good setup" do
     before do
       @settings = {
@@ -35,6 +40,11 @@ describe "Traject::SolrJWriter" do
       end
 
       @writer = Traject::SolrJWriter.new(@settings)
+
+      if @settings["solrj_writer.server_class_name"] == "MockSolrServer"
+        # so we can test it later
+        @mock = @writer.solr_server
+      end
     end
 
     it "writes a simple document" do
@@ -56,6 +66,20 @@ describe "Traject::SolrJWriter" do
       end
     end
 
+    describe "with SolrJ Errors" do
+      it "errors but does not raise on multiple ID's" do
+        @writer.put "id" => ["one", "two"]
+        @writer.close
+      end
+
+      it "errors and raises on connection error" do
+        @writer = Traject::SolrJWriter.new(@settings.merge "solr.url" => "http://no.such.place")
+        assert_raises org.apache.solr.client.solrj.SolrServerException do
+          @writer.put "id" => ["one"]
+        end
+      end
+    end
+
 
 
     # I got to see what serialized marc binary does against a real solr server,
@@ -64,7 +88,7 @@ describe "Traject::SolrJWriter" do
     # real solr server set up.
     #
     # Not really a good test right now, just manually checking my solr server,
-    # using this to make the add reproducible at least. 
+    # using this to make the add reproducible at least.
     describe "Serialized MARC" do
       it "goes to real solr somehow" do
         record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
@@ -88,6 +112,10 @@ class MockSolrServer
   end
 
   def add(solr_input_document)
+    if @url == "http://no.such.place"
+      raise org.apache.solr.client.solrj.SolrServerException.new("bad uri", java.io.IOException.new)
+    end
+
     docs_added << solr_input_document
   end
 
