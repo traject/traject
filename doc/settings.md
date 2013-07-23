@@ -13,6 +13,16 @@ line.
 
 * json_writer.pretty_print: used by the JsonWriter, if set to true, will output pretty printed json (with added whitespace) for easier human readability. Default false. 
 
+* log.file: filename to send logging, or 'STDOUT' or 'STDERR' for those streams. Default STDERR
+
+* log.error_file: Default nil, if set then all log lines of ERROR and higher will be _additionally_
+                  sent to error file named. 
+
+* log.format: Formatting string used by Yell logger. https://github.com/rudionrails/yell/wiki/101-formatting-log-messages
+
+* log.level:  Log this level and above. Default 'info', set to eg 'debug' to get potentially more logging info,
+              or 'error' to get less. https://github.com/rudionrails/yell/wiki/101-setting-the-log-level
+
 * marc_source.type: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 
 * reader_class_name: a Traject Reader class, used by the indexer as a source of records. Default Traject::MarcReader. See Traject::Indexer for more info. Command-line shortcut `-r`
