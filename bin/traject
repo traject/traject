@@ -14,6 +14,8 @@ require 'traject'
 require 'traject/indexer'
 
 
+orig_argv = ARGV.dup
+
 
 opts = Slop.new(:strict => true) do
   banner "traject [options] -c configuration.rb [-c config2.rb] file.mrc"
@@ -142,8 +144,7 @@ end
 #  Shoudln't log before config files are read above, because
 #  config files set up logger
 ##############
-
-indexer.logger.info("executing with arguments: #{ARGV.join(' ')}")
+indexer.logger.info("executing with arguments: `#{orig_argv.join(' ')}`")
 
 
 # ARGF might be perfect for this, but problems with it include:
@@ -163,10 +164,10 @@ if ARGV.length > 1
   exit 1
 end
 if ARGV.length == 0
-  logger.info "Reading from STDIN..."
+  indexer.logger.info "Reading from STDIN..."
   io = $stdin
 else
-  logger.info "Reading from #{ARGV.first}"
+  indexer.logger.info "Reading from #{ARGV.first}"
   io = File.open(ARGV.first, 'r')
 end
 
