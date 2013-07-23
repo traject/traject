@@ -149,8 +149,10 @@ class Traject::Indexer
   # set up in this Indexer. Returns a hash whose values are
   # Arrays, and keys are strings.
   #
-  def map_record(record)
-    context = Context.new(:source_record => record, :settings => settings)
+  # contextual_info hash:
+  #   [:position]   1-based i index of record in process
+  def map_record(record, contextual_info = {})
+    context = Context.new(:source_record => record, :settings => settings, :position => contextual_info[:position])
 
     @index_steps.each do |index_step|
       accumulator = []
@@ -190,7 +192,7 @@ class Traject::Indexer
 
     reader.each do |record|
       count += 1
-      writer.put map_record(record)
+      writer.put map_record(record, :position => count)
     end
     writer.close if writer.respond_to?(:close)
 
@@ -270,5 +272,7 @@ class Traject::Indexer
 
     attr_accessor :clipboard, :output_hash
     attr_accessor :field_name, :source_record, :settings
+    # 1-based position in stream of processed records. 
+    attr_accessor :position
   end
 end
