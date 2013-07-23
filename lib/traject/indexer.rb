@@ -29,7 +29,8 @@ require 'traject/macros/basic'
 #
 #
 #  A Writer is any class that:
-#  1) Has a one-argument initializer taking a Settings hash.
+#  1) Has a one-argument initializer taking a Settings hash. (The logger
+#     is provided to the Writer in settings["logger"])
 #  2) Responds to a one argument #put method, where the argument is
 #     a hash of mapped keys/values. The writer should write them
 #     to the appropriate place.
@@ -223,7 +224,7 @@ class Traject::Indexer
 
   # Instantiate a Traject Writer, suing class set in #writer_class
   def writer!
-    return writer_class.new(settings)
+    return writer_class.new(settings.merge("logger" => logger))
   end
 
   def self.default_settings
