@@ -1,5 +1,9 @@
+require 'yell'
+
 require 'traject'
 require 'traject/qualified_const_get'
+
+require 'uri'
 
 #
 # Writes to a Solr using SolrJ, and the SolrJ HttpSolrServer.
@@ -31,6 +35,7 @@ class Traject::SolrJWriter
   include Traject::QualifiedConstGet
 
   attr_reader :settings
+  attr_accessor :error_contexts
 
   def initialize(argSettings)
     @settings = argSettings
@@ -39,6 +44,8 @@ class Traject::SolrJWriter
     ensure_solrj_loaded!
 
     solr_server # init
+
+    self.error_contexts = []
   end
 
   # Loads solrj if not already loaded. By loading all jars found
@@ -81,7 +88,57 @@ class Traject::SolrJWriter
 
     # TODO: Buffer docs internally, add in arrays, one http
     # transaction per array. Is what solrj wiki recommends.
-    solr_server.add(doc)
+
+    begin
+      solr_server.add(doc)
+    rescue org.apache.solr.common.SolrException, org.apache.solr.client.solrj.SolrServerException  => e
+      # Honestly not sure what the difference is between those types, but SolrJ raises both
+      log_exception(e)
+
+      if fatal_exception? e
+        logger.fatal ("SolrJ exception judged fatal, raising...")
+        raise e
+      end
+    end
+  end
+
+  def logger
+    settings["logger"] ||= Yell.new(STDERR, :level => "gt.fatal") # null logger
+  end
+
+  # If an exception is encountered talking to Solr, is it one we should
+  # entirely give up on? SolrJ doesn't use a useful exception class hieararchy,
+  # we have to look into it's details and guess.
+  def fatal_exception?(e)
+
+
+    root_cause = e.respond_to?(:getRootCause) && e.getRootCause
+
+    # Various kinds of inability to actually talk to the
+    # server look like this:
+    if root_cause.kind_of? java.io.IOException
+      return true
+    end
+
+    return false
+  end
+
+  def log_exception(e)
+    indent = "    "
+
+    msg = "Could not index record\n"
+    msg += indent + "Exception: " + e.class.name + ": " + e.message + "\n"
+    msg += indent + e.backtrace.first + "\n"
+
+    if (e.respond_to?(:getRootCause) && e.getRootCause && e != e.getRootCause )
+      caused_by = e.getRootCause
+      msg += indent + "Caused by\n"
+      msg += indent + caused_by.class.name + ": " + caused_by.message + "\n"
+      msg += indent + caused_by.backtrace.first + "\n"
+    end
+
+    logger.error(msg)
+
   end
 
   def close
@@ -114,6 +171,10 @@ class Traject::SolrJWriter
   def settings_check!(settings)
     unless settings.has_key?("solr.url") && ! settings["solr.url"].nil?
       raise ArgumentError.new("SolrJWriter requires a 'solr.url' solr url in settings")
+    end
+
+    unless settings["solr.url"] =~ /^#{URI::regexp}$/
+      raise ArgumentError.new("SolrJWriter requires a 'solr.url' setting that looks like a URL, not: `#{settings['solr.url']}`")
     end
   end
 
