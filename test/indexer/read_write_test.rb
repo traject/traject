@@ -46,6 +46,9 @@ describe "Traject::Indexer#process" do
     assert_kind_of Hash, writer_settings["memory_writer.added"].first
     assert_equal ["ADDED TITLE"], writer_settings["memory_writer.added"].first["title"]
 
+    # logger provided in settings
+    assert writer_settings["logger"]
+
     assert writer_settings["memory_writer.closed"]
 
   end
