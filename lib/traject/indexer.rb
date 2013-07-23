@@ -100,26 +100,38 @@ class Traject::Indexer
   def logger_argument
     specified = settings["log.file"] || "STDERR"
 
-    return case specified
+    case specified
     when "STDOUT" then STDOUT
     when "STDERR" then STDERR
     else specified
     end
   end
 
+  # Second arg to Yell.new, options hash, calculated from
+  # settings
+  def logger_options
+    # formatter, default is fairly basic
+    format = settings["log.format"] || "%d %5L %m"
+    format = case format
+    when "false" then false
+    when "" then nil
+    else format
+    end
+
+    level = settings["log.level"] || "info"
+
+    {:format => format, :level => level}
+  end
+
   # Create logger according to settings
   def create_logger
     # log everything to STDERR or specified logfile
-    logger = Yell.new( logger_argument )
+    logger = Yell.new( logger_argument, logger_options )
     # ADDITIONALLY log error and higher to....
     if settings["log.error_file"]
-      logger.adapter :file, settings["error_logfile"], 'gte.error'
+      logger.adapter :file, settings["log.error_file"], :level => 'gte.error'
     end
 
-    # level?
-    if settings["log.level"]
-      logger.level = settings["log.level"]
-    end
     return logger
   end
 
@@ -169,7 +181,7 @@ class Traject::Indexer
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
   def process(io_stream)
-    logger.info "beginning Indexer#process: #{io_stream}"
+    logger.info "beginning Indexer#process"
 
     reader = self.reader!(io_stream)
     writer = self.writer!
