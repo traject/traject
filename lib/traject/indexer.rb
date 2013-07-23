@@ -181,17 +181,22 @@ class Traject::Indexer
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
   def process(io_stream)
+    count      =       0
+    start_time = Time.now
     logger.info "beginning Indexer#process"
 
     reader = self.reader!(io_stream)
     writer = self.writer!
 
     reader.each do |record|
+      count += 1
       writer.put map_record(record)
     end
     writer.close if writer.respond_to?(:close)
 
-    logger.info "finished Indexer#process"
+    elapsed        = Time.now - start_time
+    avg_rps        = (count / elapsed)
+    logger.info "finished Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
   end
 
   def reader_class
