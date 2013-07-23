@@ -57,24 +57,28 @@ in a config file:
 
 settings do
   # Where to find solr server to write to
-  store "solr.url", "http://example.org/solr"
+  provide "solr.url", "http://example.org/solr"
 
   # solr.version doesn't currently do anything, but set it
   # anyway, in the future it will warn you if you have settings
   # that may not work with your version.
-  store "solr.version", "4.3.0"
+  provide "solr.version", "4.3.0"
 
   # default source type is binary, traject can't guess
   # you have to tell it.
-  store "marc_source.type", "xml"
+  provide "marc_source.type", "xml"
 
   # settings can be set on command line instead of
   # config file too.
 
   # various others...
-  store "solrj_writer.commit_on_close", "true"
+  provide "solrj_writer.commit_on_close", "true"
 end
 ~~~
+
+`provide` will only set the key if it was previously unset, so first
+setting wins, and command-line comes first of all and overrides everything.
+You can also use `store` if you want to force-set, last set wins.
 
 See, docs page on [Settings][./doc/settings.md] for list
 of all standardized settings.
@@ -241,8 +245,7 @@ If you leave off the marc_file, traject will try to read from stdin. You can onl
     cat some/dir/*.marc | traject -c conf_file.rb
 
 You can set any setting on the command line with `-s key=value`.
-This will over-ride any settings from conf files. (TODO, I don't
-think over-riding works, it's actually a bit tricky)
+This will over-ride any settings set with `provide` in conf files. 
 
     traject -c conf_file.rb marc_file -s solr.url=http://somehere/solr -s solr.url=http://example.com/solr -s solrj_writer.commit_on_close=true
 

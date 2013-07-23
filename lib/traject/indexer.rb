@@ -184,6 +184,16 @@ class Traject::Indexer
 
     # Hashie bug Issue #100 https://github.com/intridea/hashie/pull/100
     alias_method :store, :indifferent_writer
+
+    # a cautious store, which only saves key=value if
+    # there was not already a value for #key. Can be used
+    # to set settings that can be overridden on command line,
+    # or general first-set-wins settings.
+    def provide(key, value)
+      unless has_key? key
+        store(key, value)
+      end
+    end
   end
 
   # Represents the context of a specific record being indexed, passed
