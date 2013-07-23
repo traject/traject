@@ -18,7 +18,7 @@ require 'marc'
 #                   allowed, and no unescpaed internal newlines allowed in the json
 #                   objects -- we just read line by line, and assume each line is a
 #                   marc-in-json. http://dilettantes.code4lib.org/blog/2010/09/a-proposal-to-serialize-marc-in-json/
-#   ["marc_source.xml_parser"] For XML type, which XML parser to tell Marc::Reader
+#   ["marc_reader.xml_parser"] For XML type, which XML parser to tell Marc::Reader
 #                              to use. Anything recognized by Marc::Reader :parser
 #                              argument. By default, asks Marc::Reader to take
 #                              it's best guess as to highest performance available
@@ -45,7 +45,7 @@ class Traject::MarcReader
       @internal_reader =
         case settings["marc_source.type"]
         when "xml"
-          parser = settings["marc_source.xml_parser"] || @@best_xml_parser
+          parser = settings["marc_reader.xml_parser"] || @@best_xml_parser
           MARC::XMLReader.new(self.input_stream, :parser=> parser)
         else
           MARC::Reader.new(self.input_stream)
