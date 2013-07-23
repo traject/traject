@@ -60,6 +60,17 @@ describe "Traject::Indexer#settings" do
     assert_equal "foo 4", @indexer.settings["foo"]
   end
 
+  it "implements #provide as cautious setter" do
+    @indexer.settings[:a] = "original"
+
+    @indexer.settings do
+      provide :a, "new"
+      provide :b, "new"
+    end
+
+    assert_equal "original", settings[:a]
+    assert_equal "new", settings[:b]
+  end 
 
 
 end
