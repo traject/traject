@@ -48,13 +48,14 @@ class Traject::Marc4JReader
     # Loads solrj if not already loaded. By loading all jars found
   # in settings["solrj.jar_dir"]
   def ensure_marc4j_loaded!
-    unless defined?(MarcPermissiveStreamReader)
+    unless defined?(MarcPermissiveStreamReader) 
       require 'java'
 
       tries = 0
       begin
         tries += 1
         java_import org.marc4j.MarcPermissiveStreamReader
+        java_import org.marc4j.MarcXmlReader
       rescue NameError  => e
         # /Users/jrochkind/code/solrj-gem/lib"
 
@@ -78,11 +79,24 @@ class Traject::Marc4JReader
     @internal_reader ||= create_marc_reader!
   end
 
-  def create_marc_reader!
-    permissive = settings["marc4j_reader.permissive"].to_s == "true"
+  def input_type
+    # maybe later add some guessing somehow
+    settings["marc_source.type"]
+  end
 
-    # third arg means 'convert to UTF-8, yes'
-    return MarcPermissiveStreamReader.new(input_stream.to_inputstream, permissive, true, settings["marc4j_reader.source_encoding"])
+  def create_marc_reader!
+    case input_type
+    when "binary"
+      permissive = settings["marc4j_reader.permissive"].to_s == "true"
+
+      # #to_inputstream turns our ruby IO into a Java InputStream
+      # third arg means 'convert to UTF-8, yes'
+      MarcPermissiveStreamReader.new(input_stream.to_inputstream, permissive, true, settings["marc4j_reader.source_encoding"])
+    when "xml"
+      MarcXmlReader.new(input_stream.to_inputstream)
+    else
+      raise IllegalArgument.new("Unrecgonized marc_source.type: #{input_type}")
+    end
   end
 
   def each
