@@ -316,6 +316,7 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
   * Put them in their own gem
   * Make the end-user download them theirselves, possibly providing the ivy.xml's to do so for
     them.
+  * Oh, this applies to Marc4J jars used by the Marc4JReader too. 
 
 * Various performance improvements, this is not optimized yet. Some improvements
   may challenge architecture, when they involve threading.
