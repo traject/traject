@@ -256,6 +256,17 @@ class Traject::Indexer
         store(key, value)
       end
     end
+
+    # reverse_merge copied from ActiveSupport, pretty straightforward,
+    # modified to make sure we return a Settings
+    def reverse_merge(other_hash)
+      self.class.new(other_hash).merge(self)
+    end
+
+    def reverse_merge!(other_hash)
+      replace(reverse_merge(other_hash))
+    end
+
   end
 
   # Represents the context of a specific record being indexed, passed
