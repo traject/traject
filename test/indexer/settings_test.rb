@@ -70,7 +70,30 @@ describe "Traject::Indexer#settings" do
 
     assert_equal "original", @indexer.settings[:a]
     assert_equal "new", @indexer.settings[:b]
-  end 
+  end
 
+  it "has reverse_merge" do
+    settings = Traject::Indexer::Settings.new("a" => "original", "b" => "original")
+
+    new_settings = settings.reverse_merge(:a => "new",  :c => "new")
+
+    assert_kind_of Traject::Indexer::Settings, new_settings
+
+    assert_equal "original", new_settings["a"]
+    assert_equal "original", new_settings["b"]
+    assert_equal "new", new_settings["c"]
+  end
+
+  it "has reverse_merge!" do
+    settings = Traject::Indexer::Settings.new("a" => "original", "b" => "original") 
+
+    settings.reverse_merge!(:a => "new",  :c => "new")
+
+    assert_kind_of Traject::Indexer::Settings, settings
+
+    assert_equal "original", settings["a"]
+    assert_equal "original", settings["b"]
+    assert_equal "new", settings["c"]
+  end
 
 end
