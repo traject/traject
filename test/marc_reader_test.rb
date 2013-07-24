@@ -1,5 +1,8 @@
+# Encoding: UTF-8
+
 require 'test_helper'
 require 'traject/marc_reader'
+require 'marc'
 
 describe "Traject::MarcReader" do
 
@@ -22,7 +25,16 @@ describe "Traject::MarcReader" do
     array = reader.to_a
 
     assert_equal 30, array.length
+
+    first = array.first
+
+    assert_kind_of MARC::Record, first
+
+    assert first['245']['a'].encoding.name, "UTF-8"
+    assert_equal "Fikr-i Ayāz /", first['245']['a']
   end
+
+  
 
 
 
