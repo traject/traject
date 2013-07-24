@@ -1,3 +1,19 @@
+# TODO: THREAD POOL
+#
+# 1) Exception handling in threads, what's the right thing to do
+# 2) General count of failed records in a thread safe way, so we can report
+#    it back from 'close', so process can report it back, and non-zero exit
+#    code can be emited from command-line.
+# 3) back pressure on thread pool. give it a bounded blocking queue instead,
+#    to make sure thousands of add tasks don't build up, waiting until the end.
+#    or does that even matter? So what if they build up in the queue and only
+#    get taken care of at the end, is that okay? I do emit a warning right now
+#    if it takes more than 60 seconds to process remaining thread pool task queue
+#    at end.
+# 4) No tests yet that actually test thread pool stuff; additionally, may make
+#    some of the batch tests fail in non-deterministic ways, since batch tests
+#    assume order of add (and our Mock solr server is not thread safe yet!)
+
 require 'yell'
 
 require 'traject'
@@ -35,7 +51,7 @@ require 'thread' # for Mutex
 #   [solrj_writer.batch_size]       If non-nil and more than 1, send documents to
 #                                   solr in batches of solrj_writer.batch_size. If nil/1,
 #                                   however, an http transaction with solr will be done
-#                                   per doc. DEFAULT to 100, which seems to be a sweet spot. 
+#                                   per doc. DEFAULT to 100, which seems to be a sweet spot.
 class Traject::SolrJWriter
   include Traject::QualifiedConstGet
 
@@ -56,6 +72,14 @@ class Traject::SolrJWriter
 
     unless @settings.has_key?("solrj_writer.batch_size")
       @settings["solrj_writer.batch_size"] = 100
+    end
+    unless @settings.has_key?("solrj_writer.thread_pool")
+      @settings["solrj_writer.thread_pool"] = 4
+    end
+
+    # specified 1 thread pool is still a thread pool, with one thread in it!
+    if @settings["solrj_writer.thread_pool"].to_i > 0
+      @thread_pool = java.util.concurrent.Executors.new_fixed_thread_pool(@settings["solrj_writer.thread_pool"].to_i)
     end
   end
 
@@ -99,6 +123,10 @@ class Traject::SolrJWriter
   # If we are using batch add, we surround all access to our shared state batch queue
   # in a mutex -- just a naive implementation. May be able to improve performance
   # with more sophisticated java.util.concurrent data structure (blocking queue etc)
+  # I did try a java ArrayBlockingQueue or LinkedBlockingQueue instead of our own
+  # mutex -- I did not see consistently different performance. May want to
+  # change so doesn't use a mutex at all if multiple mapping threads aren't being
+  # used.
   #
   # this class does not at present use any threads itself, all work will be done
   # in the calling thread, including actual http transactions to solr via solrj SolrServer
@@ -124,8 +152,10 @@ class Traject::SolrJWriter
         batch_add_documents(ready_batch)
       end
     else # non-batched add, add one at a time.
-      rescue_solr_single_add_exception do
-        solr_server.add(doc)
+      maybe_in_thread_pool do
+        rescue_solr_single_add_exception do
+          solr_server.add(doc)
+        end
       end
     end
   end
@@ -149,19 +179,33 @@ class Traject::SolrJWriter
   # in a doc array that is not shared state, extracting it from
   # shared state batched_queue in a mutex.
   def batch_add_documents(current_batch)
-    logger.debug("SolrJWriter: batch adding #{current_batch.length} documents")
-    begin
-      solr_server.add( current_batch )
-    rescue Exception => e
-      # Error in batch, none of the docs got added, let's try to re-add
-      # em all individually, so those that CAN get added get added, and those
-      # that can't get individually logged.
-      logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
-      current_batch.each do |doc|
-        rescue_solr_single_add_exception do
-          solr_server.add(doc)
+    maybe_in_thread_pool do
+      logger.debug("SolrJWriter: batch adding #{current_batch.length} documents")
+      begin
+        solr_server.add( current_batch )
+      rescue Exception => e
+        # Error in batch, none of the docs got added, let's try to re-add
+        # em all individually, so those that CAN get added get added, and those
+        # that can't get individually logged.
+        logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
+        current_batch.each do |doc|
+          rescue_solr_single_add_exception do
+            solr_server.add(doc)
+          end
         end
       end
+    end
+  end
+
+  # executes it's block in a thread pool if we're configured to use one, otherwise
+  # just executes
+  def maybe_in_thread_pool
+    if @thread_pool
+      @thread_pool.execute do
+        yield
+      end
+    else
+      yield
     end
   end
 
@@ -232,6 +276,22 @@ class Traject::SolrJWriter
       batch_add_documents( batched_queue.dup )
       batched_queue.clear
     end
+
+    if @thread_pool
+      start_t = Time.now
+      logger.info "SolrJWriter: Shutting down thread pool, waiting if needed..."
+      @thread_pool.shutdown
+      # We pretty much want to wait forever, although we need to give
+      # a timeout. Okay, one day!
+      @thread_pool.awaitTermination(1, java.util.concurrent.TimeUnit::DAYS)
+
+      elapsed = Time.now - start_t
+      if elapsed > 60
+        logger.warn "Waited #{elapsed} seconds for all threads, you may want to increase solrj_writer.thread_pool (currently #{@settings["solrj_writer.thread_pool"]})"
+      end
+      logger.info "SolrJWriter: Thread pool shutdown complete"
+    end
+
 
     if settings["solrj_writer.commit_on_close"].to_s == "true"
       logger.info "SolrJWriter: Sending commit to solr..."
