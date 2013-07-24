@@ -11,12 +11,12 @@ line.
 
 ## Known settings
 
-* json_writer.pretty_print: used by the JsonWriter, if set to true, will output pretty printed json (with added whitespace) for easier human readability. Default false. 
+* json_writer.pretty_print: used by the JsonWriter, if set to true, will output pretty printed json (with added whitespace) for easier human readability. Default false.
 
 * log.file: filename to send logging, or 'STDOUT' or 'STDERR' for those streams. Default STDERR
 
 * log.error_file: Default nil, if set then all log lines of ERROR and higher will be _additionally_
-                  sent to error file named. 
+                  sent to error file named.
 
 * log.format: Formatting string used by Yell logger. https://github.com/rudionrails/yell/wiki/101-formatting-log-messages
 
@@ -25,15 +25,20 @@ line.
 
 * marc_source.type: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 
+* marc4j_reader.permissive: Used by Marc4JReader only when marc.source_type is 'binary', boolean, argument to the underlying MarcPermissiveStreamReader. Default true. 
+
+* marc4j_reader.source_encoding: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
+  b
+
 * reader_class_name: a Traject Reader class, used by the indexer as a source of records. Default Traject::MarcReader. See Traject::Indexer for more info. Command-line shortcut `-r`
 
-* solr.url: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`. 
+* solr.url: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
 
 * solrj.jar_dir: SolrJWriter needs to load Java .jar files with SolrJ. It will load from a packaged SolrJ, but you can load your own SolrJ (different version etc) by specifying a directory. All *.jar in directory will be loaded.
 
 * solr.version: Set to eg "1.4.0", "4.3.0"; currently un-used, but in the future will control
   change some default settings, and/or sanity check and warn you if you're doing something
-  that might not work with that version of solr. Set now for help in the future. 
+  that might not work with that version of solr. Set now for help in the future.
 
 * solrj_writer.commit_on_close: default false, set to true to have SolrJWriter send an explicit commit message to Solr after indexing.
 
