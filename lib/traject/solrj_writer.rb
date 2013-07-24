@@ -164,7 +164,8 @@ class Traject::SolrJWriter
     server        = server_class.new( settings["solr.url"].to_s );
 
     if parser_name = settings["solrj_writer.parser_class_name"]
-      parser = org.apache.solr.client.solrj.impl.const_get(parser_name).new
+      #parser = org.apache.solr.client.solrj.impl.const_get(parser_name).new
+      parser = Java::JavaClass.for_name("org.apache.solr.client.solrj.impl.#{parser_name}").ruby_class.new
       server.setParser( parser )
     end
 
