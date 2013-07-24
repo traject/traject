@@ -186,10 +186,12 @@ class Traject::Indexer
   def process(io_stream)
     count      =       0
     start_time = Time.now
-    logger.info "beginning Indexer#process"
+    logger.info "beginning Indexer#process with settings: #{settings.inspect}"
 
     reader = self.reader!(io_stream)
     writer = self.writer!
+
+    logger.info "   with reader: #{reader} and writer: #{writer}"
 
     reader.each do |record|
       count += 1
