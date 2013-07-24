@@ -4,6 +4,7 @@ require 'traject'
 require 'traject/qualified_const_get'
 
 require 'uri'
+require 'thread' # for Mutex
 
 #
 # Writes to a Solr using SolrJ, and the SolrJ HttpSolrServer.
@@ -31,11 +32,16 @@ require 'uri'
 #                                    "XMLResponseParser"
 #   [solrj_writer.commit_on_close]  If true (or string 'true'), send a commit to solr
 #                                   at end of #process.
+#   [solrj_writer.batch_size]       If non-nil and more than 1, send documents to
+#                                   solr in batches of solrj_writer.batch_size. If nil/1,
+#                                   however, an http transaction with solr will be done
+#                                   per doc. DEFAULT to 100, which seems to be a sweet spot. 
 class Traject::SolrJWriter
   include Traject::QualifiedConstGet
 
   attr_reader :settings
-  attr_accessor :error_contexts
+
+  attr_accessor :batched_queue
 
   def initialize(argSettings)
     @settings = argSettings
@@ -45,7 +51,8 @@ class Traject::SolrJWriter
 
     solr_server # init
 
-    self.error_contexts = []
+    self.batched_queue = []
+    @batched_queue_mutex = Mutex.new
   end
 
   # Loads solrj if not already loaded. By loading all jars found
@@ -80,23 +87,96 @@ class Traject::SolrJWriter
     org.apache.log4j.Logger.getRootLogger().addAppender(org.apache.log4j.varia.NullAppender.new)
   end
 
+  # Method IS thread-safe, can be called concurrently by multi-threads.
+  #
+  # Why? If not using batched add, we just use the SolrServer, which is already
+  # thread safe itself.
+  #
+  # If we are using batch add, we surround all access to our shared state batch queue
+  # in a mutex -- just a naive implementation. May be able to improve performance
+  # with more sophisticated java.util.concurrent data structure (blocking queue etc)
+  #
+  # this class does not at present use any threads itself, all work will be done
+  # in the calling thread, including actual http transactions to solr via solrj SolrServer
+  # if using batches, then not every #put is a http transaction, but when it is,
+  # it's in the calling thread, synchronously.
   def put(hash)
-    doc = SolrInputDocument.new
+    doc = hash_to_solr_document(hash)
 
+    if settings["solrj_writer.batch_size"].to_i > 1
+      ready_batch = nil
+
+      # Synchronize access to our shared batched_queue state,
+      # but once we've pulled out what we want in local var
+      # `ready_batch`, don't need to synchronize anymore.
+      @batched_queue_mutex.synchronize do
+        batched_queue << doc
+        if batched_queue.length >= settings["solrj_writer.batch_size"].to_i
+          ready_batch = batched_queue.slice!(0, batched_queue.length)
+        end
+      end
+
+      if ready_batch
+        batch_add_documents(ready_batch)
+      end
+    else # non-batched add, add one at a time.
+      rescue_solr_single_add_exception do
+        solr_server.add(doc)
+      end
+    end
+  end
+
+  def hash_to_solr_document(hash)
+    doc = SolrInputDocument.new
     hash.each_pair do |key, value_array|
       value_array.each do |value|
         doc.addField( key, value )
       end
     end
+    return doc
+  end
 
-    # TODO: Buffer docs internally, add in arrays, one http
-    # transaction per array. Is what solrj wiki recommends.
-
+  # Takes array and batch adds it to solr
+  #
+  # Catches error in batch add, logs, and re-tries docs individually
+  #
+  # Is thread-safe, because SolrServer is thread-safe, and we aren't
+  # referencing any other shared state. Important that CALLER passes
+  # in a doc array that is not shared state, extracting it from
+  # shared state batched_queue in a mutex.
+  def batch_add_documents(current_batch)
+    logger.debug("SolrJWriter: batch adding #{current_batch.length} documents")
     begin
-      solr_server.add(doc)
+      solr_server.add( current_batch )
+    rescue Exception => e
+      # Error in batch, none of the docs got added, let's try to re-add
+      # em all individually, so those that CAN get added get added, and those
+      # that can't get individually logged.
+      logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
+      current_batch.each do |doc|
+        rescue_solr_single_add_exception do
+          solr_server.add(doc)
+        end
+      end
+    end
+  end
+
+  # Rescues exceptions thrown by SolrServer.add, logs them, and then raises them
+  # again if deemed fatal and should stop indexing. Only intended to be used on a SINGLE
+  # document add. If we get an exception on a multi-doc batch add, we need to recover
+  # differently.
+  #
+  # eg
+  #
+  # rescue_solr_single_add_exception do
+  #   solr_server.add(doc)
+  # end
+  def rescue_solr_single_add_exception
+    begin
+      yield
     rescue org.apache.solr.common.SolrException, org.apache.solr.client.solrj.SolrServerException  => e
       # Honestly not sure what the difference is between those types, but SolrJ raises both
-      log_exception(e)
+      logger.error("Could not index record\n" + exception_to_log_message(e) )
 
       if fatal_exception? e
         logger.fatal ("SolrJ exception judged fatal, raising...")
@@ -126,11 +206,10 @@ class Traject::SolrJWriter
     return false
   end
 
-  def log_exception(e)
+  def exception_to_log_message(e)
     indent = "    "
 
-    msg = "Could not index record\n"
-    msg += indent + "Exception: " + e.class.name + ": " + e.message + "\n"
+    msg  = indent + "Exception: " + e.class.name + ": " + e.message + "\n"
     msg += indent + e.backtrace.first + "\n"
 
     if (e.respond_to?(:getRootCause) && e.getRootCause && e != e.getRootCause )
@@ -140,14 +219,19 @@ class Traject::SolrJWriter
       msg += indent + caused_by.backtrace.first + "\n"
     end
 
-    logger.error(msg)
-
+    return msg
   end
 
   def close
+    if batched_queue.length > 0
+      # leftovers
+      batch_add_documents( batched_queue.dup )
+      batched_queue.clear
+    end
+
     if settings["solrj_writer.commit_on_close"].to_s == "true"
       logger.info "SolrJWriter: Sending commit to solr..."
-      solr_server.commit 
+      solr_server.commit
     end
 
     solr_server.shutdown
