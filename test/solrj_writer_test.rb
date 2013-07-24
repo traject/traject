@@ -28,7 +28,8 @@ describe "Traject::SolrJWriter" do
         # Use XMLResponseParser just to test, and so it will work
         # with a solr 1.4 test server
         "solrj_writer.parser_class_name" => "XMLResponseParser",
-        "solrj_writer.commit_on_close" => "true"
+        "solrj_writer.commit_on_close" => "true",
+
       }
 
       if ENV["solr_url"]
@@ -56,13 +57,40 @@ describe "Traject::SolrJWriter" do
         assert_kind_of org.apache.solr.client.solrj.impl.XMLResponseParser, @mock.parser
         assert_equal @settings["solr.url"], @mock.url
 
-        assert_equal 1, @mock.docs_added.length
-        assert_kind_of SolrInputDocument, @mock.docs_added.first
+        assert_equal 1, @mock.things_added.length
+        assert_kind_of SolrInputDocument, @mock.things_added.first
 
         assert @mock.committed
         assert @mock.shutted_down
 
       else
+      end
+    end
+
+    describe "with batching of solr docs" do
+      before do
+        @writer.settings["solrj_writer.batch_size"] = 5
+      end
+
+      it "sends all documents" do
+        docs = Array(1..17).collect do |i|
+          {"id" => ["item_#{i}"], "title" => ["To be #{i} again!"]}
+        end
+
+        docs.each do |doc|
+          @writer.put doc
+        end
+        @writer.close
+
+        if @mock
+          # 3 batches of 5, and the leftover 2 (16, 17)
+          assert_length 4, @mock.things_added
+
+          assert_length 5, @mock.things_added[0]
+          assert_length 5, @mock.things_added[1]
+          assert_length 5, @mock.things_added[2]
+          assert_length 2, @mock.things_added[3]
+        end
       end
     end
 
@@ -104,19 +132,19 @@ describe "Traject::SolrJWriter" do
 end
 
 class MockSolrServer
-  attr_accessor :docs_added, :url, :committed, :parser, :shutted_down
+  attr_accessor :things_added, :url, :committed, :parser, :shutted_down
 
   def initialize(url)
     @url =  url
-    @docs_added = []
+    @things_added = []
   end
 
-  def add(solr_input_document)
+  def add(thing)
     if @url == "http://no.such.place"
       raise org.apache.solr.client.solrj.SolrServerException.new("bad uri", java.io.IOException.new)
     end
 
-    docs_added << solr_input_document
+    things_added << thing
   end
 
   def commit
