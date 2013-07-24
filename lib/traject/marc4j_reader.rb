@@ -10,8 +10,9 @@ require 'marc'
 #
 # Also hope it gives us some performance benefit.
 #
-# Uses the Marc4J MarcPermissiveStreamReader, but sometimes
-# in non-permissive mode, according to settings.
+# Uses the Marc4J MarcPermissiveStreamReader for binary, but sometimes
+# in non-permissive mode, according to settings. Uses the Marc4j MarcXmlReader
+# for xml. 
 #
 #
 # Settings:
