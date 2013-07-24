@@ -28,7 +28,7 @@ line.
 * marc4j_reader.permissive: Used by Marc4JReader only when marc.source_type is 'binary', boolean, argument to the underlying MarcPermissiveStreamReader. Default true. 
 
 * marc4j_reader.source_encoding: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
-  b
+  by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
 
 * reader_class_name: a Traject Reader class, used by the indexer as a source of records. Default Traject::MarcReader. See Traject::Indexer for more info. Command-line shortcut `-r`
 
@@ -39,6 +39,9 @@ line.
 * solr.version: Set to eg "1.4.0", "4.3.0"; currently un-used, but in the future will control
   change some default settings, and/or sanity check and warn you if you're doing something
   that might not work with that version of solr. Set now for help in the future.
+
+* solrj_writer.batch_size: size of batches that SolrJWriter will send docs to Solr in. Default 100. Set to nil,
+  0, or 1, and SolrJWriter will do one http transaction per document, no batching. 
 
 * solrj_writer.commit_on_close: default false, set to true to have SolrJWriter send an explicit commit message to Solr after indexing.
 
