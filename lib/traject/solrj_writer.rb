@@ -145,7 +145,10 @@ class Traject::SolrJWriter
   end
 
   def close
-    solr_server.commit if settings["solrj_writer.commit_on_close"].to_s == "true"
+    if settings["solrj_writer.commit_on_close"].to_s == "true"
+      logger.info "SolrJWriter: Sending commit to solr..."
+      solr_server.commit 
+    end
 
     solr_server.shutdown
     @solr_server = nil
