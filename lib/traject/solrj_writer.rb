@@ -53,6 +53,10 @@ class Traject::SolrJWriter
 
     self.batched_queue = []
     @batched_queue_mutex = Mutex.new
+
+    unless @settings.has_key?("solrj_writer.batch_size")
+      @settings["solrj_writer.batch_size"] = 100
+    end
   end
 
   # Loads solrj if not already loaded. By loading all jars found

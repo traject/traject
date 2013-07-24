@@ -22,6 +22,10 @@ describe "Traject::SolrJWriter" do
     assert_raises(ArgumentError) { Traject::SolrJWriter.new("solr.url" => "adfadf") }
   end
 
+  it "defaults to solrj_writer.batch_size of 100" do
+    assert_equal 100, Traject::SolrJWriter.new("solr.url" => "http://example.org/solr").settings["solrj_writer.batch_size"].to_i
+  end
+
   describe "with good setup" do
     before do
       @settings = {
@@ -29,7 +33,7 @@ describe "Traject::SolrJWriter" do
         # with a solr 1.4 test server
         "solrj_writer.parser_class_name" => "XMLResponseParser",
         "solrj_writer.commit_on_close" => "true",
-
+        "solrj_writer.batch_size" => nil
       }
 
       if ENV["solr_url"]
