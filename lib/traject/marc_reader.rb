@@ -34,7 +34,7 @@ class Traject::MarcReader
   @@best_xml_parser = MARC::XMLReader.best_available
 
   def initialize(input_stream, settings)
-    @settings = settings
+    @settings = Traject::Indexer::Settings.new settings
     @input_stream = input_stream
   end
 
