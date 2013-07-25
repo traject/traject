@@ -58,7 +58,7 @@ class Traject::Indexer
 
 
   def initialize
-    @settings = Settings.new(self.class.default_settings)
+    @settings = Settings.new
     @index_steps = []
   end
 
@@ -184,6 +184,8 @@ class Traject::Indexer
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
   def process(io_stream)
+    settings.fill_in_defaults!
+
     count      =       0
     start_time = Time.now
     logger.info "beginning Indexer#process with settings: #{settings.inspect}"
@@ -229,23 +231,37 @@ class Traject::Indexer
     return writer_class.new(settings.merge("logger" => logger))
   end
 
-  def self.default_settings
-    {
-      "reader_class_name" => "Traject::MarcReader",
-      "writer_class_name" => "Traject::SolrJWriter"
-    }
-  end
-
-
 
   # Enhanced with a few features from Hashie, to make it for
   # instance string/symbol indifferent
+  #
+  # #provide(key, value) is added, to do like settings[key] ||= value,
+  # set only if not already set (but unlike ||=, nil or false can count as already set)
+  #
+  # Also has an interesting 'defaults' system, meant to play along
+  # with configuration file 'provide' statements. There is a built-in hash of
+  # defaults, which will be lazily filled in if accessed and not yet
+  # set. (nil can count as set, though!).  If they haven't been lazily
+  # set yet, then #provide will still fill them in. But you can also call
+  # fill_in_defaults! to fill all defaults in, if you know configuration
+  # files have all been loaded, and want to fill them in for inspection.
   class Settings < Hash
     include Hashie::Extensions::MergeInitializer # can init with hash
     include Hashie::Extensions::IndifferentAccess
 
     # Hashie bug Issue #100 https://github.com/intridea/hashie/pull/100
     alias_method :store, :indifferent_writer
+
+    def initialize(*args)
+      super
+      self.default_proc = lambda do |hash, key|
+        if self.class.defaults.has_key?(key)
+          return hash[key] = self.class.defaults[key]
+        else
+          return nil
+        end
+      end
+    end
 
     # a cautious store, which only saves key=value if
     # there was not already a value for #key. Can be used
@@ -266,6 +282,17 @@ class Traject::Indexer
     def reverse_merge!(other_hash)
       replace(reverse_merge(other_hash))
     end
+
+    def fill_in_defaults!
+      self.reverse_merge!(self.class.defaults)
+    end
+
+    def self.defaults
+      @@defaults ||= {
+      "reader_class_name" => "Traject::MarcReader",
+      "writer_class_name" => "Traject::SolrJWriter"
+      }
+  end
 
   end
 
