@@ -1,13 +1,31 @@
 require 'test_helper'
 
-describe "Traject::Indexer#settings" do 
+describe "Traject::Indexer#settings" do
   before do
     @indexer = Traject::Indexer.new
   end
 
-  it "starts out default hash" do
+  it "starts out a Hash, that can fill in it's defaults" do
     assert_kind_of Hash, @indexer.settings
-    assert_equal Traject::Indexer.default_settings, @indexer.settings
+
+    Traject::Indexer::Settings.defaults.each_pair do |key, value|
+      assert_equal value, @indexer.settings[key]
+    end
+  end
+
+  it "can fill_in_defaults!" do
+    @indexer.settings.fill_in_defaults!
+
+    assert_equal Traject::Indexer::Settings.defaults, @indexer.settings
+  end
+
+  it "doesn't overwrite with fill_in_defaults!" do
+    key = Traject::Indexer::Settings.defaults.keys.first
+    @indexer.settings[ key  ] = "MINE KEEP IT"
+
+    @indexer.settings.fill_in_defaults!
+
+    assert_equal "MINE KEEP IT", @indexer.settings[key]
   end
 
   it "can take argument to set" do
@@ -42,7 +60,7 @@ describe "Traject::Indexer#settings" do
     @indexer.settings("four" => "fourth")
 
     {"one" => "original", "two" => "second", "three" => "third", "four" => "fourth"}.each_pair do |key, value|
-      assert_equal value, @indexer.settings[key] 
+      assert_equal value, @indexer.settings[key]
     end
   end
 
@@ -85,7 +103,7 @@ describe "Traject::Indexer#settings" do
   end
 
   it "has reverse_merge!" do
-    settings = Traject::Indexer::Settings.new("a" => "original", "b" => "original") 
+    settings = Traject::Indexer::Settings.new("a" => "original", "b" => "original")
 
     settings.reverse_merge!(:a => "new",  :c => "new")
 
@@ -94,6 +112,10 @@ describe "Traject::Indexer#settings" do
     assert_equal "original", settings["a"]
     assert_equal "original", settings["b"]
     assert_equal "new", settings["c"]
+  end
+
+  describe "defaults" do
+
   end
 
 end
