@@ -40,7 +40,7 @@ class Traject::Marc4JReader
   attr_reader :settings, :input_stream
 
   def initialize(input_stream, settings)
-    @settings     = Traject::Indexer::Settings.new(default_settings).merge(settings)
+    @settings     = Traject::Indexer::Settings.new settings
     @input_stream = input_stream
 
     ensure_marc4j_loaded!
@@ -128,14 +128,6 @@ class Traject::Marc4JReader
     end
 
     return rmarc
-  end
-
-  def default_settings
-    {
-      "marc_source.type" => "binary",
-      "marc4j_reader.permissive" => true,
-      "marc4j_reader.source_encoding" => "MARC8"
-    }
-  end
+  end 
 
 end

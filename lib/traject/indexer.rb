@@ -290,7 +290,11 @@ class Traject::Indexer
     def self.defaults
       @@defaults ||= {
       "reader_class_name" => "Traject::MarcReader",
-      "writer_class_name" => "Traject::SolrJWriter"
+      "writer_class_name" => "Traject::SolrJWriter",
+      "marc_source.type" => "binary",
+      "marc4j_reader.permissive" => true,
+      "marc4j_reader.source_encoding" => "MARC8",
+      "solrj_writer.batch_size" => 100
       }
   end
 
