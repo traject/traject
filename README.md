@@ -9,7 +9,10 @@ them somewhere.
 
 ## Background/Goals
 
-Based on both the successes and failures of previous MARC indexing attempts -- including the venerable SolrMarc which we greatly appreciate and from which we've learned a lot -- I decided that to create a solution that worked at remaining pain points, I needed jruby -- ruby on the JVM.
+I've used previous MARC indexing solutions, and borrowed a lot from their success, including the
+venerable SolrMarc, which we greatly appreciate and from which we've learned a lot. But I realized
+in order to get the solution with the internal architecture, features, and interface I wanted, I
+could do it best in jruby (ruby on the JVM). 
 
 Traject aims to:
 
