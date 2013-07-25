@@ -20,7 +20,7 @@ describe "Traject::Indexer#map_record" do
     it "works with block" do
       called  = false
 
-      @indexer.to_field("title") do |record, accumulator|
+      @indexer.to_field("title") do |record, accumulator, context|
         assert_kind_of MARC::Record, record
         assert_kind_of Array, accumulator
 
@@ -38,7 +38,7 @@ describe "Traject::Indexer#map_record" do
     it "works with a lambda arg" do
       called  = false
 
-      logic = lambda do |record, accumulator|
+      logic = lambda do |record, accumulator, context|
         assert_kind_of MARC::Record, record
         assert_kind_of Array, accumulator
 
@@ -58,11 +58,11 @@ describe "Traject::Indexer#map_record" do
     it "works with both lambda and Proc" do
       block_called = false
 
-      lambda_arg = lambda do |record, accumulator|
+      lambda_arg = lambda do |record, accumulator, context|
         accumulator << "Lambda-provided Value"
       end
 
-      @indexer.to_field("title", lambda_arg) do |record, accumulator|
+      @indexer.to_field("title", lambda_arg) do |record, accumulator, context|
         assert_includes accumulator, "Lambda-provided Value"
         accumulator << "Block-provided Value"
 
