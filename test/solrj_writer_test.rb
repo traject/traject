@@ -2,6 +2,10 @@ require 'test_helper'
 
 require 'traject/solrj_writer'
 
+# It's crazy hard to test this effectively, especially under threading.
+# we do our best to test decently, and keep the tests readable,
+# but some things aren't quite reliable under threading, sorry.
+
 # create's a solrj_writer, maybe with MockSolrServer, maybe
 # with a real one. With settings in @settings, set or change
 # in before blocks
@@ -17,7 +21,7 @@ def create_solrj_writer
 end
 
 
-# Some tests we need to run multiple ties in multiple batch/thread scenarios, 
+# Some tests we need to run multiple ties in multiple batch/thread scenarios,
 # we DRY them up by creating a method to add the tests in different describe blocks
 def test_handles_errors
   it "errors but does not raise on multiple ID's" do
@@ -28,7 +32,6 @@ def test_handles_errors
   it "errors and raises on connection error" do
     @settings.merge!("solr.url" => "http://no.such.place")
     create_solrj_writer
-
     assert_raises org.apache.solr.client.solrj.SolrServerException do
       @writer.put "id" => ["one"]
       # in batch and/or thread scenarios, sometimes no exception raised until close
@@ -46,7 +49,7 @@ end
 #
 # This is pretty limited test right now.
 describe "Traject::SolrJWriter" do
-  $stderr.puts "WARNING: Testing SolrJWriter with mock instance" unless ENV["solr.url"]
+  $stderr.puts "WARNING: Testing SolrJWriter with mock instance, set ENV 'solr_url' to test against real solr" unless ENV["solr_url"]
   before do
     @settings = {
       # Use XMLResponseParser just to test, and so it will work
