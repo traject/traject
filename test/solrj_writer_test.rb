@@ -55,7 +55,7 @@ describe "Traject::SolrJWriter" do
       # Use XMLResponseParser just to test, and so it will work
       # with a solr 1.4 test server
       "solrj_writer.parser_class_name" => "XMLResponseParser",
-      "solrj_writer.commit_on_close" => "true",
+      "solrj_writer.commit_on_close" => "false", # real solr is way too slow if we always have it commit on close
       "solrj_writer.batch_size" => nil
     }
 
