@@ -70,6 +70,11 @@ class Traject::SolrJWriter
     self.batched_queue = []
     @batched_queue_mutex = Mutex.new
 
+    # when multi-threaded exceptions raised in threads are held here
+    # we need a HIGH performance queue here to try and avoid slowing things down,
+    # since we need to check it frequently.
+    @async_exception_queue = java.util.concurrent.ConcurrentLinkedQueue.new
+
     unless @settings.has_key?("solrj_writer.thread_pool")
       @settings["solrj_writer.thread_pool"] = 4
     end
@@ -130,6 +135,8 @@ class Traject::SolrJWriter
   # if using batches, then not every #put is a http transaction, but when it is,
   # it's in the calling thread, synchronously.
   def put(hash)
+    re_raise_async_exception!
+
     doc = hash_to_solr_document(hash)
 
     if settings["solrj_writer.batch_size"].to_i > 1
@@ -199,10 +206,24 @@ class Traject::SolrJWriter
   def maybe_in_thread_pool
     if @thread_pool
       @thread_pool.execute do
-        yield
+        begin
+          yield
+        rescue Exception => e
+          @async_exception_queue.offer(e)
+        end
       end
     else
       yield
+    end
+  end
+
+  # If we are in threaded mode, check the async exception queue,
+  # and re-raise an exception if it has one. This is called from
+  # main thread.
+  def re_raise_async_exception!
+    if @thread_pool && e = @async_exception_queue.poll
+      # exception added in a thread, we raise it here.
+      raise e
     end
   end
 
@@ -268,6 +289,8 @@ class Traject::SolrJWriter
   end
 
   def close
+    re_raise_async_exception!
+
     if batched_queue.length > 0
       # leftovers
       batch_add_documents( batched_queue.dup )
@@ -289,6 +312,9 @@ class Traject::SolrJWriter
       logger.info "SolrJWriter: Thread pool shutdown complete"
     end
 
+    # check again now that we've waited, there could still be some
+    # that didn't show up before.
+    re_raise_async_exception!
 
     if settings["solrj_writer.commit_on_close"].to_s == "true"
       logger.info "SolrJWriter: Sending commit to solr..."
