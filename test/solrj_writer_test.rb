@@ -99,10 +99,22 @@ describe "Traject::SolrJWriter" do
         assert_equal 1, @mock.things_added.length
         assert_kind_of SolrInputDocument, @mock.things_added.first
 
-        assert @mock.committed
         assert @mock.shutted_down
+      end
+    end
 
-      else
+    it "commits on close when so set" do
+      @settings.merge!("solrj_writer.commit_on_close" => "true")
+      create_solrj_writer
+
+      @writer.put "title_t" => ["MY TESTING TITLE"], "id" => ["TEST_TEST_TEST_0001"]
+      @writer.close
+
+      # if it's not a mock, we don't really test anything, except that
+      # no exception was raised. oh well. If it's a mock, we can
+      # ask it.
+      if @mock
+        assert @mock.committed, "mock gets commit called on it"
       end
     end
 
