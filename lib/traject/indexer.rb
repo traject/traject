@@ -164,13 +164,8 @@ class Traject::Indexer
       # with same accumulator.
       [index_step[:lambda], index_step[:block]].each do |aProc|
         if aProc
-          case aProc.arity
-          when 1 then aProc.call(record)
-          when 2 then aProc.call(record, accumulator)
-          else        aProc.call(record, accumulator, context)
-          end
+          aProc.call(record, accumulator, context)
         end
-
       end
 
       (context.output_hash[field_name] ||= []).concat accumulator
