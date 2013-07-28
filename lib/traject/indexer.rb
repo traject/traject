@@ -146,15 +146,33 @@ class Traject::Indexer
     }
   end
 
-  # Processes a single record, according to indexing rules
-  # set up in this Indexer. Returns a hash whose values are
-  # Arrays, and keys are strings.
-  #
-  # contextual_info hash:
-  #   [:position]   1-based i index of record in process
-  def map_record(record, contextual_info = {})
-    context = Context.new(:source_record => record, :settings => settings, :position => contextual_info[:position])
 
+  # Processes a single record according to indexing rules set up in
+  # this indexer. Returns the output hash (a hash whose keys are
+  # string fields, and values are arrays of one or more values in that field)
+  #
+  # This is a convenience shortcut for #map_to_context! -- use that one
+  # if you want to provide addtional context
+  # like position, and/or get back the full context. 
+  def map_record(record)
+    context = Context.new(:source_record => record, :settings => settings)
+    map_to_context!(context)
+    return context.output_hash
+  end
+
+  # Maps a single record INTO the second argument, a Traject::Indexer::Context.
+  #
+  # Context must be passed with a #source_record and #settings, and optionally
+  # a #position. 
+  #
+  # Context will be mutated by this method, most significantly by adding 
+  # an #output_hash, a hash from fieldname to array of values in that field. 
+  #
+  # Pass in a context with a set #position if you want that to be available
+  # to mapping routines. 
+  #
+  # Returns the context passed in as second arg, as a convenience for chaining etc. 
+  def map_to_context!(context)
     @index_steps.each do |index_step|
       accumulator = []
       field_name  = index_step[:field_name]
@@ -165,9 +183,9 @@ class Traject::Indexer
       [index_step[:lambda], index_step[:block]].each do |aProc|
         if aProc
           case aProc.arity
-          when 1 then aProc.call(record)
-          when 2 then aProc.call(record, accumulator)
-          else        aProc.call(record, accumulator, context)
+          when 1 then aProc.call(context.source_record)
+          when 2 then aProc.call(context.source_record, accumulator)
+          else        aProc.call(context.source_record, accumulator, context)
           end
         end
 
@@ -177,7 +195,7 @@ class Traject::Indexer
       context.field_name = nil
     end
 
-    return context.output_hash
+    return context
   end
 
   # Processes a stream of records, reading from the configured Reader,
@@ -197,7 +215,10 @@ class Traject::Indexer
 
     reader.each do |record|
       count += 1
-      writer.put map_record(record, :position => count)
+
+      context = Context.new(:source_record => record, :settings => settings, :position => count)
+      map_to_context!(context)
+      writer.put context.output_hash
     end
     writer.close if writer.respond_to?(:close)
 
