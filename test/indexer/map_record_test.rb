@@ -1,9 +1,9 @@
 require 'test_helper'
 
-describe "Traject::Indexer#map_record" do 
+describe "Traject::Indexer#map_record" do
   before do
     @indexer = Traject::Indexer.new
-    @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first    
+    @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
   end
 
 
@@ -16,7 +16,7 @@ describe "Traject::Indexer#map_record" do
     end
   end
 
-  describe "#to_field" do    
+  describe "#to_field" do
     it "works with block" do
       called  = false
 
@@ -27,7 +27,7 @@ describe "Traject::Indexer#map_record" do
         called = true # by the power of closure!
         accumulator << "Some Title"
       end
-      
+
       output = @indexer.map_record(@record)
 
       assert called
@@ -46,8 +46,8 @@ describe "Traject::Indexer#map_record" do
         accumulator << "Some Title"
       end
 
-      @indexer.to_field("title", logic) 
-      
+      @indexer.to_field("title", logic)
+
       output = @indexer.map_record(@record)
 
       assert called
@@ -103,7 +103,7 @@ describe "Traject::Indexer#map_record" do
         called = true
 
         assert_kind_of Traject::Indexer::Context, context
-        
+
         assert_kind_of Hash, context.clipboard
         assert_kind_of Hash, context.output_hash
 
@@ -138,5 +138,5 @@ describe "Traject::Indexer#map_record" do
     end
 
   end
-  
+
 end
