@@ -18,6 +18,13 @@ module Traject::Macros
     # Second arg is optional options, including options valid on MarcExtractor.new,
     # and others. (TODO)
     #
+    # * :first => true: take only first value
+    # * :translation_map => String: translate with named translation map looked up in load
+    #       path, uses Tranject::TranslationMap.new(translation_map_arg)
+    # * :trim_punctuation => true; trims leading/trailing punctuation using standard algorithms that
+    #     have shown themselves useful with Marc, using Marc21.trim_punctuation
+    # * :default => String: if otherwise empty, add default value
+    #
     # Examples:
     #
     # to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
@@ -26,11 +33,12 @@ module Traject::Macros
     def extract_marc(spec, options = {})
       only_first              = options.delete(:first)
       trim_punctuation        = options.delete(:trim_punctuation)
+      default_value           = options.delete(:default)
 
       # We create the TranslationMap here on load, not inside the closure
       # where it'll be called for every record. Since TranslationMap is supposed
       # to cache, prob doesn't matter, but doens't hurt. Also causes any syntax
-      # exceptions to raise on load. 
+      # exceptions to raise on load.
       if translation_map_arg  = options.delete(:translation_map)
         translation_map = Traject::TranslationMap.new(translation_map_arg)
       end
@@ -48,6 +56,10 @@ module Traject::Macros
 
         if trim_punctuation
           accumulator.collect! {|s| Marc21.trim_punctuation(s)}
+        end
+
+        if default_value && accumulator.empty?
+          accumulator << default_value
         end
       end
     end
@@ -97,7 +109,7 @@ module Traject::Macros
     # All fields in from-to must be marc DATA (not control fields), or weirdness
     #
     # Can always run this thing multiple times on the same field if you need
-    # non-contiguous ranges of fields. 
+    # non-contiguous ranges of fields.
     def extract_all_marc_values(options = {})
       options = {:from => "100", :to => "899", :seperator => ' '}.merge(options)
 
