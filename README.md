@@ -186,7 +186,8 @@ used to define a block of logic that can be stored and executed later. When the 
 
 The third argument is a `Traject::Indexer::Context` object that can
 be used for more advanced functionality, including caching expensive
-per-record calculations, writing out to more than one output field at a time (TODO example), or taking account of current Traject Settings in your logic.
+per-record calculations, writing out to more than one output field at a time (TODO example), or taking account of current Traject Settings in your logic. The third argument is optional, you can supply
+a two-argument block too. 
 
 You can always drop out to this basic direct use whenever you need
 special purpose logic, directly in the config file, writing in
