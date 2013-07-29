@@ -17,8 +17,9 @@ module Traject::Macros
       lambda do |record, accumulator|
         list = MarcExtractor.extract_by_spec(record, extract_fields, :seperator => nil).collect! do |o|
           Marc21Semantics.oclcnum_trim(o)
-        end.uniq!
-        accumulator.concat list
+        end
+
+        accumulator.concat list.uniq if list
       end
     end
     def self.oclcnum_trim(num)
