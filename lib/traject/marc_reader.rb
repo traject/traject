@@ -9,6 +9,9 @@ require 'marc'
 # determine what serialization type to expect, and other parameters controlling
 # de-serialization.
 #
+# NOTE: MarcReader can not handle Marc8 encoding. If you need to read binary
+# records in MARC8, use Traject::Marc4JReader instead.
+#
 # Settings:
 #   ["marc_source.type"]  serialization type. default 'binary'
 #                 * "binary". Actual marc.

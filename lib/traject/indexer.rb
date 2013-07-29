@@ -139,45 +139,107 @@ class Traject::Indexer
 
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
+    if field_name.nil? || field_name.empty?
+      raise ArgumentError.new("to_field requires a non-blank first argument, field name")
+    end
+    [aLambda, block].each do |proc|
+      # allow negative arity, meaning variable/optional, trust em on that.
+      # but for positive arrity, we need 2 or 3 args
+      if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
+        raise ArgumentError.new("block/proc given to to_field needs 2 or 3 arguments: #{proc}")
+      end
+    end
+
+
     @index_steps << {
       :field_name => field_name.to_s,
       :lambda => aLambda,
-      :block  => block
+      :block  => block,
+      :type   => :to_field
     }
   end
 
-  # Processes a single record, according to indexing rules
-  # set up in this Indexer. Returns a hash whose values are
-  # Arrays, and keys are strings.
-  #
-  # contextual_info hash:
-  #   [:position]   1-based i index of record in process
-  def map_record(record, contextual_info = {})
-    context = Context.new(:source_record => record, :settings => settings, :position => contextual_info[:position])
-
-    @index_steps.each do |index_step|
-      accumulator = []
-      field_name  = index_step[:field_name]
-      context.field_name = field_name
-
-      # Might have a lambda arg AND a block, we execute in order,
-      # with same accumulator.
-      [index_step[:lambda], index_step[:block]].each do |aProc|
-        if aProc
-          case aProc.arity
-          when 1 then aProc.call(record)
-          when 2 then aProc.call(record, accumulator)
-          else        aProc.call(record, accumulator, context)
-          end
-        end
-
+  def each_record(aLambda = nil, &block)
+    # arity check
+    [aLambda, block].each do |proc|
+      # allow negative arity, meaning variable/optional, trust em on that.
+      # but for positive arrity, we need 1 or 2 args
+      if proc && (proc.arity == 0 || proc.arity > 2)
+        raise ArgumentError.new("block/proc given to to_field needs 1 or 2 arguments: #{proc}")
       end
-
-      (context.output_hash[field_name] ||= []).concat accumulator
-      context.field_name = nil
     end
 
+    @index_steps << {
+      :lambda => aLambda,
+      :block  => block,
+      :type   => :each_record
+    }
+  end
+
+
+  # Processes a single record according to indexing rules set up in
+  # this indexer. Returns the output hash (a hash whose keys are
+  # string fields, and values are arrays of one or more values in that field)
+  #
+  # This is a convenience shortcut for #map_to_context! -- use that one
+  # if you want to provide addtional context
+  # like position, and/or get back the full context.
+  def map_record(record)
+    context = Context.new(:source_record => record, :settings => settings)
+    map_to_context!(context)
     return context.output_hash
+  end
+
+  # Maps a single record INTO the second argument, a Traject::Indexer::Context.
+  #
+  # Context must be passed with a #source_record and #settings, and optionally
+  # a #position.
+  #
+  # Context will be mutated by this method, most significantly by adding
+  # an #output_hash, a hash from fieldname to array of values in that field.
+  #
+  # Pass in a context with a set #position if you want that to be available
+  # to mapping routines.
+  #
+  # Returns the context passed in as second arg, as a convenience for chaining etc.
+  def map_to_context!(context)
+    @index_steps.each do |index_step|
+
+
+      if index_step[:type] == :to_field
+        accumulator = []
+        context.field_name = index_step[:field_name]
+
+        # Might have a lambda arg AND a block, we execute in order,
+        # with same accumulator.
+        [index_step[:lambda], index_step[:block]].each do |aProc|
+          if aProc
+            if aProc.arity == 2
+              aProc.call(context.source_record, accumulator)
+            else
+              aProc.call(context.source_record, accumulator, context)
+            end
+          end
+        end
+        (context.output_hash[context.field_name] ||= []).concat accumulator
+        context.field_name = nil
+      elsif index_step[:type] == :each_record
+        # one or two arg
+        [index_step[:lambda], index_step[:block]].each do |aProc|
+          if aProc
+            if aProc.arity == 1
+              aProc.call(context.source_record)
+            else
+              aProc.call(context.source_record, context)
+            end
+          end
+        end
+      else
+        raise ArgumentError.new("An @index_step we don't know how to deal with: #{@index_step}")
+      end
+    end
+
+    return context
   end
 
   # Processes a stream of records, reading from the configured Reader,
@@ -197,7 +259,10 @@ class Traject::Indexer
 
     reader.each do |record|
       count += 1
-      writer.put map_record(record, :position => count)
+
+      context = Context.new(:source_record => record, :settings => settings, :position => count)
+      map_to_context!(context)
+      writer.put context.output_hash
     end
     writer.close if writer.respond_to?(:close)
 
@@ -289,11 +354,11 @@ class Traject::Indexer
 
     def self.defaults
       @@defaults ||= {
-      "reader_class_name" => "Traject::MarcReader",
+      "reader_class_name" => "Traject::Marc4jReader",
       "writer_class_name" => "Traject::SolrJWriter",
       "marc_source.type" => "binary",
       "marc4j_reader.permissive" => true,
-      "marc4j_reader.source_encoding" => "MARC8",
+      "marc4j_reader.source_encoding" => "BESTGUESS",
       "solrj_writer.batch_size" => 100
       }
   end
@@ -317,7 +382,7 @@ class Traject::Indexer
 
     attr_accessor :clipboard, :output_hash
     attr_accessor :field_name, :source_record, :settings
-    # 1-based position in stream of processed records. 
+    # 1-based position in stream of processed records.
     attr_accessor :position
   end
 end

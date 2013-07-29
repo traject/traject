@@ -12,7 +12,7 @@ them somewhere.
 I've used previous MARC indexing solutions, and borrowed a lot from their success, including the
 venerable SolrMarc, which we greatly appreciate and from which we've learned a lot. But I realized
 in order to get the solution with the internal architecture, features, and interface I wanted, I
-could do it best in jruby (ruby on the JVM). 
+could do it best in jruby (ruby on the JVM).
 
 Traject aims to:
 
@@ -77,6 +77,14 @@ settings do
 
   # various others...
   provide "solrj_writer.commit_on_close", "true"
+
+  # By default, we use the Traject::Marc4JReader, which
+  # can read marc8 and ISO8859_1 -- if your records are all in UTF8,
+  # the pure-ruby MarcReader may be faster...
+  # provide "reader_class_name", "Traject::MarcReader"
+  # If you ARE using the Marc4JReader, it defaults to "BESTGUESS"
+  # as to encoding when reading binary, you may want to tell it instead
+  provide "marc4j_reader.source_encoding", "MARC8" # or UTF-8 or ISO8859_1
 end
 ~~~
 
@@ -84,7 +92,7 @@ end
 setting wins, and command-line comes first of all and overrides everything.
 You can also use `store` if you want to force-set, last set wins.
 
-See, docs page on [Settings][./doc/settings.md] for list
+See, docs page on [Settings](./doc/settings.md) for list
 of all standardized settings.
 
 ### Indexing Rules
@@ -166,7 +174,7 @@ for mapping form MARC codes to user-displayable strings. See Traject::Translatio
 
 #### Direct indexing logic vs. Macros
 
-It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values, and `extract_marc` -- are what Traject calls 'macros'.
+It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values`, and `extract_marc` -- are what Traject calls 'macros'.
 
 They are all actually built based upon a more basic element of
 indexing functionality, which you can always drop down to, and
@@ -186,7 +194,8 @@ used to define a block of logic that can be stored and executed later. When the 
 
 The third argument is a `Traject::Indexer::Context` object that can
 be used for more advanced functionality, including caching expensive
-per-record calculations, writing out to more than one output field at a time (TODO example), or taking account of current Traject Settings in your logic.
+per-record calculations, writing out to more than one output field at a time, or taking account of current Traject Settings in your logic. The third argument is optional, you can supply
+a two-argument block too.
 
 You can always drop out to this basic direct use whenever you need
 special purpose logic, directly in the config file, writing in
@@ -210,7 +219,7 @@ to_field "weirdo" do |record, accumulator, context|
    list = list.join(" ")
    accumulator << list
 end
-~~~~
+~~~
 
 You can also *combine* a macro and a direct block for some
 post-processing. In this case, the `accumulator` parameter
@@ -227,6 +236,33 @@ end
 If you find yourself repeating code a lot in direct blocks, you
 can supply your _own_ macros, for local use, or even to share
 with others in a ruby gem. See docs [Macros](./doc/macros.md)
+
+#### each_record
+
+There is also a method `each_record`, which is like `to_field`, but without
+a specific field. It can be used for other side-effects of your choice, or
+even for writing to multiple fields.
+
+~~~ruby
+  each_record do |record, context|
+    # example of writing to two fields at once.
+    (x, y) = Something.do_stuff
+    (context["one_field"] ||= [])     << x
+    (context["another_field"] ||= []) << y
+  end
+~~~
+
+You could write or use macros for `each_record` too. It's suggested that
+such a macro take the field names it will effect as arguments (example?)
+
+`each_record` and `to_field` calls will be processed in one big order, guaranteed
+in order.
+
+~~~ruby
+  to_field("foo") {...}  # will be called first on each record
+  each_record {...}      # will always be called AFTER above has potentially added values
+  to_field("foo") {...}  # and will be called after each of the preceding for each record
+~~~
 
 ## Command Line
 
@@ -307,7 +343,7 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
     (I want all of this code BUT the Solr writing stuff to be usable under MRI too,
      I want to repurpose the mapping code for DISPLAY too)
   * Do need to get SolrJWriter error logging to log recordID and position number
-    of skipped record. A pain cause of current seperation of concerns architecture. 
+    of skipped record. A pain cause of current seperation of concerns architecture.
 
 * Error handling. Related to logging. Catch errors indexing
   particular records, make
@@ -320,7 +356,7 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
   * Put them in their own gem
   * Make the end-user download them theirselves, possibly providing the ivy.xml's to do so for
     them.
-  * Oh, this applies to Marc4J jars used by the Marc4JReader too. 
+  * Oh, this applies to Marc4J jars used by the Marc4JReader too.
 
 * Various performance improvements, this is not optimized yet. Some improvements
   may challenge architecture, when they involve threading.
