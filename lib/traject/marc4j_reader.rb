@@ -12,8 +12,11 @@ require 'marc'
 #
 # Uses the Marc4J MarcPermissiveStreamReader for binary, but sometimes
 # in non-permissive mode, according to settings. Uses the Marc4j MarcXmlReader
-# for xml. 
+# for xml.
 #
+# NOTE: If you aren't reading in binary records encoded in MARC8, you may
+# find the pure-ruby Traject::MarcReader faster; the extra step to read
+# Marc4J but translate to ruby MARC::Record adds some overhead.
 #
 # Settings:
 #
@@ -49,7 +52,7 @@ class Traject::Marc4JReader
     # Loads solrj if not already loaded. By loading all jars found
   # in settings["solrj.jar_dir"]
   def ensure_marc4j_loaded!
-    unless defined?(MarcPermissiveStreamReader) 
+    unless defined?(MarcPermissiveStreamReader)
       require 'java'
 
       tries = 0
@@ -128,6 +131,6 @@ class Traject::Marc4JReader
     end
 
     return rmarc
-  end 
+  end
 
 end
