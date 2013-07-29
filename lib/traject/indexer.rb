@@ -4,6 +4,7 @@ require 'yell'
 require 'traject'
 require 'traject/qualified_const_get'
 require 'traject/marc_reader'
+require 'traject/marc4j_reader'
 require 'traject/json_writer'
 require 'traject/solrj_writer'
 
@@ -354,7 +355,7 @@ class Traject::Indexer
 
     def self.defaults
       @@defaults ||= {
-      "reader_class_name" => "Traject::Marc4jReader",
+      "reader_class_name" => "Traject::Marc4JReader",
       "writer_class_name" => "Traject::SolrJWriter",
       "marc_source.type" => "binary",
       "marc4j_reader.permissive" => true,
