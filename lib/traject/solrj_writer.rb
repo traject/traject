@@ -164,12 +164,10 @@ class Traject::SolrJWriter
       end
 
       if ready_batch
-        batch_add_documents(ready_batch)
+        maybe_in_thread_pool { batch_add_documents(ready_batch) }
       end
     else # non-batched add, add one at a time.
-      maybe_in_thread_pool do
-        add_one_document(doc)
-      end
+      maybe_in_thread_pool { add_one_document(doc) }
     end
   end
 
@@ -192,18 +190,16 @@ class Traject::SolrJWriter
   # in a doc array that is not shared state, extracting it from
   # shared state batched_queue in a mutex.
   def batch_add_documents(current_batch)
-    maybe_in_thread_pool do
-      logger.debug("SolrJWriter: batch adding #{current_batch.length} documents")
-      begin
-        solr_server.add( current_batch )
-      rescue Exception => e
-        # Error in batch, none of the docs got added, let's try to re-add
-        # em all individually, so those that CAN get added get added, and those
-        # that can't get individually logged.
-        logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
-        current_batch.each do |doc|
-          add_one_document(doc)
-        end
+    logger.debug("SolrJWriter: batch adding #{current_batch.length} documents")
+    begin
+      solr_server.add( current_batch )
+    rescue Exception => e
+      # Error in batch, none of the docs got added, let's try to re-add
+      # em all individually, so those that CAN get added get added, and those
+      # that can't get individually logged.
+      logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
+      current_batch.each do |doc|
+        add_one_document(doc)
       end
     end
   end
@@ -296,9 +292,14 @@ class Traject::SolrJWriter
     re_raise_async_exception!
 
     if batched_queue.length > 0
-      # leftovers
-      batch_add_documents( batched_queue.dup )
+      # leftovers, dup em so we can pass em into a thread happily
+      docs = batched_queue.dup
       batched_queue.clear
+
+      # we do it in the thread pool just for consistency, and so
+      # it goes to the end of the queue behind any outstanding
+      # work in the pool.
+      maybe_in_thread_pool { batch_add_documents( docs ) }
     end
 
     if @thread_pool
