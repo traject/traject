@@ -70,7 +70,7 @@ to_field "issn_related",      extract_marc("490x:440x:800x:400x:410x:411x:810x:8
 
 to_field "oclcnum_t",         extract_marc("035a") do |marc_record, accumulator|
   accumulator.collect! do |o|
-    o.gsub(/\A(ocm)|(ocn)|(\(OCoLC\))/, '')
+    o.gsub(/\A(ocm)|(ocn)|(on)|(\(OCoLC\))/, '')
   end.uniq!
 end
 
