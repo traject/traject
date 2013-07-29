@@ -26,17 +26,17 @@ module Traject
     # Third arg is an optional options hash that will be passed as
     # third arg of MarcExtractor constructor.
     def self.extract_by_spec(marc_record, specification, options = {})
-      (raise IllegalArgument, "first argument must not be nil") if marc_record.nil?
-
-      unless specification.kind_of? Hash
-        specification = self.parse_string_spec(specification)
-      end
+      (raise ArgumentError, "first argument must not be nil") if marc_record.nil?
 
       Traject::MarcExtractor.new(marc_record, specification, options).extract
     end
 
     # Take a hash that's the output of #parse_string_spec, return
     # an array of strings extracted from a marc record accordingly
+    #
+    # Second arg can either be a string specification that will be passed
+    # to MarcExtractor.parse_string_spec, or a Hash that's
+    # already been created by it.
     #
     # options:
     #
@@ -47,16 +47,15 @@ module Traject
     #                     that match spec. Also:
     #                     * false => do not include.
     #                     * :only => only include linked 880s, not original
-    def initialize(marc_record, spec_hash, options = {})
+    def initialize(marc_record, spec, options = {})
       self.options = {
         :seperator => ' ',
         :alternate_script => :include
       }.merge(options)
 
-      raise IllegalArgument.new("second arg to MarcExtractor.new must be a Hash specification object") unless spec_hash.kind_of? Hash
-
       self.marc_record = marc_record
-      self.spec_hash = spec_hash
+
+      self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
     end
 
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
