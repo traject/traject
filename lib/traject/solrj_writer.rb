@@ -60,6 +60,16 @@ require 'thread' # for Mutex
 #                                   however, an http transaction with solr will be done
 #                                   per doc. DEFAULT to 100, which seems to be a sweet spot.
 class Traject::SolrJWriter
+  # just a tuple of a SolrInputDocument
+  # and a Traject::Indexer::Context it came from
+  class UpdatePackage
+    attr_accessor :solr_document, :context
+    def initialize(doc, ctx)
+      self.solr_document = doc
+      self.context = ctx
+    end
+  end
+
   include Traject::QualifiedConstGet
 
   attr_reader :settings
@@ -146,11 +156,12 @@ class Traject::SolrJWriter
   # if using batches, then not every #put is a http transaction, but when it is,
   # it's in the calling thread, synchronously.
   def put(context)
-    hash = context.output_hash
-    
     re_raise_async_exception!
 
-    doc = hash_to_solr_document(hash)
+    # package the SolrInputDocument along with the context, so we have
+    # the context for error reporting when we actually add.
+
+    package = UpdatePackage.new(hash_to_solr_document(context.output_hash), context)
 
     if settings["solrj_writer.batch_size"].to_i > 1
       ready_batch = nil
@@ -159,17 +170,17 @@ class Traject::SolrJWriter
       # but once we've pulled out what we want in local var
       # `ready_batch`, don't need to synchronize anymore.
       @batched_queue_mutex.synchronize do
-        batched_queue << doc
+        batched_queue << package
         if batched_queue.length >= settings["solrj_writer.batch_size"].to_i
           ready_batch = batched_queue.slice!(0, batched_queue.length)
         end
       end
 
       if ready_batch
-        maybe_in_thread_pool { batch_add_documents(ready_batch) }
+        maybe_in_thread_pool { batch_add_document_packages(ready_batch) }
       end
     else # non-batched add, add one at a time.
-      maybe_in_thread_pool { add_one_document(doc) }
+      maybe_in_thread_pool { add_one_document_package(package) }
     end
   end
 
@@ -183,7 +194,8 @@ class Traject::SolrJWriter
     return doc
   end
 
-  # Takes array and batch adds it to solr
+  # Takes array and batch adds it to solr -- array of UpdatePackage tuples of
+  # SolrInputDocument and context.
   #
   # Catches error in batch add, logs, and re-tries docs individually
   #
@@ -191,17 +203,17 @@ class Traject::SolrJWriter
   # referencing any other shared state. Important that CALLER passes
   # in a doc array that is not shared state, extracting it from
   # shared state batched_queue in a mutex.
-  def batch_add_documents(current_batch)
+  def batch_add_document_packages(current_batch)
     logger.debug("SolrJWriter: batch adding #{current_batch.length} documents")
     begin
-      solr_server.add( current_batch )
+      solr_server.add( current_batch.collect {|package| package.solr_document } )
     rescue Exception => e
       # Error in batch, none of the docs got added, let's try to re-add
       # em all individually, so those that CAN get added get added, and those
       # that can't get individually logged.
       logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
-      current_batch.each do |doc|
-        add_one_document(doc)
+      current_batch.each do |package|
+        add_one_document_package(package)
       end
     end
   end
@@ -232,15 +244,16 @@ class Traject::SolrJWriter
     end
   end
 
-  # Adds a single SolrInputDocument passed in.
+  # Adds a single SolrInputDocument passed in as an UpdatePackage combo of SolrInputDocument
+  # and context.
   #
   # Rescues exceptions thrown by SolrServer.add, logs them, and then raises them
   # again if deemed fatal and should stop indexing. Only intended to be used on a SINGLE
   # document add. If we get an exception on a multi-doc batch add, we need to recover
   # differently.
-  def add_one_document(doc)
+  def add_one_document_package(package)
     begin
-      solr_server.add(doc)
+      solr_server.add(package.solr_document)
     rescue org.apache.solr.common.SolrException, org.apache.solr.client.solrj.SolrServerException  => e
       # Honestly not sure what the difference is between those types, but SolrJ raises both
       logger.error("Could not index record\n" + exception_to_log_message(e) )
@@ -295,13 +308,13 @@ class Traject::SolrJWriter
 
     if batched_queue.length > 0
       # leftovers, dup em so we can pass em into a thread happily
-      docs = batched_queue.dup
+      packages = batched_queue.dup
       batched_queue.clear
 
       # we do it in the thread pool just for consistency, and so
       # it goes to the end of the queue behind any outstanding
       # work in the pool.
-      maybe_in_thread_pool { batch_add_documents( docs ) }
+      maybe_in_thread_pool { batch_add_document_packages( packages ) }
     end
 
     if @thread_pool
