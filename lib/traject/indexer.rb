@@ -145,7 +145,7 @@ class Traject::Indexer
     [aLambda, block].each do |proc|
       # allow negative arity, meaning variable/optional, trust em on that.
       # but for positive arrity, we need 2 or 3 args
-      if proc && (proc.arity == 1 || proc.arity > 3)
+      if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
         raise ArgumentError.new("block/proc given to to_field needs 2 or 3 arguments: #{proc}")
       end
     end
@@ -154,7 +154,25 @@ class Traject::Indexer
     @index_steps << {
       :field_name => field_name.to_s,
       :lambda => aLambda,
-      :block  => block
+      :block  => block,
+      :type   => :to_field
+    }
+  end
+
+  def each_record(aLambda = nil, &block)
+    # arity check
+    [aLambda, block].each do |proc|
+      # allow negative arity, meaning variable/optional, trust em on that.
+      # but for positive arrity, we need 1 or 2 args
+      if proc && (proc.arity == 0 || proc.arity > 2)
+        raise ArgumentError.new("block/proc given to to_field needs 1 or 2 arguments: #{proc}")
+      end
+    end
+
+    @index_steps << {
+      :lambda => aLambda,
+      :block  => block,
+      :type   => :each_record
     }
   end
 
@@ -186,25 +204,39 @@ class Traject::Indexer
   # Returns the context passed in as second arg, as a convenience for chaining etc.
   def map_to_context!(context)
     @index_steps.each do |index_step|
-      accumulator = []
-      field_name  = index_step[:field_name]
-      context.field_name = field_name
 
-      # Might have a lambda arg AND a block, we execute in order,
-      # with same accumulator.
-      [index_step[:lambda], index_step[:block]].each do |aProc|
-        if aProc
-          if aProc.arity == 2
-            aProc.call(context.source_record, accumulator)
-          else
-            aProc.call(context.source_record, accumulator, context)
+
+      if index_step[:type] == :to_field
+        accumulator = []
+        context.field_name = index_step[:field_name]
+
+        # Might have a lambda arg AND a block, we execute in order,
+        # with same accumulator.
+        [index_step[:lambda], index_step[:block]].each do |aProc|
+          if aProc
+            if aProc.arity == 2
+              aProc.call(context.source_record, accumulator)
+            else
+              aProc.call(context.source_record, accumulator, context)
+            end
           end
         end
-
+        (context.output_hash[context.field_name] ||= []).concat accumulator
+        context.field_name = nil
+      elsif index_step[:type] == :each_record
+        # one or two arg
+        [index_step[:lambda], index_step[:block]].each do |aProc|
+          if aProc
+            if aProc.arity == 1
+              aProc.call(context.source_record)
+            else
+              aProc.call(context.source_record, context)
+            end
+          end
+        end
+      else
+        raise ArgumentError.new("An @index_step we don't know how to deal with: #{@index_step}")
       end
-
-      (context.output_hash[field_name] ||= []).concat accumulator
-      context.field_name = nil
     end
 
     return context

@@ -118,6 +118,54 @@ describe "Traject::Indexer#map_record" do
     end
   end
 
+  describe "#each_record" do
+    it "is called with one-arg record" do
+      called = false
+      @indexer.each_record do |record|
+        called = true
+        assert_kind_of MARC::Record, record
+      end
+      @indexer.map_record(@record)
+
+      assert called, "each_record was called"
+    end
+    it "is called with two-arg record and context" do
+      called = false
+      @indexer.each_record do |record, context|
+        called = true
+        assert_kind_of MARC::Record, record
+        assert_kind_of Traject::Indexer::Context, context
+      end
+      @indexer.map_record(@record)
+
+      assert called, "each_record was called"
+    end
+    it "accepts lambda AND block" do
+      lambda_arg = lambda do |record, context|
+        context.output_hash["field"] ||= []
+        context.output_hash["field"] << "first"
+      end
+
+      @indexer.each_record(lambda_arg) do |record, context|
+        context.output_hash["field"] ||= []
+        context.output_hash["field"] << "second"
+      end
+
+      output = @indexer.map_record(@record)
+
+      assert_equal %w{first second}, output["field"]
+    end
+    it "is called in order with #to_field" do
+      @indexer.to_field("foo") {|record, accumulator| accumulator << "first"}
+      @indexer.each_record {|record, context| context.output_hash["foo"] << "second" }
+      @indexer.to_field("foo") {|record, accumulator| accumulator << "third"}
+
+      output = @indexer.map_record(@record)
+
+      assert_equal %w{first second third}, output["foo"]
+    end
+  end
+
   describe "map_to_context!" do
     before do
       @context = Traject::Indexer::Context.new(:source_record => @record, :settings => @indexer.settings, :position => 10 )
