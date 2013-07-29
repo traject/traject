@@ -143,7 +143,7 @@ class Traject::Indexer
       raise ArgumentError.new("to_field requires a non-blank first argument, field name")
     end
     [aLambda, block].each do |proc|
-      # allow negative arity, meaning variable/optional, trust em on that. 
+      # allow negative arity, meaning variable/optional, trust em on that.
       # but for positive arrity, we need 2 or 3 args
       if proc && (proc.arity == 1 || proc.arity > 3)
         raise ArgumentError.new("block/proc given to to_field needs 2 or 3 arguments: #{proc}")
@@ -165,7 +165,7 @@ class Traject::Indexer
   #
   # This is a convenience shortcut for #map_to_context! -- use that one
   # if you want to provide addtional context
-  # like position, and/or get back the full context. 
+  # like position, and/or get back the full context.
   def map_record(record)
     context = Context.new(:source_record => record, :settings => settings)
     map_to_context!(context)
@@ -175,15 +175,15 @@ class Traject::Indexer
   # Maps a single record INTO the second argument, a Traject::Indexer::Context.
   #
   # Context must be passed with a #source_record and #settings, and optionally
-  # a #position. 
+  # a #position.
   #
-  # Context will be mutated by this method, most significantly by adding 
-  # an #output_hash, a hash from fieldname to array of values in that field. 
+  # Context will be mutated by this method, most significantly by adding
+  # an #output_hash, a hash from fieldname to array of values in that field.
   #
   # Pass in a context with a set #position if you want that to be available
-  # to mapping routines. 
+  # to mapping routines.
   #
-  # Returns the context passed in as second arg, as a convenience for chaining etc. 
+  # Returns the context passed in as second arg, as a convenience for chaining etc.
   def map_to_context!(context)
     @index_steps.each do |index_step|
       accumulator = []
@@ -194,10 +194,10 @@ class Traject::Indexer
       # with same accumulator.
       [index_step[:lambda], index_step[:block]].each do |aProc|
         if aProc
-          case aProc.arity
-          when 1 then aProc.call(context.source_record)
-          when 2 then aProc.call(context.source_record, accumulator)
-          else        aProc.call(context.source_record, accumulator, context)
+          if aProc.arity == 2
+            aProc.call(context.source_record, accumulator)
+          else
+            aProc.call(context.source_record, accumulator, context)
           end
         end
 
@@ -350,7 +350,7 @@ class Traject::Indexer
 
     attr_accessor :clipboard, :output_hash
     attr_accessor :field_name, :source_record, :settings
-    # 1-based position in stream of processed records. 
+    # 1-based position in stream of processed records.
     attr_accessor :position
   end
 end
