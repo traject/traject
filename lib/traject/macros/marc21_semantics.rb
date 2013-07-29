@@ -51,7 +51,7 @@ module Traject::Macros
       onexx = onexx.strip if onexx
 
       titles = []
-      MarcExtractor.new(record, MarcExtractor.parse_string_spec("240:245"), :first => true).each_matching_line do |field, spec|
+      MarcExtractor.new(record, "240:245", :first => true).each_matching_line do |field, spec|
         non_filing = field.indicator2.to_i
 
         str = field.subfields.collect {|sf| sf.value}.join(" ")
@@ -63,5 +63,26 @@ module Traject::Macros
 
       return "#{onexx}#{title}"
     end
+
+
+    # 245 a and b, with non-filing characters stripped off
+    def sortable_title
+      lambda do |record, accumulator|
+        accumulator << Marc21Semantics.get_sortable_title(record)
+      end
+    end
+    def self.get_sortable_title(record)
+      MarcExtractor.new(record, "245ab").collect_matching_lines do |field, spec, extractor|
+        str = extractor.collect_subfields(field, spec).first
+
+        non_filing = field.indicator2.to_i
+        str = str.slice(non_filing, str.length)
+        str = Marc21.trim_punctuation(str)
+
+        str
+      end.first
+    end
+
+
   end
 end

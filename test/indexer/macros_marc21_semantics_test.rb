@@ -49,4 +49,20 @@ describe "Traject::Macros::Marc21Semantics" do
       assert_equal ["Business renaissance quarterly [electronic resource]."], output["author_sort"]
     end
   end
+
+  describe "sortable_title" do
+    before do
+      @indexer.instance_eval { to_field "title_sort", sortable_title }
+    end
+    it "works" do 
+      output = @indexer.map_record(@record)
+      assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title_sort"]
+    end
+    it "respects non-filing" do
+      @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_equal ["Business renaissance quarterly"], output["title_sort"]
+    end
+  end
 end
