@@ -84,7 +84,7 @@ end
 setting wins, and command-line comes first of all and overrides everything.
 You can also use `store` if you want to force-set, last set wins.
 
-See, docs page on [Settings][./doc/settings.md] for list
+See, docs page on [Settings](./doc/settings.md) for list
 of all standardized settings.
 
 ### Indexing Rules
@@ -166,7 +166,7 @@ for mapping form MARC codes to user-displayable strings. See Traject::Translatio
 
 #### Direct indexing logic vs. Macros
 
-It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values, and `extract_marc` -- are what Traject calls 'macros'.
+It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values`, and `extract_marc` -- are what Traject calls 'macros'.
 
 They are all actually built based upon a more basic element of
 indexing functionality, which you can always drop down to, and
@@ -228,6 +228,8 @@ end
 If you find yourself repeating code a lot in direct blocks, you
 can supply your _own_ macros, for local use, or even to share
 with others in a ruby gem. See docs [Macros](./doc/macros.md)
+
+#### each_record
 
 There is also a method `each_record`, which is like `to_field`, but without
 a specific field. It can be used for other side-effects of your choice, or
