@@ -41,7 +41,7 @@ module Traject::Macros
     # you might want.
     #
     # these probably should be taking only certain subfields, but we're copying
-    # from SolrMarc that didn't do so either and nobody noticed, so not bothering for now. 
+    # from SolrMarc that didn't do so either and nobody noticed, so not bothering for now.
     def marc_sortable_author
       lambda do |record, accumulator|
         accumulator << Marc21Semantics.get_sortable_author(record)
@@ -89,7 +89,7 @@ module Traject::Macros
     # Can specify other spec if you want, say, 041b (lang of abstract)
     # or 041e (lang of librettos), or 041h (lang of original) instead or in addition.
     #
-    # de-dups values so you don't get the same one twice. 
+    # de-dups values so you don't get the same one twice.
     #
     # Exact spec of #marc_languages may change with new user data on what
     # works best.
@@ -119,6 +119,48 @@ module Traject::Macros
       end
     end
 
+    # Adds in marc fields in spec (default is recommended series spec, but you can specify your own)
+    # -- only trick is that 490's are skipped of first indicator is 1 -- if 490 first
+    # indicator is "1", "series traced", that means the series title mentioned here is
+    # already covered by another field we're including, so we don't want to double count it, possibly
+    # with slight variation.
+    def marc_series_facet(spec = "440a:490a:800abcdt:810abcdt:811acdeft:830adfgklmnoprst")
+      lambda do |record, accumulator|
+        MarcExtractor.new(record, spec).collect_matching_lines do |field, spec, extractor|
+          extractor.collect_subfields(field, spec) unless (field.tag == "490" && field.indicator1 == "1")
+        end
+      end
+    end
+
+
+    # Takes marc 048ab instrument code, and translates it to human-displayable
+    # string. Takes first two chars of 048a or b, to translate (ignores numeric code)
+    #
+    # Pass in custom spec if you want just a or b, to seperate soloists or whatever.
+    def marc_instrumentation_humanized(spec = "048ab", options = {})
+      translation_map = Traject::TranslationMap.new(options[:translation_map] || "marc_instruments")
+
+      lambda do |record, accumulator|
+        values = Traject::MarcExtractor.extract_by_spec(record, spec, :seperator => nil)
+        human = values.collect do |value|
+          translation_map[ value.slice(0, 2) ]
+        end.uniq
+        accumulator.concat human if human && human.length > 0
+      end
+    end
+
+    # This weird one actually returns marc instrumentation codes, not
+    # humanized. But it normalizes them by breaking them down into a numeric and non-numeric
+    # version. For instance "ba01" will be indexed as both "ba01" and "ba".
+    # ALSO, if the code is in a subfield b (soloist), it'll be indexed
+    # _additionally_ as "ba01.s" and "ba.s".
+    #
+    # This has proven useful for expert music librarian searching.
+    #def marc_instrument_code_normalized
+    #  MarcExtractor.new(record, "048").collect_matching_lines do |field, spec, extractor|
+
+    #  end
+    #end
 
   end
 end

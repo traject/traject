@@ -79,4 +79,19 @@ describe "Traject::Macros::Marc21Semantics" do
     end
   end
 
+  describe "marc_instrumentation_humanized" do
+    before do
+      @record = MARC::Reader.new(support_file_path  "musical_cage.marc").to_a.first
+      @indexer.instance_eval {to_field "instrumentation", marc_instrumentation_humanized }
+    end
+
+    it "translates, de-duping" do
+      output = @indexer.map_record(@record)
+
+      assert_equal ["Larger ensemble, Unspecified", "Piano", "Soprano voice", "Tenor voice", "Violin", "Larger ensemble, Ethnic", "Guitar", "Voices, Unspecified"], output["instrumentation"]
+    end
+
+
+  end
+
 end
