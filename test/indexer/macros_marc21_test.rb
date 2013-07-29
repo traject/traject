@@ -44,8 +44,8 @@ describe "Traject::Macros::Marc21" do
       end
 
       output = @indexer.map_record(@record)
-
-      assert ! output["title"].first.end_with?("/"), "does not end with /"
+      
+      assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title"]
     end
 
     it "Marc21::trim_punctuation class method" do
