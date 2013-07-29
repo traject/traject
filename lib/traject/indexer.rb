@@ -36,6 +36,8 @@ require 'traject/macros/basic'
 #     a hash of mapped keys/values. The writer should write them
 #     to the appropriate place.
 #  3) Responds to a #close method, called when we're done.
+#  4) Optionally implements a #skipped_record_count method, returning int count of records
+#     that were skipped due to errors (and presumably logged)
 #
 #  The default writer (will be) the SolrWriter , which is configured
 #  through additional Settings as well. A JsonWriter is also available,

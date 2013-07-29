@@ -27,6 +27,7 @@ def test_handles_errors
   it "errors but does not raise on multiple ID's" do
     @writer.put "id" => ["one", "two"]
     @writer.close
+    assert_equal 1, @writer.skipped_record_count, "counts skipped record"
   end
 
   it "errors and raises on connection error" do
@@ -214,10 +215,15 @@ class MockSolrServer
   def add(thing)
     @add_mutex.synchronize do # easy peasy threadsafety for our mock
       if @url == "http://no.such.place"
-        raise org.apache.solr.client.solrj.SolrServerException.new("bad uri", java.io.IOException.new)
+        raise org.apache.solr.client.solrj.SolrServerException.new("mock bad uri", java.io.IOException.new)
       end
 
-      things_added << thing
+      # simulate a multiple id error please
+      if [thing].flatten.find {|doc| doc.getField("id").getValueCount() != 1}
+        raise org.apache.solr.client.solrj.SolrServerException.new("mock non-1 size of 'id'")
+      else
+        things_added << thing
+      end
     end
   end
 

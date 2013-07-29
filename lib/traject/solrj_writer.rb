@@ -26,6 +26,13 @@ require 'thread' # for Mutex
 # Writes to a Solr using SolrJ, and the SolrJ HttpSolrServer.
 #  (sub-class later for the ConcurrentUpdate server?)
 #
+# After you call #close, you can check #skipped_record_count if you want
+# for an integer count of skipped records.
+#
+# For fatal errors that raise... async processing with thread_pool means that
+# you may not get a raise immediately after calling #put, you may get it on
+# a FUTURE #put or #close. You should get it eventually though. 
+#
 # settings:
 #   [solr.url] Your solr url (required)
 #   [solrj_writer.server_class_name]  Defaults to "HttpSolrServer". You can specify
@@ -78,6 +85,10 @@ class Traject::SolrJWriter
     unless @settings.has_key?("solrj_writer.thread_pool")
       @settings["solrj_writer.thread_pool"] = 4
     end
+
+    # Store error count in an AtomicInteger, so multi threads can increment
+    # it safely, if we're threaded. 
+    @skipped_record_incrementer = java.util.concurrent.atomic.AtomicInteger.new(0)
 
     # specified 1 thread pool is still a thread pool, with one thread in it!
     if @settings["solrj_writer.thread_pool"].to_i > 0
@@ -243,6 +254,7 @@ class Traject::SolrJWriter
     rescue org.apache.solr.common.SolrException, org.apache.solr.client.solrj.SolrServerException  => e
       # Honestly not sure what the difference is between those types, but SolrJ raises both
       logger.error("Could not index record\n" + exception_to_log_message(e) )
+      @skipped_record_incrementer.getAndIncrement() # AtomicInteger, thread-safe increment.
 
       if fatal_exception? e
         logger.fatal ("SolrJ exception judged fatal, raising...")
@@ -310,6 +322,7 @@ class Traject::SolrJWriter
         logger.warn "Waited #{elapsed} seconds for all threads, you may want to increase solrj_writer.thread_pool (currently #{@settings["solrj_writer.thread_pool"]})"
       end
       logger.info "SolrJWriter: Thread pool shutdown complete"
+      logger.warn "SolrJWriter: #{skipped_record_count} skipped records" if skipped_record_count > 0
     end
 
     # check again now that we've waited, there could still be some
@@ -323,6 +336,13 @@ class Traject::SolrJWriter
 
     solr_server.shutdown
     @solr_server = nil
+  end
+
+  # Return count of encountered skipped records. Most accurate to call
+  # it after #close, in which case it should include full count, even
+  # under async thread_pool. 
+  def skipped_record_count
+    @skipped_record_incrementer.get
   end
 
 
