@@ -139,6 +139,18 @@ class Traject::Indexer
 
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
+    if field_name.nil? || field_name.empty?
+      raise ArgumentError.new("to_field requires a non-blank first argument, field name")
+    end
+    [aLambda, block].each do |proc|
+      # allow negative arity, meaning variable/optional, trust em on that. 
+      # but for positive arrity, we need 2 or 3 args
+      if proc && (proc.arity == 1 || proc.arity > 3)
+        raise ArgumentError.new("block/proc given to to_field needs 2 or 3 arguments: #{proc}")
+      end
+    end
+
+
     @index_steps << {
       :field_name => field_name.to_s,
       :lambda => aLambda,
