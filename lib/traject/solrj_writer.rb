@@ -31,7 +31,7 @@ require 'thread' # for Mutex
 #
 # For fatal errors that raise... async processing with thread_pool means that
 # you may not get a raise immediately after calling #put, you may get it on
-# a FUTURE #put or #close. You should get it eventually though. 
+# a FUTURE #put or #close. You should get it eventually though.
 #
 # settings:
 #   [solr.url] Your solr url (required)
@@ -87,7 +87,7 @@ class Traject::SolrJWriter
     end
 
     # Store error count in an AtomicInteger, so multi threads can increment
-    # it safely, if we're threaded. 
+    # it safely, if we're threaded.
     @skipped_record_incrementer = java.util.concurrent.atomic.AtomicInteger.new(0)
 
     # specified 1 thread pool is still a thread pool, with one thread in it!
@@ -168,9 +168,7 @@ class Traject::SolrJWriter
       end
     else # non-batched add, add one at a time.
       maybe_in_thread_pool do
-        rescue_solr_single_add_exception do
-          solr_server.add(doc)
-        end
+        add_one_document(doc)
       end
     end
   end
@@ -204,9 +202,7 @@ class Traject::SolrJWriter
         # that can't get individually logged.
         logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
         current_batch.each do |doc|
-          rescue_solr_single_add_exception do
-            solr_server.add(doc)
-          end
+          add_one_document(doc)
         end
       end
     end
@@ -238,19 +234,15 @@ class Traject::SolrJWriter
     end
   end
 
+  # Adds a single SolrInputDocument passed in.
+  #
   # Rescues exceptions thrown by SolrServer.add, logs them, and then raises them
   # again if deemed fatal and should stop indexing. Only intended to be used on a SINGLE
   # document add. If we get an exception on a multi-doc batch add, we need to recover
   # differently.
-  #
-  # eg
-  #
-  # rescue_solr_single_add_exception do
-  #   solr_server.add(doc)
-  # end
-  def rescue_solr_single_add_exception
+  def add_one_document(doc)
     begin
-      yield
+      solr_server.add(doc)
     rescue org.apache.solr.common.SolrException, org.apache.solr.client.solrj.SolrServerException  => e
       # Honestly not sure what the difference is between those types, but SolrJ raises both
       logger.error("Could not index record\n" + exception_to_log_message(e) )
@@ -340,7 +332,7 @@ class Traject::SolrJWriter
 
   # Return count of encountered skipped records. Most accurate to call
   # it after #close, in which case it should include full count, even
-  # under async thread_pool. 
+  # under async thread_pool.
   def skipped_record_count
     @skipped_record_incrementer.get
   end
