@@ -88,6 +88,8 @@ module Traject::Macros
     # Can specify other spec if you want, say, 041b (lang of abstract)
     # or 041e (lang of librettos), or 041h (lang of original) instead or in addition.
     #
+    # de-dups values so you don't get the same one twice. 
+    #
     # Exact spec of #marc_languages may change with new user data on what
     # works best.
     def marc_languages(spec = "008[35-37]:041a:041d")
@@ -95,17 +97,22 @@ module Traject::Macros
 
       lambda do |record, accumulator|
         codes = MarcExtractor.new(record, spec, :seperator => "nil").collect_matching_lines do |field, spec, extractor|
-          extractor.collect_subfields(field, spec).collect do |value|
-            # sometimes multiple language codes are jammed together in one subfield, and
-            # we need to seperate ourselves. sigh.
-            unless value.length == 3
-              value = value.scan(/.{1,3}/) # split into an array of 3-length substrs
-            end
-            value
-          end.flatten
+          if extractor.control_field?(field)
+            (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
+          else
+            extractor.collect_subfields(field, spec).collect do |value|
+              # sometimes multiple language codes are jammed together in one subfield, and
+              # we need to seperate ourselves. sigh.
+              unless value.length == 3
+                value = value.scan(/.{1,3}/) # split into an array of 3-length substrs
+              end
+              value
+            end.flatten
+          end
         end
+        codes = codes.uniq
 
-        translation_map.translate_array! codes
+        translation_map.translate_array!(codes)
 
         accumulator.concat codes
       end
