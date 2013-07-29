@@ -20,7 +20,9 @@ class Traject::JsonWriter
     @settings = argSettings
   end
 
-  def put(hash)
+  def put(context)
+    hash = context.output_hash
+
     serialized = 
       if settings["json_writer.pretty_print"]
         JSON.pretty_generate(hash)

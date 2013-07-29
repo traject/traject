@@ -145,7 +145,9 @@ class Traject::SolrJWriter
   # in the calling thread, including actual http transactions to solr via solrj SolrServer
   # if using batches, then not every #put is a http transaction, but when it is,
   # it's in the calling thread, synchronously.
-  def put(hash)
+  def put(context)
+    hash = context.output_hash
+    
     re_raise_async_exception!
 
     doc = hash_to_solr_document(hash)
