@@ -5,6 +5,11 @@ require 'minitest/spec'
 require 'traject'
 require 'marc'
 
+# keeps things from complaining about "yell-1.4.0/lib/yell/adapters/io.rb:66 warning: syswrite for buffered IO"
+# for reasons I don't entirely understand, involving yell using syswrite and tests sometimes
+# using $stderr.puts. https://github.com/TwP/logging/issues/31
+STDERR.sync = true
+
 def support_file_path(relative_path)
   return File.expand_path(File.join("test_support", relative_path), File.dirname(__FILE__))
 end
@@ -25,4 +30,44 @@ def assert_start_with(start_with, obj, msg = nil)
   msg ||= "expected #{obj} to start with #{start_with}"
 
   assert obj.start_with?(start_with), msg
+end
+
+# pretends to be a SolrJ HTTPServer-like thing, just kind of mocks it up
+# and records what happens and simulates errors in some cases. 
+class MockSolrServer
+  attr_accessor :things_added, :url, :committed, :parser, :shutted_down
+
+  def initialize(url)
+    @url =  url
+    @things_added = []
+    @add_mutex = Mutex.new
+  end
+
+  def add(thing)
+    @add_mutex.synchronize do # easy peasy threadsafety for our mock
+      if @url == "http://no.such.place"
+        raise org.apache.solr.client.solrj.SolrServerException.new("mock bad uri", java.io.IOException.new)
+      end
+
+      # simulate a multiple id error please
+      if [thing].flatten.find {|doc| doc.getField("id").getValueCount() != 1}
+        raise org.apache.solr.client.solrj.SolrServerException.new("mock non-1 size of 'id'")
+      else
+        things_added << thing
+      end
+    end
+  end
+
+  def commit
+    @committed = true
+  end
+
+  def setParser(parser)
+    @parser = parser
+  end
+
+  def shutdown
+    @shutted_down = true
+  end
+
 end

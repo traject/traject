@@ -35,10 +35,12 @@ describe "Traject::Indexer#process" do
       assert_equal times_called, context.position
     end
 
-    @indexer.process( @file )
+    return_value = @indexer.process( @file )
+
+    assert return_value, "Returns `true` on success"
 
     # Grab the settings out of a class variable where we left em,
-    # as a convenient place to store outcomes so we can test em. 
+    # as a convenient place to store outcomes so we can test em.
     writer_settings = memory_writer_class.class_variable_get("@@last_writer_settings")
 
     assert writer_settings["memory_writer.added"]
@@ -50,10 +52,25 @@ describe "Traject::Indexer#process" do
     assert writer_settings["logger"]
 
     assert writer_settings["memory_writer.closed"]
-
   end
 
+  it "returns false if skipped records" do
+    @indexer = Traject::Indexer.new(
+      "solrj_writer.server_class_name" => "MockSolrServer",
+      "solr.url" => "http://example.org",
+      "writer_class_name" => "Traject::SolrJWriter"
+    )
+    @file = File.open(support_file_path "manufacturing_consent.marc")    
 
+
+    @indexer.to_field("id") do |record, accumulator|
+      # intentionally make error
+      accumulator.concat ["one_id", "two_id"]
+    end
+    return_value = @indexer.process(@file)
+
+    assert ! return_value, "returns false on skipped record errors"
+  end
 
 
 end
