@@ -34,7 +34,8 @@ require 'traject/macros/basic'
 #  1) Has a one-argument initializer taking a Settings hash. (The logger
 #     is provided to the Writer in settings["logger"])
 #  2) Responds to a one argument #put method, where the argument is
-#     a hash of mapped keys/values. The writer should write them
+#     a Traject::Indexer::Context, containing an #output_hash
+#     hash of mapped keys/values. The writer should write them
 #     to the appropriate place.
 #  3) Responds to a #close method, called when we're done.
 #  4) Optionally implements a #skipped_record_count method, returning int count of records
@@ -273,7 +274,7 @@ class Traject::Indexer
 
       context = Context.new(:source_record => record, :settings => settings, :position => count)
       map_to_context!(context)
-      writer.put context.output_hash
+      writer.put context
     end
     writer.close if writer.respond_to?(:close)
 

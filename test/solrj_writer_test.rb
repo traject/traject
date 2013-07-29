@@ -20,12 +20,16 @@ def create_solrj_writer
   end
 end
 
+def context_with(hash)
+  Traject::Indexer::Context.new(:output_hash => hash)
+end
+
 
 # Some tests we need to run multiple ties in multiple batch/thread scenarios,
 # we DRY them up by creating a method to add the tests in different describe blocks
 def test_handles_errors
   it "errors but does not raise on multiple ID's" do
-    @writer.put "id" => ["one", "two"]
+    @writer.put context_with("id" => ["one", "two"])
     @writer.close
     assert_equal 1, @writer.skipped_record_count, "counts skipped record"
   end
@@ -34,7 +38,7 @@ def test_handles_errors
     @settings.merge!("solr.url" => "http://no.such.place")
     create_solrj_writer
     assert_raises org.apache.solr.client.solrj.SolrServerException do
-      @writer.put "id" => ["one"]
+      @writer.put context_with("id" => ["one"])
       # in batch and/or thread scenarios, sometimes no exception raised until close
       @writer.close
     end
@@ -89,7 +93,7 @@ describe "Traject::SolrJWriter" do
     end
 
     it "writes a simple document" do
-      @writer.put "title_t" => ["MY TESTING TITLE"], "id" => ["TEST_TEST_TEST_0001"]
+      @writer.put context_with("title_t" => ["MY TESTING TITLE"], "id" => ["TEST_TEST_TEST_0001"])
       @writer.close
 
 
@@ -108,7 +112,7 @@ describe "Traject::SolrJWriter" do
       @settings.merge!("solrj_writer.commit_on_close" => "true")
       create_solrj_writer
 
-      @writer.put "title_t" => ["MY TESTING TITLE"], "id" => ["TEST_TEST_TEST_0001"]
+      @writer.put context_with("title_t" => ["MY TESTING TITLE"], "id" => ["TEST_TEST_TEST_0001"])
       @writer.close
 
       # if it's not a mock, we don't really test anything, except that
@@ -134,7 +138,7 @@ describe "Traject::SolrJWriter" do
         record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
 
         serialized = record.to_marc # straight binary
-        @writer.put "marc_record_t" => [serialized], "id" => ["TEST_TEST_TEST_MARC_BINARY"]
+        @writer.put context_with("marc_record_t" => [serialized], "id" => ["TEST_TEST_TEST_MARC_BINARY"])
         @writer.close
       end
     end
@@ -152,7 +156,7 @@ describe "Traject::SolrJWriter" do
       end
 
       docs.each do |doc|
-        @writer.put doc
+        @writer.put context_with(doc)
       end
       @writer.close
 
@@ -182,7 +186,7 @@ describe "Traject::SolrJWriter" do
       end
 
       docs.each do |doc|
-        @writer.put doc
+        @writer.put context_with(doc)
       end
       @writer.close
 
