@@ -28,12 +28,12 @@ describe "Traject::Macros::Marc21Semantics" do
     assert_equal %w{2710183 47971712},  output["oclcnum"]
   end
 
-  describe "sortable_author" do
+  describe "marc_sortable_author" do
     # these probably should be taking only certain subfields, but we're copying
     # from SolrMarc that didn't do so either and nobody noticed, so not bothering for now.
     before do
       @indexer.instance_eval do
-        to_field "author_sort", sortable_author
+        to_field "author_sort", marc_sortable_author
       end
     end
     it "collates author and title" do
@@ -50,9 +50,9 @@ describe "Traject::Macros::Marc21Semantics" do
     end
   end
 
-  describe "sortable_title" do
+  describe "marc_sortable_title" do
     before do
-      @indexer.instance_eval { to_field "title_sort", sortable_title }
+      @indexer.instance_eval { to_field "title_sort", marc_sortable_title }
     end
     it "works" do
       output = @indexer.map_record(@record)
