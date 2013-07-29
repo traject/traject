@@ -44,8 +44,17 @@ describe "Traject::Macros::Marc21" do
       end
 
       output = @indexer.map_record(@record)
-      
+
       assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title"]
+    end
+
+    it "respects :default option" do
+      @indexer.instance_eval do
+        to_field "only_default", extract_marc("9999", :default => "DEFAULT VALUE")
+      end
+      output = @indexer.map_record(@record)
+
+      assert_equal ["DEFAULT VALUE"], output["only_default"]
     end
 
     it "Marc21::trim_punctuation class method" do
