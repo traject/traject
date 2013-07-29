@@ -60,8 +60,9 @@ class Traject::Indexer
   include Traject::Macros::Basic
 
 
-  def initialize
-    @settings = Settings.new
+  # optional hash or Traject::Indexer::Settings object of settings. 
+  def initialize(arg_settings = {})
+    @settings = Settings.new(arg_settings)
     @index_steps = []
   end
 
@@ -248,6 +249,12 @@ class Traject::Indexer
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
+  #
+  # returns 'false' as a signal to command line to return non-zero exit code 
+  # for some reason (reason found in logs, presumably). This particular mechanism
+  # is open to complexification, starting simple. We do need SOME way to return
+  # non-zero to command line. 
+  #
   def process(io_stream)
     settings.fill_in_defaults!
 
@@ -272,6 +279,13 @@ class Traject::Indexer
     elapsed        = Time.now - start_time
     avg_rps        = (count / elapsed)
     logger.info "finished Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
+
+    if writer.respond_to?(:skipped_record_count) && writer.skipped_record_count > 0
+      logger.error "Indexer#process returning 'false' due to #{writer.skipped_record_count }skipped records."
+      return false
+    end
+
+    return true
   end
 
   def reader_class
