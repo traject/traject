@@ -158,6 +158,18 @@ module Traject
       end
     end
 
+    # line each_matching_line, takes a block to process each matching line,
+    # but collects results of block into an array. 
+    # Useful for re-use of this class for custom processing
+    def collect_matching_lines
+      results = []
+      self.each_matching_line do |field, spec, extractor|
+        results = yield(field, spec, extractor)
+      end
+      return results
+    end
+
+
     # Pass in a marc data field and a hash spec, returns
     # an ARRAY of one or more strings, subfields extracted
     # and processed per spec. Takes account of options such

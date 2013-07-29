@@ -191,6 +191,19 @@ describe "Traject::MarcExtractor" do
     end
   end
 
+  describe "#collect_matching_lines" do
+    before do
+      @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+      @extractor = Traject::MarcExtractor.new(@record, "245abc")
+    end
+    it "collects with custom block" do
+      results = @extractor.collect_matching_lines do |field, spec, extractor|
+        extractor.collect_subfields(field, spec)
+      end
+      assert_equal ["Manufacturing consent : the political economy of the mass media / Edward S. Herman and Noam Chomsky ; with a new introduction by the authors."], results
+    end
+  end
+
 
 
 end
