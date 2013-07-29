@@ -30,7 +30,7 @@ describe "Traject::Macros::Marc21Semantics" do
 
   describe "sortable_author" do
     # these probably should be taking only certain subfields, but we're copying
-    # from SolrMarc that didn't do so either and nobody noticed, so not bothering for now. 
+    # from SolrMarc that didn't do so either and nobody noticed, so not bothering for now.
     before do
       @indexer.instance_eval do
         to_field "author_sort", sortable_author
@@ -54,7 +54,7 @@ describe "Traject::Macros::Marc21Semantics" do
     before do
       @indexer.instance_eval { to_field "title_sort", sortable_title }
     end
-    it "works" do 
+    it "works" do
       output = @indexer.map_record(@record)
       assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title_sort"]
     end
@@ -65,4 +65,18 @@ describe "Traject::Macros::Marc21Semantics" do
       assert_equal ["Business renaissance quarterly"], output["title_sort"]
     end
   end
+
+  describe "marc_languages" do
+    before do
+      @indexer.instance_eval {to_field "languages", marc_languages("041a") }
+    end
+
+    it "unpacks packed 041a and translates" do
+      @record = MARC::Reader.new(support_file_path  "packed_041a_lang.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_equal ["English", "French", "German", "Italian", "Spanish", "Russian"], output["languages"]
+    end
+  end
+
 end

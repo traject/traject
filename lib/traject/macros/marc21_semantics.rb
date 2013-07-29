@@ -83,6 +83,34 @@ module Traject::Macros
       end.first
     end
 
+    # maps languages, by default out of 008[35-37] and 041a and 041d
+    #
+    # Can specify other spec if you want, say, 041b (lang of abstract)
+    # or 041e (lang of librettos), or 041h (lang of original) instead or in addition.
+    #
+    # Exact spec of #marc_languages may change with new user data on what
+    # works best.
+    def marc_languages(spec = "008[35-37]:041a:041d")
+      translation_map = Traject::TranslationMap.new("marc_languages")
+
+      lambda do |record, accumulator|
+        codes = MarcExtractor.new(record, spec, :seperator => "nil").collect_matching_lines do |field, spec, extractor|
+          extractor.collect_subfields(field, spec).collect do |value|
+            # sometimes multiple language codes are jammed together in one subfield, and
+            # we need to seperate ourselves. sigh.
+            unless value.length == 3
+              value = value.scan(/.{1,3}/) # split into an array of 3-length substrs
+            end
+            value
+          end.flatten
+        end
+
+        translation_map.translate_array! codes
+
+        accumulator.concat codes
+      end
+    end
+
 
   end
 end
