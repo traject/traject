@@ -144,13 +144,16 @@ module Traject
     end
 
     # Yields a block for every line in source record that matches
-    # spec. First arg to block is MARC::Field (control or data), second
+    # spec. First arg to block is MARC::DataField or ControlField, second
     # is the hash specification that it matched on. May take account
     # of options such as :alternate_script
+    #
+    # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
+    # implementations.
     def each_matching_line
       self.marc_record.each do |field|
         if (spec = spec_covering_field(field)) && matches_indicators(field, spec)
-          yield(field, spec)
+          yield(field, spec, self)
         end
       end
     end

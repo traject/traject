@@ -3,6 +3,7 @@
 require 'test_helper'
 require 'traject/marc_extractor'
 
+require 'marc'
 
 describe "Traject::MarcExtractor" do
   describe "#parse_marc_spec" do
@@ -161,6 +162,33 @@ describe "Traject::MarcExtractor" do
       assert values.first.include?("Manufacturing consent"), "Extracted value includes title"
     end
 
+  end
+
+  describe "#each_matching_line" do
+    before do
+      @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+      @extractor = Traject::MarcExtractor.new(@record, "245abc")
+    end
+    it "yields two args" do
+      called = false
+      @extractor.each_matching_line do |field, spec|
+        called = true
+        assert_kind_of MARC::DataField, field
+        assert_kind_of Hash, spec
+      end
+      assert called, "calls block"
+    end
+    it "yields three args" do
+      called = false
+      @extractor.each_matching_line do |field, spec, extractor|
+        called = true
+        assert_kind_of MARC::DataField, field
+        assert_kind_of Hash, spec
+        assert_kind_of Traject::MarcExtractor, extractor
+        assert_same @extractor, extractor
+      end
+      assert called, "calls block"
+    end
   end
 
 
