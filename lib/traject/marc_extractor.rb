@@ -164,7 +164,7 @@ module Traject
     def collect_matching_lines
       results = []
       self.each_matching_line do |field, spec, extractor|
-        results = yield(field, spec, extractor)
+        results.concat [yield(field, spec, extractor)].flatten
       end
       return results
     end
