@@ -214,7 +214,7 @@ end
 # marc_extract does, you may want to use the Traject::MarcExtractor
 # class
 to_field "weirdo" do |record, accumulator, context|
-   list = MarcExtractor.new(record, "700a").extract
+   list = MarcExtractor.extract_by_spec(record, "700a")
    # combine all the 700a's in ONE string, cause we're weird
    list = list.join(" ")
    accumulator << list
