@@ -171,4 +171,6 @@ else
   io = File.open(ARGV.first, 'r')
 end
 
-indexer.process(io)
+result = indexer.process(io)
+
+exit 1 unless result # non-zero exit status on process telling us there's problems. 
