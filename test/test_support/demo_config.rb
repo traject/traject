@@ -4,12 +4,12 @@
 #extend Traject::Macros::Basic
 
 settings do
-  #provide "solr.url", "http://catsolrmaster.library.jhu.edu:8985/solr/master_prod"
+  provide "solr.url", "http://catsolrmaster.library.jhu.edu:8985/solr/master_prod"
 
-  provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
-  provide "solrj_writer.parser_class_name", "XMLResponseParser"
+  #provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
+  #provide "solrj_writer.parser_class_name", "XMLResponseParser"
 
-  provide "solrj_writer.commit_on_close", true
+  #provide "solrj_writer.commit_on_close", true
 
   #require 'traject/marc4j_reader'
   #store "reader_class_name", "Marc4JReader"
@@ -21,9 +21,9 @@ to_field "id", extract_marc("001", :first => true) do |marc_record, accumulator,
   accumulator.collect! {|s| "bib_#{s}"}
 
   # A way to intentionally add errors
-  #if context.position == 10
+  #if context.position % 10 == 0
     # intentionally add another one to error
-    #accumulator << "ANOTHER"
+  #  accumulator << "ANOTHER"
   #end
 
 end
@@ -70,8 +70,8 @@ to_field "issn_related",      extract_marc("490x:440x:800x:400x:410x:411x:810x:8
 
 to_field "oclcnum_t",         extract_marc("035a") do |marc_record, accumulator|
   accumulator.collect! do |o|
-    o.gsub!(/\A(ocm)|(ocn)|(\(OCoLC\))/, '')
-  end
+    o.gsub(/\A(ocm)|(ocn)|(\(OCoLC\))/, '')
+  end.uniq!
 end
 
 to_field "other_number_unstem", extract_marc("024a:028a")
