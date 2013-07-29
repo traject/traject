@@ -358,7 +358,7 @@ class Traject::Indexer
       "writer_class_name" => "Traject::SolrJWriter",
       "marc_source.type" => "binary",
       "marc4j_reader.permissive" => true,
-      "marc4j_reader.source_encoding" => "MARC8",
+      "marc4j_reader.source_encoding" => "BESTGUESS",
       "solrj_writer.batch_size" => 100
       }
   end
