@@ -161,6 +161,12 @@ class Traject::Indexer
   end
 
   def each_record(aLambda = nil, &block)
+    # make sure they didn't give something that looks like a #to_field
+    if aLambda.is_a? String
+      raise ArgumentError.new("side_effect takes only a lambda/block. Maybe you provided a field name by accident?")
+    end
+    
+    
     # arity check
     [aLambda, block].each do |proc|
       # allow negative arity, meaning variable/optional, trust em on that.
