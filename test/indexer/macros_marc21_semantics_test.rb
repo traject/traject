@@ -68,7 +68,7 @@ describe "Traject::Macros::Marc21Semantics" do
 
   describe "marc_languages" do
     before do
-      @indexer.instance_eval {to_field "languages", marc_languages("041a") }
+      @indexer.instance_eval {to_field "languages", marc_languages() }
     end
 
     it "unpacks packed 041a and translates" do
