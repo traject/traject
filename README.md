@@ -77,6 +77,14 @@ settings do
 
   # various others...
   provide "solrj_writer.commit_on_close", "true"
+
+  # By default, we use the Traject::Marc4JReader, which
+  # can read marc8 and ISO8859_1 -- if your records are all in UTF8,
+  # the pure-ruby MarcReader may be faster...
+  # provide "reader_class_name", "Traject::MarcReader"
+  # If you ARE using the Marc4JReader, it defaults to "BESTGUESS"
+  # as to encoding when reading binary, you may want to tell it instead
+  provide "marc4j_reader.source_encoding", "MARC8" # or UTF-8 or ISO8859_1
 end
 ~~~
 
@@ -211,7 +219,7 @@ to_field "weirdo" do |record, accumulator, context|
    list = list.join(" ")
    accumulator << list
 end
-~~~~
+~~~
 
 You can also *combine* a macro and a direct block for some
 post-processing. In this case, the `accumulator` parameter
