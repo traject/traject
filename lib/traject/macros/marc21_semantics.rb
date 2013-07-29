@@ -41,7 +41,7 @@ module Traject::Macros
     #
     # these probably should be taking only certain subfields, but we're copying
     # from SolrMarc that didn't do so either and nobody noticed, so not bothering for now. 
-    def sortable_author
+    def marc_sortable_author
       lambda do |record, accumulator|
         accumulator << Marc21Semantics.get_sortable_author(record)
       end
@@ -66,7 +66,7 @@ module Traject::Macros
 
 
     # 245 a and b, with non-filing characters stripped off
-    def sortable_title
+    def marc_sortable_title
       lambda do |record, accumulator|
         accumulator << Marc21Semantics.get_sortable_title(record)
       end
