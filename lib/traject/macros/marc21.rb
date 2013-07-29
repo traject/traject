@@ -123,15 +123,15 @@ module Traject::Macros
     # pretty simple.
     #
     # Removes
-    # * trailing: comma, slash, semicolon, colon (possibly followed by whitespace)
-    # * trailing period if it is preceded by at least three letters (possibly followed by whitespace)
+    # * trailing: comma, slash, semicolon, colon (possibly preceded and followed by whitespace)
+    # * trailing period if it is preceded by at least three letters (possibly preceded and followed by whitespace)
     # * single square bracket characters if they are the start and/or end
     #   chars and there are no internal square brackets.
     #
     # Returns altered string, doesn't change original arg.
     def self.trim_punctuation(str)
-      str = str.sub(/[ ,\/;:] *\Z/, '')
-      str = str.sub(/(\w\w\w)\. *\Z/, '\1')
+      str = str.sub(/ *[ ,\/;:] *\Z/, '')
+      str = str.sub(/ *(\w\w\w)\. *\Z/, '\1')
       str = str.sub(/\A\[?([^\[\]]+)\]?\Z/, '\1')
       return str
     end
