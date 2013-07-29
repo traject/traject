@@ -254,9 +254,17 @@ class Traject::SolrJWriter
   def add_one_document_package(package)
     begin
       solr_server.add(package.solr_document)
+    # Honestly not sure what the difference is between those types, but SolrJ raises both
     rescue org.apache.solr.common.SolrException, org.apache.solr.client.solrj.SolrServerException  => e
-      # Honestly not sure what the difference is between those types, but SolrJ raises both
-      logger.error("Could not index record\n" + exception_to_log_message(e) )
+      id        = package.context.source_record && package.context.source_record['001'] && package.context.source_record['001'].value
+      id_str    = id ? "001:#{id}" : ""
+
+      position  = package.context.position
+      position_str = position ? "at file position #{position} (starting at 1)" : ""
+
+      logger.error("Could not index record #{id_str} #{position_str}\n" + exception_to_log_message(e) )
+      logger.debug(package.context.source_record.to_s)
+
       @skipped_record_incrementer.getAndIncrement() # AtomicInteger, thread-safe increment.
 
       if fatal_exception? e
