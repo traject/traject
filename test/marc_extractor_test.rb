@@ -162,6 +162,19 @@ describe "Traject::MarcExtractor" do
       assert values.first.include?("Manufacturing consent"), "Extracted value includes title"
     end
 
+    it "returns empty array if no matching tags" do
+      values = Traject::MarcExtractor.extract_by_spec(@record, "999abc")
+      assert_equal [], values
+
+      values = Traject::MarcExtractor.extract_by_spec(@record, "999")
+      assert_equal [], values
+    end
+
+    it "returns empty array if matching tag but no subfield" do 
+      values = Traject::MarcExtractor.extract_by_spec(@record, "245xyz")
+      assert_equal [], values
+    end
+
   end
 
   describe "#each_matching_line" do
