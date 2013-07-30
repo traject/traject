@@ -159,7 +159,8 @@ module Traject
     end
 
     # line each_matching_line, takes a block to process each matching line,
-    # but collects results of block into an array. 
+    # but collects results of block into an array -- flattens any subarrays for you!
+    #
     # Useful for re-use of this class for custom processing
     def collect_matching_lines
       results = []
