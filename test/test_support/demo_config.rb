@@ -52,6 +52,15 @@ to_field "title_t",           extract_marc("245ak")
 to_field "title1_t",          extract_marc("245abk")
 to_field "title2_t",          extract_marc("245nps:130:240abcdefgklmnopqrs:210ab:222ab:242abcehnp:243abcdefgklmnopqrs:246abcdefgnp:247abcdefgnp")
 to_field "title3_t",          extract_marc("700gklmnoprst:710fgklmnopqrst:711fgklnpst:730abdefgklmnopqrst:740anp:505t:780abcrst:785abcrst:773abrst")
+# also add in 505$t only if the 505 has an $r -- we consider this likely to be
+# a titleish string, if there's a 505$r
+to_field "title3_t" do |record, accumulator|
+  record.each_by_tag('505') do |field|
+    if field['r']
+      accumulator.concat field.subfields.collect {|sf| sf.value if sf.code == 't'}.compact
+    end
+  end
+end
 
 to_field "title_display",     extract_marc("245abk", :trim_puncutation => true, :first => true)
 to_field "title_sort",        marc_sortable_title
