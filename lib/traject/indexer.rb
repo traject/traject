@@ -227,7 +227,7 @@ class Traject::Indexer
             end
           end
         end
-        (context.output_hash[context.field_name] ||= []).concat accumulator
+        (context.output_hash[context.field_name] ||= []).concat accumulator unless accumulator.empty?
         context.field_name = nil
       elsif index_step[:type] == :each_record
         # one or two arg
