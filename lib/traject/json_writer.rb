@@ -36,7 +36,7 @@ class Traject::JsonWriter
     unless defined? @output_file
       @output_file = 
         if settings["output_file"]
-          File.open(settings["output_file"])
+          File.open(settings["output_file"], 'w:UTF-8')
         elsif settings["output_stream"]
           settings["output_stream"]
         else
