@@ -152,6 +152,18 @@ describe "Traject::Macros::Marc21Semantics" do
 
       assert_equal ["Language & Literature"], output["discipline_facet"]
     end
+    it "maps to default" do
+      @record = MARC::Reader.new(support_file_path  "musical_cage.marc").to_a.first
+      output = @indexer.map_record(@record)
+      assert_equal ["Unknown"], output["discipline_facet"]
+    end
+    it "maps to nothing if none and no default" do
+      @indexer.instance_eval {to_field "discipline_no_default", marc_lcc_to_broad_category(:default => nil)}
+      @record = MARC::Reader.new(support_file_path  "musical_cage.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_nil output["discipline_no_default"]
+    end
   end
 
 end
