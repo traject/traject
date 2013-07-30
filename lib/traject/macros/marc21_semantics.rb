@@ -271,19 +271,21 @@ module Traject::Macros
 
     # Looks up Library of Congress Classification (LCC) or NLM Medical Subject Headings (MeSH)
     # from usual parts of the marc record. Maps them to high-level broad categories,
-    # basically just using the first part of the LCC.
+    # basically just using the first part of the LCC. Note it's just looking in bib-level
+    # locations for LCCs, you're on your own with holdings. 
     #
     # Sanity checks to make sure the thing looks like an LCC with a regex, before
     # mapping.
     #
     # Will call it 'Unknown' if it's got nothing else, or pass in :default => something else,
-    # or nil. 
+    # or nil.
     #
     # The categories output aren't great, but they're something.
+    LCC_REGEX = / *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
     def marc_lcc_to_broad_category(spec="050a:060a:090a:096a", options = {})
       # Trying to match things that look like LCC, and not match things
       # that don't. Is tricky.
-      lcc_regex = / *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
+      lcc_regex = LCC_REGEX
       default_value = options[:default] || "Unknown"
       translation_map = Traject::TranslationMap.new("lcc_top_level")
 
