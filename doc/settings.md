@@ -25,12 +25,12 @@ line.
 
 * `marc_source.type`: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 
-* `marc4j_reader.permissive`: Used by Marc4JReader only when marc.source_type is 'binary', boolean, argument to the underlying MarcPermissiveStreamReader. Default true. 
+* `marc4j_reader.permissive`: Used by Marc4JReader only when marc.source_type is 'binary', boolean, argument to the underlying MarcPermissiveStreamReader. Default true.
 
 * `marc4j_reader.source_encoding`: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
   by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::MarcReader. See Traject::Indexer for more info. Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4jReader. See Traject::Indexer for more info. Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
 
@@ -41,7 +41,7 @@ line.
   that might not work with that version of solr. Set now for help in the future.
 
 * `solrj_writer.batch_size`: size of batches that SolrJWriter will send docs to Solr in. Default 100. Set to nil,
-  0, or 1, and SolrJWriter will do one http transaction per document, no batching. 
+  0, or 1, and SolrJWriter will do one http transaction per document, no batching.
 
 * `solrj_writer.commit_on_close`: default false, set to true to have SolrJWriter send an explicit commit message to Solr after indexing.
 
@@ -51,9 +51,9 @@ line.
 
 * `solrj_writer.thread_pool`:         Defaults to 4. A thread pool is used for submitting docs
                                     to solr. Set to 0 or nil to disable threading. Set to 1,
-                                    there will still be a single bg thread doing the adds. 
+                                    there will still be a single bg thread doing the adds.
                                     May make sense to set higher than number of cores on your
                                     indexing machine, as these threads will mostly be waiting
-                                    on Solr. Speed/capacity of your solr is more relevant. 
+                                    on Solr. Speed/capacity of your solr is more relevant.
 
 * `writer_class_name`: a Traject Writer class, used by indexer to send processed dictionaries off. Default Traject::SolrJWriter, also available Traject::JsonWriter. See Traject::Indexer for more info. Command line shortcut `-w`
