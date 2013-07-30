@@ -128,7 +128,7 @@ module Traject
     end
 
 
-    # Returns array of strings, extracted values
+    # Returns array of strings, extracted values. Maybe empty array.
     def extract
       results = []
 
@@ -175,10 +175,14 @@ module Traject
     # an ARRAY of one or more strings, subfields extracted
     # and processed per spec. Takes account of options such
     # as :seperator
+    #
+    # Always returns array, sometimes empty array.
     def collect_subfields(field, spec)
       subfields = field.subfields.collect do |subfield|
         subfield.value if spec[:subfields].nil? || spec[:subfields].include?(subfield.code)
       end.compact
+
+      return subfields if subfields.empty? # empty array, just return it.
 
       return options[:seperator] ? [ subfields.join( options[:seperator]) ] : subfields
     end
@@ -196,7 +200,7 @@ module Traject
       if field.tag == "880" && options[:alternate_script] != false
         # pull out the spec for corresponding original marc tag this 880 corresponds to
         # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
-        # to do this weird encode gymnastics, which fixes it for mysterious reasons. 
+        # to do this weird encode gymnastics, which fixes it for mysterious reasons.
         orig_field = field["6"].encode(field["6"].encoding).byteslice(0,3)
         field["6"] && self.spec_hash[  orig_field  ]
       elsif options[:alternate_script] != :only
