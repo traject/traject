@@ -155,12 +155,37 @@ module Traject::Macros
     # ALSO, if the code is in a subfield b (soloist), it'll be indexed
     # _additionally_ as "ba01.s" and "ba.s".
     #
-    # This has proven useful for expert music librarian searching.
-    #def marc_instrument_code_normalized
-    #  MarcExtractor.new(record, "048").collect_matching_lines do |field, spec, extractor|
+    # This has proven useful for expert music librarian searching by hand; it could
+    # also be the basis of a GUI that executes searches behind the scenes for these
+    # codes.
+    def marc_instrument_codes_normalized(spec = "048")
+      soloist_suffix = ".s"
+      return lambda do |record, accumulator|
+        accumulator.concat(
+          MarcExtractor.new(record, "048", :seperator => nil).collect_matching_lines do |field, spec, extractor|
+            values = []
 
-    #  end
-    #end
+            field.subfields.each do |sf|
+              v = sf.value
+              # Unless there's at least two chars, it's malformed, we can
+              # do nothing
+              next unless v.length >= 2
+
+              # Index both with and without number -- both with soloist suffix
+              # if in a $b
+              values << v
+              values << "#{v}#{soloist_suffix}" if sf.code == 'b'
+              if v.length >= 4
+                bare = v.slice(0,2) # just the prefix
+                values << bare
+                values << "#{bare}#{soloist_suffix}" if sf.code == 'b'
+              end
+            end
+            values
+          end.uniq
+        )
+      end
+    end
 
   end
 end

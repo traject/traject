@@ -90,8 +90,26 @@ describe "Traject::Macros::Marc21Semantics" do
 
       assert_equal ["Larger ensemble, Unspecified", "Piano", "Soprano voice", "Tenor voice", "Violin", "Larger ensemble, Ethnic", "Guitar", "Voices, Unspecified"], output["instrumentation"]
     end
+  end
 
+  describe "marc_instrument_codes_normalized" do
+    before do
+      @record = MARC::Reader.new(support_file_path  "musical_cage.marc").to_a.first
+      @indexer.instance_eval {to_field "instrument_codes", marc_instrument_codes_normalized }
+    end
+    it "normalizes, de-duping" do
+      output = @indexer.map_record(@record)
 
+      assert_equal ["on", "ka01", "ka", "va01", "va", "vd01", "vd", "sa01", "sa", "oy", "tb01", "tb", "vn12", "vn"],
+        output["instrument_codes"]
+    end
+    it "codes soloist 048$b" do
+      @record = MARC::Reader.new(support_file_path  "louis_armstrong.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_equal ["bb01", "bb01.s", "bb", "bb.s", "oe"],
+        output["instrument_codes"]
+    end
   end
 
 end
