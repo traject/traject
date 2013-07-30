@@ -142,4 +142,16 @@ describe "Traject::Macros::Marc21Semantics" do
     end
   end
 
+  describe "marc_lcc_to_broad_category" do
+    before do
+      @indexer.instance_eval {to_field "discipline_facet", marc_lcc_to_broad_category }
+    end
+    it "maps a simple example" do
+      @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_equal ["Language & Literature"], output["discipline_facet"]
+    end
+  end
+
 end

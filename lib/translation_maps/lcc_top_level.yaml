@@ -1,0 +1,26 @@
+# Very crude basic mapping from top-level first-letter of LCC call
+# number to an area name.
+
+A: General Works
+B: Philosophy, Psychology, Religion
+C: Historical Sciences (Archaeology, Genealogy)
+D: World History
+E: History of the Americas (General)
+F: History of the Americas (Local)
+G: Geography, Anthropology, Recreation
+H: Social Sciences
+J: Political Science
+K: Law
+L: Education
+M: Music
+N: Fine Arts
+P: Language & Literature
+Q: Science
+R: Medicine
+S: Agriculture
+T: Technology
+U: Military Science
+V: Naval Science
+Z: Bibliography, Library Science, Information Resources
+# W is NLM call number
+W: Medicine

@@ -195,7 +195,7 @@ module Traject::Macros
     # * Ignores dates below min_year (default 500) or above max_year (this year plus 6 years),
     #     because experience shows too many of these were in error.
     #
-    # Yeah, this code ends up ridiculous. 
+    # Yeah, this code ends up ridiculous.
     def marc_publication_date(options = {})
       estimate_tolerance  = options[:estimate_tolerance] || 15
       min_year            = options[:min_year] || 500
@@ -231,7 +231,7 @@ module Traject::Macros
         # didn't find a date that way, and anything OTHER than date_type
         # n=unknown, q=questionable, try single date -- for some date types,
         # there's a date range between date1 and date2, yeah, we often take
-        # the FIRST date then, the earliest. That's just what we're doing. 
+        # the FIRST date then, the earliest. That's just what we're doing.
         if found_date.nil? && date_type != 'n' && date_type != 'q'
           # in date_type 'r', second date is original publication date, use that I think?
           date_str = (date_type == 'r' && date2_str.to_i != 0) ? date2_str : date1_str
@@ -267,6 +267,35 @@ module Traject::Macros
       found_date = nil if found_date && (found_date < min_year || found_date > max_year)
 
       return found_date
+    end
+
+    # Looks up Library of Congress Classification (LCC) or NLM Medical Subject Headings (MeSH)
+    # from usual parts of the marc record. Maps them to high-level broad categories,
+    # basically just using the first part of the LCC.
+    #
+    # Sanity checks to make sure the thing looks like an LCC with a regex, before
+    # mapping.
+    #
+    # Will call it 'Unknown' if it's got nothing else, or pass in :default => something else,
+    # or nil. 
+    #
+    # The categories output aren't great, but they're something.
+    def marc_lcc_to_broad_category(spec="050a:060a:090a:096a", options = {})
+      # Trying to match things that look like LCC, and not match things
+      # that don't. Is tricky.
+      lcc_regex = / *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
+      default_value = options[:default] || "Unknown"
+      translation_map = Traject::TranslationMap.new("lcc_top_level")
+
+      lambda do |record, accumulator|
+        candidates = MarcExtractor.extract_by_spec(record, spec, :seperator => nil)
+
+        candidates.reject! do |candidate|
+          !(candidate =~ lcc_regex)
+        end
+
+        accumulator.concat translation_map.translate_array!(candidates.collect {|a| a.lstrip.slice(0, 1)}).uniq
+      end
     end
 
   end
