@@ -6,8 +6,16 @@ used for grouping and namespacing.
 
 Values are usually strings, but occasionally something else.
 
-Settings can be set in configuration files, or on the command
-line.
+Settings can be set in configuration files, usually like:
+
+~~~ruby
+settings do
+  provide "key", "value"
+end
+~~~~
+
+or on the command line: `-s key=value`.  There are also some command line shortcuts
+for commonly used settings, see `traject -h`. 
 
 ## Known settings
 
