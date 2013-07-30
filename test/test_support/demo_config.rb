@@ -12,7 +12,7 @@ settings do
   #provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
   #provide "solrj_writer.parser_class_name", "XMLResponseParser"
 
-  provide "solrj_writer.commit_on_close", true
+  #provide "solrj_writer.commit_on_close", true
 
   #require 'traject/marc4j_reader'
   #store "reader_class_name", "Marc4JReader"
@@ -70,7 +70,7 @@ to_field "author_facet",      extract_marc("100abcdq:110abcdgnu:111acdenqu:700ab
 
 to_field "subject_t",         extract_marc("600:610:611:630:650:651avxyz:653aa:654abcvyz:655abcvxyz:690abcdxyz:691abxyz:692abxyz:693abxyz:656akvxyz:657avxyz:652axyz:658abcd")
 
-to_field "subject_topic_facet", extract_marc("600abcdtq:610abt:610x:611abt:611x:630aa:630x:648a:648x:650aa:650x:651a:651x:691a:691x:653aa:654ab:656aa:690a:690x", 
+to_field "subject_topic_facet", extract_marc("600abcdtq:610abt:610x:611abt:611x:630aa:630x:648a:648x:650aa:650x:651a:651x:691a:691x:653aa:654ab:656aa:690a:690x",
           :trim_puncutation => true, ) do |record, accumulator|
   #upcase first letter if needed, in MeSH sometimes inconsistently downcased
   accumulator.collect! do |value|
@@ -85,6 +85,44 @@ to_field "subject_facet",     extract_marc("600:610:611:630:650:651:655:690")
 to_field "published_display", extract_marc("260a", :trim_punctuation => true)
 
 to_field "pub_date",          marc_publication_date
+
+# LCC to broad class, start with built-in from marc record, but then do our own for local
+# call numbers.
+lcc_map = Traject::TranslationMap.new("lcc_top_level")
+to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |record, accumulator|
+  # add in our local call numbers
+  accumulator.concat(
+    Traject::MarcExtractor.new(record, "991:937").collect_matching_lines do |field, spec, extractor|
+        # we output call type 'processor' in subfield 'f' of our holdings
+        # fields, that sort of maybe tells us if it's an LCC field.
+        # When the data is right, which it often isn't.
+      call_type = field['f']
+      if call_type == "sudoc"
+        # we choose to call it:
+        "Government Publication"
+      elsif call_type.nil? || call_type == "lc" || field['a'] =~ Traject::Macros::Marc21Semantics::LCC_REGEX
+        # run it through the map
+        s = field['a']
+        s = s.slice(0, 1) if s
+        lcc_map[s]
+      else
+        nil
+      end
+    end.compact
+  )
+
+  # If it's got an 086, we'll put it in "Government Publication", to be
+  # consistent with when we do that from a local SuDoc call #.
+  if Traject::MarcExtractor.extract_by_spec(record, "086a", :seperator =>nil).length > 0
+    accumulator << "Government Publication"
+  end
+
+  accumulator.uniq!
+
+  if accumulator.empty?
+    accumulator << "Unknown"
+  end
+end
 
 to_field "instrumentation_facet", marc_instrumentation_humanized
 to_field "instrumentation_code_unstem", marc_instrument_codes_normalized
