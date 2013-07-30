@@ -49,4 +49,11 @@ line.
 
 * solrj_writer.server_class_name: String name of a solrj.SolrServer subclass to be used by SolrJWriter. Default "HttpSolrServer"
 
+* solrj_writer.thread_pool:         Defaults to 4. A thread pool is used for submitting docs
+                                    to solr. Set to 0 or nil to disable threading. Set to 1,
+                                    there will still be a single bg thread doing the adds. 
+                                    May make sense to set higher than number of cores on your
+                                    indexing machine, as these threads will mostly be waiting
+                                    on Solr. Speed/capacity of your solr is more relevant. 
+
 * writer_class_name: a Traject Writer class, used by indexer to send processed dictionaries off. Default Traject::SolrJWriter, also available Traject::JsonWriter. See Traject::Indexer for more info. Command line shortcut `-w`

@@ -59,6 +59,12 @@ require 'thread' # for Mutex
 #                                   solr in batches of solrj_writer.batch_size. If nil/1,
 #                                   however, an http transaction with solr will be done
 #                                   per doc. DEFAULT to 100, which seems to be a sweet spot.
+#   [solrj_writer.thread_pool]      Defaults to 4. A thread pool is used for submitting docs
+#                                   to solr. Set to 0 or nil to disable threading. Set to 1,
+#                                   there will still be a single bg thread doing the adds. 
+#                                   May make sense to set higher than number of cores on your
+#                                   indexing machine, as these threads will mostly be waiting
+#                                   on Solr. Speed/capacity of your solr is more relevant. 
 class Traject::SolrJWriter
   # just a tuple of a SolrInputDocument
   # and a Traject::Indexer::Context it came from
