@@ -272,7 +272,7 @@ module Traject::Macros
     # Looks up Library of Congress Classification (LCC) or NLM Medical Subject Headings (MeSH)
     # from usual parts of the marc record. Maps them to high-level broad categories,
     # basically just using the first part of the LCC. Note it's just looking in bib-level
-    # locations for LCCs, you're on your own with holdings. 
+    # locations for LCCs, you're on your own with holdings.
     #
     # Sanity checks to make sure the thing looks like an LCC with a regex, before
     # mapping.
@@ -297,7 +297,7 @@ module Traject::Macros
         end
 
         accumulator.concat translation_map.translate_array!(candidates.collect {|a| a.lstrip.slice(0, 1)}).uniq
-        
+
         if default_value && accumulator.empty?
           accumulator << default_value
         end
