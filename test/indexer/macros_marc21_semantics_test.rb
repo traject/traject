@@ -112,4 +112,34 @@ describe "Traject::Macros::Marc21Semantics" do
     end
   end
 
+  describe "publication_date" do
+    # there are way too many edge cases for us to test em all, but we'll test some of em.
+    it "pulls out 008 date_type s" do
+      @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+      assert_equal 2002, Marc21Semantics.publication_date(@record)
+    end
+    it "uses start date for date_type c continuing resource" do
+      @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
+      assert_equal 2006, Marc21Semantics.publication_date(@record)
+    end
+    it "returns nil when the records really got nothing" do
+      @record = MARC::Reader.new(support_file_path  "emptyish_record.marc").to_a.first
+      assert_equal nil, Marc21Semantics.publication_date(@record)
+    end
+    it "estimates with a single 'u'" do
+      @record = MARC::Reader.new(support_file_path  "date_with_u.marc").to_a.first
+      # was 184u as date1 on a continuing resource. For continuing resources,
+      # we take the first date. And need to deal with the u.
+      assert_equal 1845, Marc21Semantics.publication_date(@record)
+    end
+    it "resorts to 260c" do
+      @record = MARC::Reader.new(support_file_path  "date_resort_to_260.marc").to_a.first
+      assert_equal 1980, Marc21Semantics.publication_date(@record)
+    end
+    it "works with date type r missing date2" do
+      @record = MARC::Reader.new(support_file_path  "date_type_r_missing_date2.marc").to_a.first
+      assert_equal 1957, Marc21Semantics.publication_date(@record)
+    end
+  end
+
 end

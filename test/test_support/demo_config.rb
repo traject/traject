@@ -69,6 +69,7 @@ to_field "author_sort",       marc_sortable_author
 to_field "author_facet",      extract_marc("100abcdq:110abcdgnu:111acdenqu:700abcdq:710abcdgnu:711acdenqu", :trim_punctuation => true)
 
 to_field "subject_t",         extract_marc("600:610:611:630:650:651avxyz:653aa:654abcvyz:655abcvxyz:690abcdxyz:691abxyz:692abxyz:693abxyz:656akvxyz:657avxyz:652axyz:658abcd")
+
 to_field "subject_topic_facet", extract_marc("600abcdtq:610abt:610x:611abt:611x:630aa:630x:648a:648x:650aa:650x:651a:651x:691a:691x:653aa:654ab:656aa:690a:690x", 
           :trim_puncutation => true, ) do |record, accumulator|
   #upcase first letter if needed, in MeSH sometimes inconsistently downcased
@@ -83,7 +84,9 @@ to_field "subject_facet",     extract_marc("600:610:611:630:650:651:655:690")
 
 to_field "published_display", extract_marc("260a", :trim_punctuation => true)
 
-to_field "instrumentation_facet", marc_instrumentatation_humanized
+to_field "pub_date",          marc_publication_date
+
+to_field "instrumentation_facet", marc_instrumentation_humanized
 to_field "instrumentation_code_unstem", marc_instrument_codes_normalized
 
 to_field "issn",              extract_marc("022a:022l:022y:773x:774x:776x")
