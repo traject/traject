@@ -282,11 +282,11 @@ module Traject::Macros
     #
     # The categories output aren't great, but they're something.
     LCC_REGEX = / *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
-    def marc_lcc_to_broad_category(spec="050a:060a:090a:096a", options = {})
+    def marc_lcc_to_broad_category( options = {}, spec="050a:060a:090a:096a")
       # Trying to match things that look like LCC, and not match things
       # that don't. Is tricky.
       lcc_regex = LCC_REGEX
-      default_value = options[:default] || "Unknown"
+      default_value = options.has_key?(:default) ? options[:default] : "Unknown"
       translation_map = Traject::TranslationMap.new("lcc_top_level")
 
       lambda do |record, accumulator|
@@ -297,6 +297,10 @@ module Traject::Macros
         end
 
         accumulator.concat translation_map.translate_array!(candidates.collect {|a| a.lstrip.slice(0, 1)}).uniq
+        
+        if default_value && accumulator.empty?
+          accumulator << default_value
+        end
       end
     end
 
