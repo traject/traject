@@ -67,6 +67,14 @@ describe "TranslationMap" do
     assert_equal "value1", map["key1"]
   end
 
+  it "finds .properties defn" do 
+    map =Traject::TranslationMap.new("properties_map")
+
+    assert_equal "Value1", map["key1"]
+    assert_equal "Value2", map["key2"]
+    assert_equal "Multi word value", map["key3"]   
+  end
+
   it "can use a hash instance too" do
     map = Traject::TranslationMap.new(
       "input_value" => "output_value"

@@ -13,17 +13,18 @@ module Traject
   # or array of strings.
   #
   # What makes it more useful than a stunted hash is it's ability to load
-  # the hash definitions from configuration files, either pure ruby or
-  # yaml.
+  # the hash definitions from configuration files, either pure ruby, 
+  # yaml, or java .properties.  (Limited basic .properties, don't try any fancy escaping please,
+  # no = or : in key names, no split lines.)
   #
   # TranslationMap.new("dir/some_file")
   #
   # Will look through the entire ruby $LOAD_PATH, for a translation_maps subdir
-  # that contains either some_file.rb OR  some_file.yaml 
+  # that contains either some_file.rb OR  some_file.yaml OR some_file.properties. 
   # * Looks for "/translation_maps" subdir in load paths, so
   #   for instance you can have a gem that keeps translation maps
   #   in ./lib/translation_maps, and it Just Works. 
-  # * Note you do NOT supply the ".rb" or ".yaml" suffix yourself,
+  # * Note you do NOT supply the .rb, .yaml, or .properties suffix yourself,
   # it'll use whichever it finds (allows calling code to not care which is used).
   #
   # Ruby files just need to have their last line eval to a hash. They file
@@ -54,6 +55,8 @@ module Traject
   # The output can be a string or an array of strings, or nil.  It should not be anything
   # When used with the #translate_array! method, one string can be replaced by multiple values
   # (array of strings) or removed (nil)
+  #
+  # There's no way to specify multiple return values in a .properties, use .yaml or .rb for that. 
   #
   # == Caching
   # Lookup and loading of configuration files will be cached, for efficiency.
@@ -92,12 +95,17 @@ module Traject
         $LOAD_PATH.each do |base|
           rb_file = File.join( base,  "translation_maps",  "#{path}.rb"  )
           yaml_file = File.join( base, "translation_maps", "#{path}.yaml"  )
+          prop_file = File.join(base, "translation_maps", "#{path}.properties" )
 
           if File.exists? rb_file
             found = eval( File.open(rb_file).read , binding, rb_file )
             break
           elsif File.exists? yaml_file
             found = YAML.load_file(yaml_file)
+            break
+          elsif File.exists? prop_file
+            found = Traject::TranslationMap.read_properties(prop_file)
+            break
           end
         end
 
@@ -178,6 +186,40 @@ module Traject
       def initialize(path)
         super("No translation map definition file found at '#{path}[.rb|.yaml]' in load path")
       end
+    end
+
+    protected
+
+    # No built-in way to read java-style .properties, we hack it. 
+    # inspired by various hacky things found google ruby java properties parse
+    # .properties spec seems to be:
+    # http://docs.oracle.com/javase/6/docs/api/java/util/Properties.html#load%28java.io.Reader%29
+    #
+    # We do NOT handle split lines, don't do that!
+    def self.read_properties(file_name)
+      hash = {}
+      i = 0
+      f = File.open(file_name)
+      f.each_line do |line|
+        i += 1
+
+        line.strip! 
+
+        # skip blank lines
+        next if line.empty? 
+
+        # skip comment lines
+        next if line =~ /^\s*[!\#].*$/
+
+        if line =~ /\A([^:=]+)[\:\=]\s*(.*)\s*\Z/
+          hash[$1.strip] = $2
+        else
+          raise IOError.new("Can't parse from #{file_name} line #{i}: #{line}")
+        end
+      end
+      f.close
+
+      return hash
     end
 
   end
