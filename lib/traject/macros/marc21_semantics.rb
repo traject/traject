@@ -304,5 +304,62 @@ module Traject::Macros
       end
     end
 
+    # An opinionated method of making a geographic facet out of BOTH 048 marc
+    # codes, AND geo subdivisions in 6xx LCSH subjects.
+    #
+    # The LCSH geo subdivisions are further normalized:
+    # * geo qualifiers in $z fields into parens, so "Germany -- Berlin" becomes "Berlin (Germany)"
+    #   (to be consistent with how same areas are written in $a fields -- doesn't
+    #    get everything, but gets lots of em)
+    # * qualified regions like that are additionally 'posted up', so "Germany -- Berlin" gets
+    #   recorded additionally as "Germany"
+    def marc_geo_facet(options = {})
+      marc_geo_map = Traject::TranslationMap.new("marc_geographic")
+
+      a_fields_spec = options[:geo_a_fields] || "651a:691a"
+      z_fields_spec = options[:geo_z_fields] || "600:610:611:630:648:650:654:655:656:690:651:691"
+
+      lambda do |record, accumulator|
+
+        accumulator.concat(
+          MarcExtractor.extract_by_spec(record, "043a", :seperator => nil).collect do |code|
+            # remove any trailing hyphens, then map
+            marc_geo_map[code.gsub(/\-+\Z/, '')]
+          end.compact
+        )
+
+        #LCSH 651a and 691a go in more or less normally.
+        accumulator.concat(
+          MarcExtractor.extract_by_spec(record, a_fields_spec, :seperator => nil).collect do |s|
+            # remove trailing periods, which they sometimes have if they were
+            # at end of LCSH.
+            s.sub(/\. */, '')
+          end
+        )
+
+        # fields we take z's from have a bit more normalization        
+        MarcExtractor.new(record, z_fields_spec).each_matching_line do |field, spec, extractor|
+          z_fields = field.subfields.find_all {|sf| sf.code == "z"}.collect {|sf| sf.value }
+          # depending on position in total field, may be a period on the end
+          # we want to remove.
+          z_fields.collect! {|s| s.gsub(/\. *\Z/, '')}
+
+          if z_fields.length == 2
+            # normalize subdivision as parenthetical
+            accumulator << "#{z_fields[1]} (#{z_fields[0]})"
+            # and 'post up'
+            accumulator << z_fields[0]
+          else
+            # just add all the z's if there's 1 or more than 2.
+            accumulator.concat z_fields
+          end
+        end
+
+      end
+    end
+
+
+
+
   end
 end

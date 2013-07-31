@@ -166,4 +166,27 @@ describe "Traject::Macros::Marc21Semantics" do
     end
   end
 
+  describe "marc_geo_facet" do
+    before do
+      @indexer.instance_eval {to_field "geo_facet", marc_geo_facet }
+    end
+    it "maps a complicated record" do
+      @record = MARC::Reader.new(support_file_path  "multi_geo.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_equal ["Europe", "Middle East", "Africa, North", "Agora (Athens, Greece)", "Rome (Italy)", "Italy"], 
+        output["geo_facet"]
+    end
+    it "maps nothing on a record with no geo" do
+      @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+      output = @indexer.map_record(@record)
+      assert_nil output["geo_facet"]
+    end
+    it "works on mysteriously failing record" do
+      @record = MARC::Reader.new(support_file_path  "mysterious_bad_geo.marc").to_a.first
+      output = @indexer.map_record(@record)
+      assert_nil output["geo_facet"]
+    end
+  end
+
 end
