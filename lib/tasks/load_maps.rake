@@ -38,7 +38,7 @@ namespace :load_maps do
         label = line.css("td[2]").inner_text.strip
 
         label.gsub!(/\n */, ' ') # get rid of newlines that file now sometimes contains, bah.
-        label.gsub("'", "''") # yaml escapes single-quotes by doubling them, weird but true. 
+        label.gsub!("'", "''") # yaml escapes single-quotes by doubling them, weird but true. 
 
         file.puts "'#{code}': '#{label}'"
       end

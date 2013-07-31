@@ -1,5 +1,5 @@
 # Translation map for marc geographic codes constructed by `rake load_maps:marc_geographic` task
-# Scraped from http://www.loc.gov/marc/geoareas/gacs_code.html at 2013-07-31 12:03:43 -0400
+# Scraped from http://www.loc.gov/marc/geoareas/gacs_code.html at 2013-07-31 12:05:20 -0400
 # Intentionally includes discontinued codes.
 
 'a': 'Asia'
@@ -99,7 +99,7 @@
 'a-vs': 'Viet Nam, South'
 'a-vt': 'Vietnam'
 'a-ye': 'Yemen (Republic)'
-'a-ys': 'Yemen (People's Democratic Republic)'
+'a-ys': 'Yemen (People''s Democratic Republic)'
 'aa': 'Amur River (China and Russia)'
 'ab': 'Bengal, Bay of'
 'ac': 'Asia, Central'
@@ -256,7 +256,7 @@
 'f-go': 'Gabon'
 'f-gv': 'Guinea'
 'f-if': 'Ifni'
-'f-iv': 'Côte d'Ivoire'
+'f-iv': 'Côte d''Ivoire'
 'f-ke': 'Kenya'
 'f-lb': 'Liberia'
 'f-lo': 'Lesotho'
