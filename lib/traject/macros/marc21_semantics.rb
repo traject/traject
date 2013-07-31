@@ -354,11 +354,42 @@ module Traject::Macros
             accumulator.concat z_fields
           end
         end
-
       end
     end
 
+    # Opinionated routine to create values for a chronology/era facet out of
+    # LCSH chron subdivisions. Does some normalization:
+    # for 651 with a chron facet fitting the form
+    # "aaaaa, yyyy-yyyy", it will add in the $a. For instance:
+    # 651   a| United States x| History y| Civil War, 1861-1865
+    # --> "United States: Civil War, 1861-1865"
+    def marc_era_facet
+      ordinary_fields_spec = "600y:610y:611y:630y:648ay:650y:654y:656y:690y"
+      special_fields_spec = "651:691"
+      seperator = ": "
+      lambda do |record, accumulator|
+        # straightforward ones
 
+
+        accumulator.concat( MarcExtractor.extract_by_spec(record, ordinary_fields_spec).collect do |v|
+          # May have a period we have to remove, if it was at end of tag
+          v.sub(/\. *\Z/, '')
+        end)
+
+        # weird ones        
+        MarcExtractor.new(record, special_fields_spec).each_matching_line do |field, spec, extractor|
+          field.subfields.each do |sf|
+            next unless sf.code == 'y'
+            if sf.value =~ /\A\s*.+,\s+(ca.\s+)?\d\d\d\d?(-\d\d\d\d?)?( B\.C\.)?[.,; ]*\Z/
+              # it's our pattern, add the $a in please
+              accumulator << "#{field['a']}#{seperator}#{sf.value.sub(/\. *\Z/, '')}"
+            else
+              accumulator << sf.value.sub(/\. *\Z/, '')
+            end
+          end
+        end        
+      end
+    end
 
 
   end

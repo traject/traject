@@ -184,4 +184,18 @@ describe "Traject::Macros::Marc21Semantics" do
     end
   end
 
+  describe "marc_era_facet" do
+    before do
+      @indexer.instance_eval {to_field "era_facet", marc_era_facet}
+    end
+    it "maps a complicated record" do
+      @record = MARC::Reader.new(support_file_path  "multi_era.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_equal ["Early modern, 1500-1700", "17th century", "Great Britain: Puritan Revolution, 1642-1660", "Great Britain: Civil War, 1642-1649", "1642-1660"],
+        output["era_facet"]
+    end
+
+  end
+
 end

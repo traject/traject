@@ -87,9 +87,11 @@ to_field "subject_topic_facet", extract_marc("600abcdtq:610abt:610x:611abt:611x:
   end
 end
 
-to_field "subject_geo_facet", marc_geo_facet
+to_field "subject_geo_facet",   marc_geo_facet
+to_field "subject_era_facet",   marc_era_facet
 
-to_field "subject_facet",     extract_marc("600:610:611:630:650:651:655:690")
+# not doing this at present. 
+#to_field "subject_facet",     extract_marc("600:610:611:630:650:651:655:690")
 
 to_field "published_display", extract_marc("260a", :trim_punctuation => true)
 
