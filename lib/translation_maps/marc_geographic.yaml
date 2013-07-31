@@ -1,5 +1,6 @@
 # Translation map for marc geographic codes constructed by `rake load_maps:marc_geographic` task
-# Scraped from http://www.loc.gov/marc/geoareas/gacs_code.html at 2013-07-31 11:41:57 -0400
+# Scraped from http://www.loc.gov/marc/geoareas/gacs_code.html at 2013-07-31 12:03:43 -0400
+# Intentionally includes discontinued codes.
 
 'a': 'Asia'
 'a-af': 'Afghanistan'
