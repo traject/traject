@@ -27,7 +27,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "pry"
-
-  # nokogiri just used for rake tasks at present, like load_maps ones
-  spec.add_development_dependency "nokogiri"
 end
