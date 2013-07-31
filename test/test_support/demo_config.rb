@@ -4,7 +4,7 @@
 #extend Traject::Macros::Basic
 
 require 'traject/macros/marc21_semantics'
-extend Traject::Macros::Marc21Semantics
+extend  Traject::Macros::Marc21Semantics
 
 settings do
   provide "solr.url", "http://catsolrmaster.library.jhu.edu:8985/solr/master_prod"
@@ -87,6 +87,8 @@ to_field "subject_topic_facet", extract_marc("600abcdtq:610abt:610x:611abt:611x:
   end
 end
 
+to_field "subject_geo_facet", marc_geo_facet
+
 to_field "subject_facet",     extract_marc("600:610:611:630:650:651:655:690")
 
 to_field "published_display", extract_marc("260a", :trim_punctuation => true)
@@ -134,8 +136,8 @@ end
 to_field "instrumentation_facet",       marc_instrumentation_humanized
 to_field "instrumentation_code_unstem", marc_instrument_codes_normalized
 
-to_field "issn",                extract_marc("022a:022l:022y:773x:774x:776x")
-to_field "issn_related",        extract_marc("490x:440x:800x:400x:410x:411x:810x:811x:830x:700x:710x:711x:730x:780x:785x:777x:543x:760x:762x:765x:767x:770x:772x:775x:786x:787x")
+to_field "issn",                extract_marc("022a:022l:022y:773x:774x:776x", :seperator => nil)
+to_field "issn_related",        extract_marc("490x:440x:800x:400x:410x:411x:810x:811x:830x:700x:710x:711x:730x:780x:785x:777x:543x:760x:762x:765x:767x:770x:772x:775x:786x:787x", :seperator => nil)
 
 to_field "oclcnum_t",           oclcnum
 
