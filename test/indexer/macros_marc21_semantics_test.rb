@@ -182,11 +182,6 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
       assert_nil output["geo_facet"]
     end
-    it "works on mysteriously failing record" do
-      @record = MARC::Reader.new(support_file_path  "mysterious_bad_geo.marc").to_a.first
-      output = @indexer.map_record(@record)
-      assert_nil output["geo_facet"]
-    end
   end
 
 end
