@@ -283,7 +283,7 @@ class Traject::Indexer
     logger.info "finished Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
 
     if writer.respond_to?(:skipped_record_count) && writer.skipped_record_count > 0
-      logger.error "Indexer#process returning 'false' due to #{writer.skipped_record_count }skipped records."
+      logger.error "Indexer#process returning 'false' due to #{writer.skipped_record_count} skipped records."
       return false
     end
 
