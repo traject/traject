@@ -21,7 +21,7 @@ opts = Slop.new(:strict => true) do
   banner "traject [options] -c configuration.rb [-c config2.rb] file.mrc"
 
   on 'v', 'version', "print version information to stderr"
-  on 'd', 'debug', "Include debug log, log_level=debug"
+  on 'd', 'debug', "Include debug log, -s log.level=debug"
   on 'h', 'help', "print usage information to stderr"
   on 'c', 'conf', 'configuration file path (repeatable)', :argument => true, :as => Array
   on :s, :setting, "settings: `-s key=value` (repeatable)", :argument => true, :as => Array
@@ -93,7 +93,7 @@ end
 
 
 if options[:debug]
-  settings["log_level"] = "debug"
+  settings["log.level"] = "debug"
 end
 if options[:writer]
   settings["writer_class_name"] = options[:writer]
