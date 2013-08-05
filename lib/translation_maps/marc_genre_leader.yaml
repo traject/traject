@@ -1,0 +1,22 @@
+# First try to map leader bytes 6+7 combined, then if nothing
+# try to map just leader byte 6. 
+
+# first some mappings from leader bytes 6 and 7 combined:
+
+'aa': Book
+'ab': Journal/Newspaper
+'am': Book
+'as': Journal/Newspaper
+'ta': Book
+'tm': Book
+
+# Now some from just byte 6
+'c': Musical Score
+'d': Musical Score
+'e': Map/Globe
+'f': Map/Globe
+'i': Non-musical Recording
+'j': Musical Recording
+'k': Image
+'m': Software/Data
+'g': Video/Film
