@@ -6,13 +6,16 @@
 require 'traject/macros/marc21_semantics'
 extend  Traject::Macros::Marc21Semantics
 
+require 'traject/macros/marc_format_classifier'
+extend Traject::Macros::MarcFormats
+
 settings do
   #provide "solr.url", "http://catsolrmaster.library.jhu.edu:8985/solr/master_prod"
 
   provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
   provide "solrj_writer.parser_class_name", "XMLResponseParser"
 
-  #provide "solrj_writer.commit_on_close", true
+  provide "solrj_writer.commit_on_close", true
 
   #require 'traject/marc4j_reader'
   #store "reader_class_name", "Marc4JReader"
@@ -40,6 +43,9 @@ to_field "text_extra_boost_t",  extract_marc("505art")
 to_field "publisher_t",         extract_marc("260abef:261abef:262ab:264ab")
 
 to_field "language_facet",      marc_languages
+
+to_field "format",              marc_formats
+
 
 to_field "isbn_t",              extract_marc("020a:773z:776z:534z:556z")
 to_field "lccn",                extract_marc("010a")
