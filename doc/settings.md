@@ -51,6 +51,11 @@ for commonly used settings, see `traject -h`.
 * `marc4j_reader.source_encoding`: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
   by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
 
+* `processing_thread_pool` Default 3. Main thread pool used for processing records with input rules. Choose a
+   pool size based on size of your machine, and complexity of your indexing rules. 
+   Probably no reason for it ever to be more than number of cores on indexing machine.  
+   But this is the first thread_pool to try increasing for better performance on a multi-core machine. 
+
 * `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4jReader. If you don't need to read marc binary with Marc8 encoding, the pure ruby MarcReader may give you better performance.  Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
@@ -70,11 +75,13 @@ for commonly used settings, see `traject -h`.
 
 * `solrj_writer.server_class_name`: String name of a solrj.SolrServer subclass to be used by SolrJWriter. Default "HttpSolrServer"
 
-* `solrj_writer.thread_pool`:       Defaults to 3. A thread pool is used for submitting docs
+* `solrj_writer.thread_pool`:       Defaults to 1 (single bg thread). A thread pool is used for submitting docs
                                     to solr. Set to 0 or nil to disable threading. Set to 1,
                                     there will still be a single bg thread doing the adds.
                                     May make sense to set higher than number of cores on your
                                     indexing machine, as these threads will mostly be waiting
-                                    on Solr. Speed/capacity of your solr is more relevant.
+                                    on Solr. Speed/capacity of your solr might be more relevant.
+                                    Note that processing_thread_pool threads can end up submitting
+                                    to solr too, if solrj_writer.thread_pool is full. 
 
 * `writer_class_name`: a Traject Writer class, used by indexer to send processed dictionaries off. Default Traject::SolrJWriter, also available Traject::JsonWriter. See Traject::Indexer for more info. Command line shortcut `-w`
