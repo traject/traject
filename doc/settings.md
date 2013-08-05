@@ -19,6 +19,16 @@ for commonly used settings, see `traject -h`.
 
 ## Known settings
 
+* `debug_ascii_progress`: true/'true' to print ascii characters to STDERR indicating progress. Note,
+                          yes, this is fixed to STDERR, regardless of your logging setup. 
+                          * `.` for every batch of records read and parsed
+                          * `^` for every batch of records batched and queued for adding to solr
+                                (possibly in thread pool)
+                          * `%` for completing of a Solr 'add'
+                          * `!` when threadpool for solr add has a full queue, so solr add is
+                                going to happen in calling queue -- means solr adding can't
+                                keep up with production. 
+
 * `json_writer.pretty_print`: used by the JsonWriter, if set to true, will output pretty printed json (with added whitespace) for easier human readability. Default false.
 
 * `log.file`: filename to send logging, or 'STDOUT' or 'STDERR' for those streams. Default STDERR
@@ -41,7 +51,7 @@ for commonly used settings, see `traject -h`.
 * `marc4j_reader.source_encoding`: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
   by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4jReader. See Traject::Indexer for more info. Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4jReader. If you don't need to read marc binary with Marc8 encoding, the pure ruby MarcReader may give you better performance.  Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
 
@@ -51,8 +61,8 @@ for commonly used settings, see `traject -h`.
   change some default settings, and/or sanity check and warn you if you're doing something
   that might not work with that version of solr. Set now for help in the future.
 
-* `solrj_writer.batch_size`: size of batches that SolrJWriter will send docs to Solr in. Default 100. Set to nil,
-  0, or 1, and SolrJWriter will do one http transaction per document, no batching.
+* `solrj_writer.batch_size`: size of batches that SolrJWriter will send docs to Solr in. Default 200. Set to nil,
+  0, or 1, and SolrJWriter will do one http transaction per document, no batching. 
 
 * `solrj_writer.commit_on_close`: default false, set to true to have SolrJWriter send an explicit commit message to Solr after indexing.
 
@@ -60,7 +70,7 @@ for commonly used settings, see `traject -h`.
 
 * `solrj_writer.server_class_name`: String name of a solrj.SolrServer subclass to be used by SolrJWriter. Default "HttpSolrServer"
 
-* `solrj_writer.thread_pool`:         Defaults to 4. A thread pool is used for submitting docs
+* `solrj_writer.thread_pool`:       Defaults to 3. A thread pool is used for submitting docs
                                     to solr. Set to 0 or nil to disable threading. Set to 1,
                                     there will still be a single bg thread doing the adds.
                                     May make sense to set higher than number of cores on your
