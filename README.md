@@ -63,6 +63,10 @@ settings do
   # Where to find solr server to write to
   provide "solr.url", "http://example.org/solr"
 
+  # If you are connecting to Solr 1.x, you need to set
+  # for SolrJ compatibility:
+  # provide "solrj_writer.parser_class_name", "XMLResponseParser"
+
   # solr.version doesn't currently do anything, but set it
   # anyway, in the future it will warn you if you have settings
   # that may not work with your version.
