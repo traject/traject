@@ -7,10 +7,10 @@ require 'traject/macros/marc21_semantics'
 extend  Traject::Macros::Marc21Semantics
 
 settings do
-  provide "solr.url", "http://catsolrmaster.library.jhu.edu:8985/solr/master_prod"
+  #provide "solr.url", "http://catsolrmaster.library.jhu.edu:8985/solr/master_prod"
 
-  #provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
-  #provide "solrj_writer.parser_class_name", "XMLResponseParser"
+  provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
+  provide "solrj_writer.parser_class_name", "XMLResponseParser"
 
   #provide "solrj_writer.commit_on_close", true
 

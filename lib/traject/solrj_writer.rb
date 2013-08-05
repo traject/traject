@@ -18,6 +18,7 @@ require 'yell'
 
 require 'traject'
 require 'traject/qualified_const_get'
+require 'traject/thread_pool'
 
 require 'uri'
 require 'thread' # for Mutex
@@ -61,10 +62,10 @@ require 'thread' # for Mutex
 #                                   per doc. DEFAULT to 100, which seems to be a sweet spot.
 #   [solrj_writer.thread_pool]      Defaults to 4. A thread pool is used for submitting docs
 #                                   to solr. Set to 0 or nil to disable threading. Set to 1,
-#                                   there will still be a single bg thread doing the adds. 
+#                                   there will still be a single bg thread doing the adds.
 #                                   May make sense to set higher than number of cores on your
 #                                   indexing machine, as these threads will mostly be waiting
-#                                   on Solr. Speed/capacity of your solr is more relevant. 
+#                                   on Solr. Speed/capacity of your solr is more relevant.
 class Traject::SolrJWriter
   # just a tuple of a SolrInputDocument
   # and a Traject::Indexer::Context it came from
@@ -80,7 +81,7 @@ class Traject::SolrJWriter
 
   attr_reader :settings
 
-  attr_accessor :batched_queue
+  attr_reader :batched_queue
 
   def initialize(argSettings)
     @settings = Traject::Indexer::Settings.new(argSettings)
@@ -90,26 +91,22 @@ class Traject::SolrJWriter
 
     solr_server # init
 
-    self.batched_queue = []
-    @batched_queue_mutex = Mutex.new
+    @batched_queue = java.util.concurrent.LinkedBlockingQueue.new
 
     # when multi-threaded exceptions raised in threads are held here
     # we need a HIGH performance queue here to try and avoid slowing things down,
     # since we need to check it frequently.
     @async_exception_queue = java.util.concurrent.ConcurrentLinkedQueue.new
 
-    unless @settings.has_key?("solrj_writer.thread_pool")
-      @settings["solrj_writer.thread_pool"] = 4
-    end
-
     # Store error count in an AtomicInteger, so multi threads can increment
     # it safely, if we're threaded.
     @skipped_record_incrementer = java.util.concurrent.atomic.AtomicInteger.new(0)
 
-    # specified 1 thread pool is still a thread pool, with one thread in it!
-    if @settings["solrj_writer.thread_pool"].to_i > 0
-      @thread_pool = java.util.concurrent.Executors.new_fixed_thread_pool(@settings["solrj_writer.thread_pool"].to_i)
-    end
+    # if our thread pool settings are 0, it'll just create a null threadpool that
+    # executes in calling context.
+    @thread_pool = Traject::ThreadPool.new( @settings["solrj_writer.thread_pool"].to_i )
+
+    @debug_ascii_progress = (@settings["debug_ascii_progress"].to_s == "true")
   end
 
   # Loads solrj if not already loaded. By loading all jars found
@@ -162,7 +159,7 @@ class Traject::SolrJWriter
   # if using batches, then not every #put is a http transaction, but when it is,
   # it's in the calling thread, synchronously.
   def put(context)
-    re_raise_async_exception!
+    @thread_pool.raise_collected_exception!
 
     # package the SolrInputDocument along with the context, so we have
     # the context for error reporting when we actually add.
@@ -170,23 +167,28 @@ class Traject::SolrJWriter
     package = UpdatePackage.new(hash_to_solr_document(context.output_hash), context)
 
     if settings["solrj_writer.batch_size"].to_i > 1
-      ready_batch = nil
+      ready_batch = []
 
       # Synchronize access to our shared batched_queue state,
       # but once we've pulled out what we want in local var
       # `ready_batch`, don't need to synchronize anymore.
-      @batched_queue_mutex.synchronize do
-        batched_queue << package
-        if batched_queue.length >= settings["solrj_writer.batch_size"].to_i
-          ready_batch = batched_queue.slice!(0, batched_queue.length)
-        end
+      batched_queue.add(package)
+      if batched_queue.size >= settings["solrj_writer.batch_size"].to_i
+        batched_queue.drain_to(ready_batch)
       end
 
-      if ready_batch
-        maybe_in_thread_pool { batch_add_document_packages(ready_batch) }
+      if ready_batch.length > 0
+        if @debug_ascii_progress
+          $stderr.write("^")
+          if @thread_pool.queue && (@thread_pool.queue.size >= @thread_pool.queue_capacity)
+            $stderr.write "!"
+          end
+        end
+
+        @thread_pool.maybe_in_thread_pool { batch_add_document_packages(ready_batch) }        
       end
     else # non-batched add, add one at a time.
-      maybe_in_thread_pool { add_one_document_package(package) }
+      @thread_pool.maybe_in_thread_pool { add_one_document_package(package) }
     end
   end
 
@@ -210,9 +212,11 @@ class Traject::SolrJWriter
   # in a doc array that is not shared state, extracting it from
   # shared state batched_queue in a mutex.
   def batch_add_document_packages(current_batch)
-    logger.debug("SolrJWriter: batch adding #{current_batch.length} documents")
     begin
-      solr_server.add( current_batch.collect {|package| package.solr_document } )
+      a = current_batch.collect {|package| package.solr_document }    
+      solr_server.add( a )
+
+      $stderr.write "%" if @debug_ascii_progress
     rescue Exception => e
       # Error in batch, none of the docs got added, let's try to re-add
       # em all individually, so those that CAN get added get added, and those
@@ -224,31 +228,6 @@ class Traject::SolrJWriter
     end
   end
 
-  # executes it's block in a thread pool if we're configured to use one, otherwise
-  # just executes
-  def maybe_in_thread_pool
-    if @thread_pool
-      @thread_pool.execute do
-        begin
-          yield
-        rescue Exception => e
-          @async_exception_queue.offer(e)
-        end
-      end
-    else
-      yield
-    end
-  end
-
-  # If we are in threaded mode, check the async exception queue,
-  # and re-raise an exception if it has one. This is called from
-  # main thread.
-  def re_raise_async_exception!
-    if @thread_pool && e = @async_exception_queue.poll
-      # exception added in a thread, we raise it here.
-      raise e
-    end
-  end
 
   # Adds a single SolrInputDocument passed in as an UpdatePackage combo of SolrInputDocument
   # and context.
@@ -281,7 +260,7 @@ class Traject::SolrJWriter
   end
 
   def logger
-    settings["logger"] ||= Yell.new(STDERR, :level => "gt.fatal") # null logger
+    settings["logger"] ||=  Yell.new(STDERR, :level => "gt.fatal") # null logger
   end
 
   # If an exception is encountered talking to Solr, is it one we should
@@ -318,38 +297,31 @@ class Traject::SolrJWriter
   end
 
   def close
-    re_raise_async_exception!
+    @thread_pool.raise_collected_exception!
 
+    # Any leftovers in batch buffer? Send em to the threadpool too.
     if batched_queue.length > 0
-      # leftovers, dup em so we can pass em into a thread happily
-      packages = batched_queue.dup
-      batched_queue.clear
+      packages = []
+      batched_queue.drain_to(packages)
 
-      # we do it in the thread pool just for consistency, and so
+      # we do it in the thread pool for consistency, and so
       # it goes to the end of the queue behind any outstanding
       # work in the pool.
-      maybe_in_thread_pool { batch_add_document_packages( packages ) }
+      @thread_pool.maybe_in_thread_pool { batch_add_document_packages( packages ) }
     end
 
-    if @thread_pool
-      start_t = Time.now
-      logger.info "SolrJWriter: Shutting down thread pool, waiting if needed..."
-      @thread_pool.shutdown
-      # We pretty much want to wait forever, although we need to give
-      # a timeout. Okay, one day!
-      @thread_pool.awaitTermination(1, java.util.concurrent.TimeUnit::DAYS)
-
-      elapsed = Time.now - start_t
-      if elapsed > 60
-        logger.warn "Waited #{elapsed} seconds for all threads, you may want to increase solrj_writer.thread_pool (currently #{@settings["solrj_writer.thread_pool"]})"
-      end
-      logger.info "SolrJWriter: Thread pool shutdown complete"
-      logger.warn "SolrJWriter: #{skipped_record_count} skipped records" if skipped_record_count > 0
+    # Wait for shutdown, and time it.
+    logger.debug "SolrJWriter: Shutting down thread pool, waiting if needed..."
+    elapsed = @thread_pool.shutdown_and_wait
+    if elapsed > 60
+      logger.warn "Waited #{elapsed} seconds for all SolrJWriter threads, you may want to increase solrj_writer.thread_pool (currently #{@settings["solrj_writer.thread_pool"]})"
     end
+    logger.debug "SolrJWriter: Thread pool shutdown complete"
+    logger.warn "SolrJWriter: #{skipped_record_count} skipped records" if skipped_record_count > 0
 
     # check again now that we've waited, there could still be some
     # that didn't show up before.
-    re_raise_async_exception!
+    @thread_pool.raise_collected_exception!
 
     if settings["solrj_writer.commit_on_close"].to_s == "true"
       logger.info "SolrJWriter: Sending commit to solr..."

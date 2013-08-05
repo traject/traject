@@ -54,8 +54,9 @@ end
 #
 # This is pretty limited test right now.
 describe "Traject::SolrJWriter" do
-  $stderr.puts "WARNING: Testing SolrJWriter with mock instance, set ENV 'solr_url' to test against real solr" unless ENV["solr_url"]
   before do
+    $stderr.puts "WARNING: Testing SolrJWriter with mock instance, set ENV 'solr_url' to test against real solr" unless ENV["solr_url"]
+
     @settings = {
       # Use XMLResponseParser just to test, and so it will work
       # with a solr 1.4 test server
@@ -82,8 +83,8 @@ describe "Traject::SolrJWriter" do
     assert_raises(ArgumentError) { Traject::SolrJWriter.new("solr.url" => "adfadf") }
   end
 
-  it "defaults to solrj_writer.batch_size of 100" do
-    assert_equal 100, Traject::SolrJWriter.new("solr.url" => "http://example.org/solr").settings["solrj_writer.batch_size"].to_i
+  it "defaults to solrj_writer.batch_size more than 1" do
+    assert 1 < Traject::SolrJWriter.new("solr.url" => "http://example.org/solr").settings["solrj_writer.batch_size"].to_i
   end
 
   describe "with no threading or batching" do

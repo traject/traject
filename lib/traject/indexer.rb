@@ -62,7 +62,7 @@ class Traject::Indexer
   include Traject::Macros::Basic
 
 
-  # optional hash or Traject::Indexer::Settings object of settings. 
+  # optional hash or Traject::Indexer::Settings object of settings.
   def initialize(arg_settings = {})
     @settings = Settings.new(arg_settings)
     @index_steps = []
@@ -210,9 +210,8 @@ class Traject::Indexer
   # Returns the context passed in as second arg, as a convenience for chaining etc.
   def map_to_context!(context)
     @index_steps.each do |index_step|
-
-
       if index_step[:type] == :to_field
+
         accumulator = []
         context.field_name = index_step[:field_name]
 
@@ -229,7 +228,9 @@ class Traject::Indexer
         end
         (context.output_hash[context.field_name] ||= []).concat accumulator unless accumulator.empty?
         context.field_name = nil
+
       elsif index_step[:type] == :each_record
+
         # one or two arg
         [index_step[:lambda], index_step[:block]].each do |aProc|
           if aProc
@@ -240,6 +241,7 @@ class Traject::Indexer
             end
           end
         end
+
       else
         raise ArgumentError.new("An @index_step we don't know how to deal with: #{@index_step}")
       end
@@ -252,10 +254,10 @@ class Traject::Indexer
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
   #
-  # returns 'false' as a signal to command line to return non-zero exit code 
+  # returns 'false' as a signal to command line to return non-zero exit code
   # for some reason (reason found in logs, presumably). This particular mechanism
   # is open to complexification, starting simple. We do need SOME way to return
-  # non-zero to command line. 
+  # non-zero to command line.
   #
   def process(io_stream)
     settings.fill_in_defaults!
@@ -267,15 +269,41 @@ class Traject::Indexer
     reader = self.reader!(io_stream)
     writer = self.writer!
 
+    thread_pool = Traject::ThreadPool.new(settings["processing_thread_pool"].to_i)
+
     logger.info "   with reader: #{reader} and writer: #{writer}"
 
-    reader.each do |record|
+    reader.each do |record; position|
       count += 1
 
-      context = Context.new(:source_record => record, :settings => settings, :position => count)
-      map_to_context!(context)
-      writer.put context
+      # have to use a block local var, so the changing `count` one
+      # doesn't get caught in the closure. Weird, yeah.
+      position = count
+
+      thread_pool.raise_collected_exception!
+
+      if settings["debug_ascii_progress"].to_s == "true"
+        $stderr.write "." if count % settings["solrj_writer.batch_size"] == 0
+      end
+
+      # we have to use this weird lambda to properly "capture" the count, instead
+      # of having it be bound to the original variable in a non-threadsafe way.
+      # This is confusing, I might not be understanding things properly, but that's where i am.
+      #thread_pool.maybe_in_thread_pool &make_lambda(count, record, writer)
+      thread_pool.maybe_in_thread_pool do
+        context = Context.new(:source_record => record, :settings => settings, :position => position)
+        map_to_context!(context)
+        writer.put context
+      end
+
     end
+
+    $stderr.write "\n" if settings["debug_ascii_progress"].to_s == "true"
+
+    logger.debug "Shutting down #processing mapper threadpool..."
+    thread_pool.shutdown_and_wait
+    logger.debug "#processing mapper threadpool shutdown complete."
+    
     writer.close if writer.respond_to?(:close)
 
     elapsed        = Time.now - start_time
