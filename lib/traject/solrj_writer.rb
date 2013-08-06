@@ -17,6 +17,7 @@
 require 'yell'
 
 require 'traject'
+require 'traject/util'
 require 'traject/qualified_const_get'
 require 'traject/thread_pool'
 
@@ -221,7 +222,7 @@ class Traject::SolrJWriter
       # Error in batch, none of the docs got added, let's try to re-add
       # em all individually, so those that CAN get added get added, and those
       # that can't get individually logged.
-      logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + exception_to_log_message(e)
+      logger.warn "Error encountered in batch solr add, will re-try documents individually, at a performance penalty...\n" + Traject::Util.exception_to_log_message(e)
       current_batch.each do |package|
         add_one_document_package(package)
       end
@@ -247,7 +248,7 @@ class Traject::SolrJWriter
       position  = package.context.position
       position_str = position ? "at file position #{position} (starting at 1)" : ""
 
-      logger.error("Could not index record #{id_str} #{position_str}\n" + exception_to_log_message(e) )
+      logger.error("Could not index record #{id_str} #{position_str}\n" + Traject::Util.exception_to_log_message(e) )
       logger.debug(package.context.source_record.to_s)
 
       @skipped_record_incrementer.getAndIncrement() # AtomicInteger, thread-safe increment.
@@ -278,22 +279,6 @@ class Traject::SolrJWriter
     end
 
     return false
-  end
-
-  def exception_to_log_message(e)
-    indent = "    "
-
-    msg  = indent + "Exception: " + e.class.name + ": " + e.message + "\n"
-    msg += indent + e.backtrace.first + "\n"
-
-    if (e.respond_to?(:getRootCause) && e.getRootCause && e != e.getRootCause )
-      caused_by = e.getRootCause
-      msg += indent + "Caused by\n"
-      msg += indent + caused_by.class.name + ": " + caused_by.message + "\n"
-      msg += indent + caused_by.backtrace.first + "\n"
-    end
-
-    return msg
   end
 
   def close
