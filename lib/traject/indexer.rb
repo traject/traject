@@ -145,6 +145,7 @@ class Traject::Indexer
 
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
+
     if field_name.nil? || field_name.empty?
       raise ArgumentError.new("to_field requires a non-blank first argument, field name")
     end
@@ -161,7 +162,8 @@ class Traject::Indexer
       :field_name => field_name.to_s,
       :lambda => aLambda,
       :block  => block,
-      :type   => :to_field
+      :type   => :to_field,
+      :source_location => Traject::Util.extract_caller_location(caller.first)
     }
   end
 
@@ -178,7 +180,8 @@ class Traject::Indexer
     @index_steps << {
       :lambda => aLambda,
       :block  => block,
-      :type   => :each_record
+      :type   => :each_record,
+      :source_location => Traject::Util.extract_caller_location(caller.first)
     }
   end
 
@@ -217,12 +220,15 @@ class Traject::Indexer
 
         # Might have a lambda arg AND a block, we execute in order,
         # with same accumulator.
+
         [index_step[:lambda], index_step[:block]].each do |aProc|
           if aProc
-            if aProc.arity == 2
-              aProc.call(context.source_record, accumulator)
-            else
-              aProc.call(context.source_record, accumulator, context)
+            log_mapping_errors(context, index_step, aProc) do
+              if aProc.arity == 2
+                aProc.call(context.source_record, accumulator)
+              else
+                aProc.call(context.source_record, accumulator, context)
+              end
             end
           end
         end
@@ -234,10 +240,12 @@ class Traject::Indexer
         # one or two arg
         [index_step[:lambda], index_step[:block]].each do |aProc|
           if aProc
-            if aProc.arity == 1
-              aProc.call(context.source_record)
-            else
-              aProc.call(context.source_record, context)
+            log_mapping_errors(context, index_step, aProc) do
+              if aProc.arity == 1
+                aProc.call(context.source_record)
+              else
+                aProc.call(context.source_record, context)
+              end
             end
           end
         end
@@ -248,6 +256,33 @@ class Traject::Indexer
     end
 
     return context
+  end
+
+  # just a wrapper that captures and records any unexpected
+  # errors raised in mapping, along with contextual information
+  # on record and location in source file of mapping rule. 
+  #
+  # Re-raises error at the moment. 
+  #
+  # log_errors(context, some_lambda) do
+  #    all_sorts_of_stuff # that will have errors logged
+  # end
+  def log_mapping_errors(context, index_step, aProc)
+    begin
+      yield
+    rescue Exception => e        
+      msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
+
+      conf = context.field_name ? "to_field '#{context.field_name}'" : "each_record"
+
+      msg += "    while executing #{conf} defined at #{index_step[:source_location]}\n"
+      msg += Traject::Util.exception_to_log_message(e)
+
+      logger.error msg      
+      logger.debug "Record: " + context.source_record.to_s
+
+      raise e        
+    end
   end
 
   # Processes a stream of records, reading from the configured Reader,
@@ -341,6 +376,12 @@ class Traject::Indexer
   # Instantiate a Traject Writer, suing class set in #writer_class
   def writer!
     return writer_class.new(settings.merge("logger" => logger))
+  end
+
+  # get a printable id from record for error logging. 
+  # Maybe override this for a future XML version. 
+  def id_string(record)
+    record['001'] && record['001'].value.to_s
   end
 
 

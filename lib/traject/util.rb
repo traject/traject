@@ -19,5 +19,12 @@ module Traject
 
       return msg
     end
+
+    # From ruby #caller method, you get an array. Pass one line
+    # of the array here,  get just file and line number out. 
+    def self.extract_caller_location(str)
+      str.split(':in `').first
+    end
+
   end
 end
