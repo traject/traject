@@ -165,17 +165,27 @@ class Traject::Indexer
     }
   end
 
-  def each_record(aLambda = nil, &block)
+  # Process that runs each on each record but does *not* result in anything being
+  # mapped to a field.
+  #
+  # Useful for external size-effect (e.g., logging) and for avoiding repeated work
+  # by memoizing results and sticking them in the context object
+  #
+  # Format is the same as a to_field. The "field" (name/description) is 
+  # available for logging purposes and to self-document the index settings
+  
+  def each_record(desc, aLambda = nil, &block)
     # arity check
     [aLambda, block].each do |proc|
       # allow negative arity, meaning variable/optional, trust em on that.
       # but for positive arrity, we need 1 or 2 args
       if proc && (proc.arity == 0 || proc.arity > 2)
-        raise ArgumentError.new("block/proc given to to_field needs 1 or 2 arguments: #{proc}")
+        raise ArgumentError.new("block/proc given to each_record needs 1 or 2 arguments: #{proc}")
       end
     end
 
     @index_steps << {
+      :field_name => desc.to_s,
       :lambda => aLambda,
       :block  => block,
       :type   => :each_record
