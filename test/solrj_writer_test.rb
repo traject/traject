@@ -45,6 +45,7 @@ def test_handles_errors
   end
 end
 
+$stderr.puts "\n======\nWARNING: Testing SolrJWriter with mock instance, set ENV 'solr_url' to test against real solr\n======\n\n" unless ENV["solr_url"]
 # WARNING. The SolrJWriter talks to a running Solr server.
 #
 # set ENV['solr_url'] to run tests against a real solr server
@@ -55,8 +56,6 @@ end
 # This is pretty limited test right now.
 describe "Traject::SolrJWriter" do
   before do
-    $stderr.puts "WARNING: Testing SolrJWriter with mock instance, set ENV 'solr_url' to test against real solr" unless ENV["solr_url"]
-
     @settings = {
       # Use XMLResponseParser just to test, and so it will work
       # with a solr 1.4 test server
