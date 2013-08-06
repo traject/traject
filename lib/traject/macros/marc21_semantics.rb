@@ -76,6 +76,15 @@ module Traject::Macros
       MarcExtractor.new(record, "245ab").collect_matching_lines do |field, spec, extractor|
         str = extractor.collect_subfields(field, spec).first
 
+        if str.nil?
+          # maybe an APPM archival record with only a 'k'
+          str = field['k']
+        end
+        if str.nil?
+          # still? All we can do is bail, I guess
+          return nil
+        end
+
         non_filing = field.indicator2.to_i
         str = str.slice(non_filing, str.length)
         str = Marc21.trim_punctuation(str)

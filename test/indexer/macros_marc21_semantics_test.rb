@@ -64,6 +64,11 @@ describe "Traject::Macros::Marc21Semantics" do
 
       assert_equal ["Business renaissance quarterly"], output["title_sort"]
     end
+    it "works with a record with no 245$ab" do
+      @record = MARC::Reader.new(support_file_path  "245_no_ab.marc").to_a.first
+      output = @indexer.map_record(@record)
+      assert_equal ["Papers"], output["title_sort"]
+    end
   end
 
   describe "marc_languages" do
