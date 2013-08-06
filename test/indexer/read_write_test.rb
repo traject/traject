@@ -20,12 +20,16 @@ memory_writer_class = Class.new do
 
 describe "Traject::Indexer#process" do
   before do
-    @indexer = Traject::Indexer.new
+    # no threading for these tests
+    @indexer = Traject::Indexer.new("processing_thread_pool" => nil)
     @indexer.writer_class = memory_writer_class
     @file = File.open(support_file_path "test_data.utf8.mrc")
   end
 
   it "works" do
+    # oops, this times_called counter isn't thread-safe under multi-threading 
+    # is why this fails sometimes.
+    # fixed to be single-threaded for these tests. 
     times_called = 0
     @indexer.to_field("title") do |record, accumulator, context|
       times_called += 1
