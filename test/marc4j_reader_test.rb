@@ -23,6 +23,18 @@ describe "Marc4JReader" do
     assert first['245']['a'].encoding.name, "UTF-8"
   end
 
+  it "can skip a bad subfield code" do
+    file = File.new(support_file_path("bad_subfield_code.marc"))
+    settings = Traject::Indexer::Settings.new() # binary type is default
+    reader = Traject::Marc4JReader.new(file, settings)
+
+    array = reader.to_a
+
+    assert_equal 1, array.length
+    assert_kind_of MARC::Record, array.first
+    assert_length 2, array.first['260'].subfields
+  end
+
   it "reads Marc binary in Marc8 encoding" do
     file = File.new(support_file_path("one-marc8.mrc"))
     settings = Traject::Indexer::Settings.new("marc4j_reader.source_encoding" => "MARC8")
@@ -40,7 +52,7 @@ describe "Marc4JReader" do
     assert a245a.valid_encoding?
     # marc4j converts to denormalized unicode, bah. Although
     # it's legal, it probably looks weird as a string literal
-    # below, depending on your editor. 
+    # below, depending on your editor.
     assert_equal "Por uma outra globalização :", a245a
   end
 

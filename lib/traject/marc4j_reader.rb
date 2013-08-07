@@ -105,13 +105,28 @@ class Traject::Marc4JReader
 
   def each
     while (internal_reader.hasNext)
-      marc4j = internal_reader.next
-      rubymarc = self.class.convert_marc4j_to_rubymarc(marc4j)
+      begin
+        marc4j = internal_reader.next
+        rubymarc = convert_marc4j_to_rubymarc(marc4j)
+      rescue Exception =>e
+        msg = "MARC4JReader: Error reading MARC, fatal, re-raising"
+        if marc4j
+          msg += "\n    001 id: #{marc4j.getControlNumber}"
+        end
+        msg += "\n    #{Traject::Util.exception_to_log_message(e)}"
+        logger.fatal msg
+        raise e
+      end
+
       yield rubymarc
     end
   end
 
-  def self.convert_marc4j_to_rubymarc(marc4j)
+  def logger
+    @logger ||= (settings[:logger] || Yell.new(STDERR, :level => "gt.fatal")) # null logger)
+  end
+
+  def convert_marc4j_to_rubymarc(marc4j)
     rmarc = MARC::Record.new
     rmarc.leader = marc4j.getLeader.marshal
 
@@ -123,6 +138,15 @@ class Traject::Marc4JReader
       rdata = MARC::DataField.new(  marc4j_data.getTag,  marc4j_data.getIndicator1.chr, marc4j_data.getIndicator2.chr )
 
       marc4j_data.getSubfields.each do |subfield|
+
+        # We assume Marc21, skip corrupted data
+        # if subfield.getCode is more than 255, subsequent .chr
+        # would raise.
+        if subfield.getCode > 255
+          logger.warn("Marc4JReader: Corrupted MARC data, record id #{marc4j.getControlNumber}, field #{marc4j_data.tag}, corrupt subfield code byte #{subfield.getCode}. Skipping subfield, but continuing with record.")
+          next
+        end
+
         rsubfield = MARC::Subfield.new(subfield.getCode.chr, subfield.getData)
         rdata.append rsubfield
       end
