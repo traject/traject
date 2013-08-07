@@ -41,6 +41,9 @@ for commonly used settings, see `traject -h`.
 * `log.level`:  Log this level and above. Default 'info', set to eg 'debug' to get potentially more logging info,
               or 'error' to get less. https://github.com/rudionrails/yell/wiki/101-setting-the-log-level
 
+* `log.batch_progress`: If set to a number N (or string representation), will output a progress line to INFO
+   log, every N records. 
+
 * `marc_source.type`: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 
 * `marc4j_reader.jar_dir`:   Path to a directory containing Marc4J jar file to use. All .jar's in dir will
@@ -55,6 +58,11 @@ for commonly used settings, see `traject -h`.
    pool size based on size of your machine, and complexity of your indexing rules. 
    Probably no reason for it ever to be more than number of cores on indexing machine.  
    But this is the first thread_pool to try increasing for better performance on a multi-core machine. 
+   
+   A pool here can sometimes result in multi-threaded commiting to Solr too with the
+   SolrJWriter, as processing worker threads will do their own commits to solr if the
+   solrj_writer.thread_pool is full. Having a multi-threaded pool here can help even out throughput
+   through Solr's pauses for committing too. 
 
 * `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4jReader. If you don't need to read marc binary with Marc8 encoding, the pure ruby MarcReader may give you better performance.  Command-line shortcut `-r`
 

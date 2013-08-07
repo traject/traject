@@ -298,7 +298,7 @@ class Traject::Indexer
     settings.fill_in_defaults!
 
     count      =       0
-    start_time = Time.now
+    start_time = batch_start_time = Time.now
     logger.info "beginning Indexer#process with settings: #{settings.inspect}"
 
     reader = self.reader!(io_stream)
@@ -319,6 +319,13 @@ class Traject::Indexer
 
       if settings["debug_ascii_progress"].to_s == "true"
         $stderr.write "." if count % settings["solrj_writer.batch_size"] == 0
+      end
+
+      if settings["log.batch_progress"] && (count % settings["log.batch_progress"].to_i == 0)
+        batch_rps = settings["log.batch_progress"].to_i / (Time.now - batch_start_time)
+        overall_rps = count / (Time.now - start_time)
+        logger.info "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall"
+        batch_start_time = Time.now
       end
 
       # we have to use this weird lambda to properly "capture" the count, instead
@@ -381,7 +388,7 @@ class Traject::Indexer
   # get a printable id from record for error logging. 
   # Maybe override this for a future XML version. 
   def id_string(record)
-    record['001'] && record['001'].value.to_s
+    record && record['001'] && record['001'].value.to_s
   end
 
 
