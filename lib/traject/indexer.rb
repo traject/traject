@@ -370,7 +370,7 @@ class Traject::Indexer
   # Instantiate a Traject Reader, using class set
   # in #reader_class, initialized with io_stream passed in
   def reader!(io_stream)
-    return reader_class.new(io_stream, settings)
+    return reader_class.new(io_stream, settings.merge("logger" => logger))
   end
 
   # Instantiate a Traject Writer, suing class set in #writer_class
