@@ -339,12 +339,14 @@ class Traject::Indexer
       end
 
     end
-
     $stderr.write "\n" if settings["debug_ascii_progress"].to_s == "true"
 
     logger.debug "Shutting down #processing mapper threadpool..."
     thread_pool.shutdown_and_wait
     logger.debug "#processing mapper threadpool shutdown complete."
+
+    thread_pool.raise_collected_exception!
+
     
     writer.close if writer.respond_to?(:close)
 
