@@ -306,7 +306,7 @@ class Traject::Indexer
 
     thread_pool = Traject::ThreadPool.new(settings["processing_thread_pool"].to_i)
 
-    logger.info "   with reader: #{reader} and writer: #{writer}"
+    logger.info "   with reader: #{reader.class.name} and writer: #{writer.class.name}"
 
     reader.each do |record; position|
       count += 1
