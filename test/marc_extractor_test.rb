@@ -177,6 +177,14 @@ describe "Traject::MarcExtractor" do
 
   end
 
+  describe "with bad data" do
+    it "can ignore an 880 with no $6" do
+      @record = MARC::Reader.new(support_file_path  "880_with_no_6.utf8.marc").to_a.first
+      values = Traject::MarcExtractor.extract_by_spec(@record, "001")
+      assert_equal ["3468569"], values
+    end
+  end
+
   describe "#each_matching_line" do
     before do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first

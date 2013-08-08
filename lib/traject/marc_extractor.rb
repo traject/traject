@@ -194,10 +194,7 @@ module Traject
     # otherwise will always return nil for 880s, you have to handle :alternate_script :include
     # elsewhere, to add in the 880 in the right order
     def spec_covering_field(field)
-      #require 'pry'
-      #binding.pry if field.tag == "880"
-
-      if field.tag == "880" && options[:alternate_script] != false
+      if field.tag == "880" && field['6'] && options[:alternate_script] != false
         # pull out the spec for corresponding original marc tag this 880 corresponds to
         # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
         # to do this weird encode gymnastics, which fixes it for mysterious reasons.
