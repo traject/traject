@@ -9,20 +9,16 @@ them somewhere.
 
 ## Background/Goals
 
-I've used previous MARC indexing solutions, and borrowed a lot from their success, including the
-venerable SolrMarc, which we greatly appreciate and from which we've learned a lot. But I realized
-in order to get the solution with the internal architecture, features, and interface I wanted, I
-could do it best in jruby (ruby on the JVM).
+Existing tools for indexing Marc to Solr exist, and have served many of us for many years. But I was having more and more difficulty working with the existing tools, and difficulty providing the custom logic I needed in a maintainable way. I realized that for me, to create a tool with the flexibility, maintainability, and performance I wanted, I would need to do it in jruby (ruby on the JVM).
 
-Traject aims to:
+Some goals:
 
-* Be simple and straightforward for simple use cases, hopefully being accessible even to non-rubyists, although it's in ruby
-* Be composed of modular and re-composible elements, to provide flexibility for non-common use cases. You should be able to
-do your own thing wherever you want, without having to give up
-the already implemented parts you still do want, mixing and matching at will.
-* Easily support re-use and sharing of mapping rules, within an installation and between organizations.
-* Have a parsimonious or 'elegant' internal architecture, only a few architectural concepts to understand that everything else is built on, to hopefully make the internals easy to work with and maintain.
-* Be high performance, including using multi-threaded concurrency where appropriate to maximize indexing throughput.
+* Aim to be accessible even to non-rubyists
+* Concise and maintainable local configuration -- including an only gradual increase in difficulty to write your own simple logic.
+* Support reusable and shareable mapping logic routines.
+* Built of modular and composable elements: If you want to change part of what traject does, you should be able to do so without having to reimplement other things you don't want to change.
+* A maintainable internal architecture, well-factored with seperated concerns and DRY logic. Aim to be comprehensible to newcomer developers, and well-covered by tests.
+* High performance, using multi-threaded concurrency where appropriate to maximize throughput. Actual throughput can depend on complexity of your mapping rules and capacity of your server(s), but I am getting throughput 2-5x greater than previous solutions.
 
 
 ## Installation
@@ -360,50 +356,6 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
 
 ## TODO
 
-* Logging
-  * Logging is currently... okay, not great.
-  * Currently silencing SolrJ's own logging (by silencing log4j root logger) Think
-    that may actually be okay -- we still log any exceptions solrj throws.
-    * Cause, making solrj and it's own logging go to same place, accross jruby bridge, not sure
-    (I want all of this code BUT the Solr writing stuff to be usable under MRI too,
-     I want to repurpose the mapping code for DISPLAY too)
-  * Do need to get SolrJWriter error logging to log recordID and position number
-    of skipped record. A pain cause of current seperation of concerns architecture.
-
-* Error handling. Related to logging. Catch errors indexing
-  particular records, make
-  sure they are logged in an obvious place, make sure processing proceeds with other
-  records (if it should!) etc.
-
-* Distro and the SolrJ jars. Right now the SolrJ jars are included in the gem (although they
-  aren't actually loaded until you try to use the SolrJWriter). This is not neccesarily
-  best. other possibilities:
-  * Put them in their own gem
-  * Make the end-user download them theirselves, possibly providing the ivy.xml's to do so for
-    them.
-  * Oh, this applies to Marc4J jars used by the Marc4JReader too.
-
-* Various performance improvements, this is not optimized yet. Some improvements
-  may challenge architecture, when they involve threading.
-  * Profile and optimize marc loading -- right now just using ruby-marc, always.
-  * Profile/optimize marc serialization back to stored filed, right now it uses
-    known-to-be-slow rexml as part of ruby-marc.
-  * Use threads for the mapping step? With celluloid, or threach, or other? Does
-    this require thinking more about thread safety of existing code?
-  * Use threads for writing to solr?
-    * I am not sure about using the solrj ConcurrentUpdateSolrServer -- among other
-      things, it seems to swallow solr errors, that i'm not sure we want to do.
-    * But we can batch docs ourselves before HttpServer#add'ing them -- every
-      solrj HTTPServer#add is an http transaction, but you can give it an ARRAY
-      to load multiple at once -- and still get the errors, I think. (Have to test)
-      Could be perf nearly as good as concurrentupdate? Or do that, but then make each
-      HttpServer#add in one of our own manual threads (Celluloid? Or raw?), so
-      continued processing doesn't block?
-
-* Reading Marc8. It can't do it yet. Easiest way would be using Marc4j to read, or using it as a transcoder anyway. Don't really want to write marc8 transcoder in ruby.
-
-* We need something like `to_field`, but without actually being
-for mapping to a specific output field. For generic pre or post-processing, or multi-output-field logic. `before_record do &block`, `after_record do &block` , `on_each_record do &block`, one or more of those.
 
 * Unicode normalization. Has to normalize to NFKC on way out to index. Except for serialized marc field and other exceptions? Except maybe don't have to, rely on solr analyzer to do it?
 
@@ -411,8 +363,6 @@ for mapping to a specific output field. For generic pre or post-processing, or m
 
   * Either way, all optional/configurable of course. based
     on Settings.
-
-* More macros. Not all the built-in functionality that comes with SolrMarc is here yet. It can be provided as macros, either built in, or distro'd in other gems. If really needed  as macros, and not just something local configs build themselves as needed out of the parts already here.
 
 * Command line code. It's only 150 lines, but it's kind of messy
 jammed into one file *and lacks tests*. I couldn't figure out
