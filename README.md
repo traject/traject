@@ -23,7 +23,8 @@ Some goals:
 
 ## Installation
 
-Traject runs under jruby (ruby on the JVM). I recommend [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme) for installing and managing ruby installations.
+Traject runs under jruby (ruby on the JVM). I recommend [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme) for installing and managing ruby installations. traject is tested
+and supported for ruby 1.9.3. 
 
 Then just `gem install traject`.
 
