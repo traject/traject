@@ -80,8 +80,7 @@ end
 
 settings = {}
 (options[:setting] || []).each do |setting_pair|
-
-  if setting_pair =~ /\A([^=]+)\=([^=]*)\Z/
+  if setting_pair =~ /\A([^=]+)\=(.*)\Z/
     key, value = $1, $2
     settings[key] = value
   else
