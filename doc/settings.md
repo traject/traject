@@ -54,6 +54,10 @@ for commonly used settings, see `traject -h`.
 * `marc4j_reader.source_encoding`: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
   by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
 
+* `output_file`: Output file to write to for operations that write to files: For instance the `marcout` command,
+                 or Writer classes that write to files, like Traject::JsonWriter. Has an shortcut
+                 `-o` on command line. 
+
 * `processing_thread_pool` Default 3. Main thread pool used for processing records with input rules. Choose a
    pool size based on size of your machine, and complexity of your indexing rules. 
    Probably no reason for it ever to be more than number of cores on indexing machine.  
