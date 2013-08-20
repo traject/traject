@@ -54,6 +54,9 @@ describe "Marc4JReader" do
     # it's legal, it probably looks weird as a string literal
     # below, depending on your editor.
     assert_equal "Por uma outra globalização :", a245a
+
+    # Set leader byte to proper for unicode
+    assert_equal 'a', array.first.leader[9]
   end
 
 
