@@ -114,8 +114,15 @@ describe "Traject::Indexer#settings" do
     assert_equal "new", settings["c"]
   end
 
-  describe "defaults" do
+  describe "inspect" do
+    it "keeps keys ending in 'password' out of inspect" do
+      settings = Traject::Indexer::Settings.new("a" => "a", 
+        "password" => "password", "some_password" => "password",
+        "some.password" => "password")
 
+      parsed = eval( settings.inspect )
+      assert_equal( {"a" => "a", "password" => "[hidden]", "some_password" => "[hidden]", "some.password" => "[hidden]"}, parsed)
+    end
   end
 
 end

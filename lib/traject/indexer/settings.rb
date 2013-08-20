@@ -1,7 +1,7 @@
 require 'hashie'
 
 # A Hash of settings for a Traject::Indexer, which also ends up passed along
-# to other objects Traject::Indexer interacts with.  
+# to other objects Traject::Indexer interacts with.
 #
 # Enhanced with a few features from Hashie, to make it for
 # instance string/symbol indifferent
@@ -70,6 +70,14 @@ class Traject::Indexer
       "solrj_writer.thread_pool"  => 1,
       "processing_thread_pool"    => 3
       }
+    end
+
+    def inspect
+      # Keep any key ending in password out of the inspect
+      self.inject({}) do |hash, (key, value)|
+        hash[key] = (key =~ /password\Z/) ? "[hidden]" : value
+        hash
+      end.inspect
     end
   end
 end
