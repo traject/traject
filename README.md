@@ -9,7 +9,7 @@ them somewhere.
 
 ## Background/Goals
 
-Existing tools for indexing Marc to Solr exist, and have served many of us for many years. But I was having more and more difficulty working with the existing tools, and difficulty providing the custom logic I needed in a maintainable way. I realized that for me, to create a tool with the flexibility, maintainability, and performance I wanted, I would need to do it in jruby (ruby on the JVM).
+Existing tools for indexing Marc to Solr exist, and have served us well for many years, and have many useful things about them -- which I've tried to preserve in traject.  But I was having more and more difficulty working with the existing tools, including difficulty providing the custom logic I needed in a maintainable way. I realized that for me, to create a tool with the flexibility, maintainability, and performance I wanted, I would need to do it in jruby (ruby on the JVM).
 
 Some goals:
 
@@ -23,8 +23,8 @@ Some goals:
 
 ## Installation
 
-Traject runs under jruby (ruby on the JVM). I recommend [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme) for installing and managing ruby installations. traject is tested
-and supported for ruby 1.9.3. 
+Traject runs under jruby (ruby on the JVM). I recommend [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme) for installing and managing ruby installations. (traject is tested
+and supported for ruby 1.9 -- recent versions of jruby should run under 1.9 mode by default). 
 
 Then just `gem install traject`.
 
@@ -265,6 +265,10 @@ in order.
   to_field("foo") {...}  # and will be called after each of the preceding for each record
 ~~~
 
+#### Sample config
+
+A fairly complex sample config file can be found at [./test/test_support/demo_config.rb](./test/test_support/demo_config.rb)
+
 #### Built-in MARC21 Semantics
 
 There is another package of 'macros' that comes with Traject for extracting semantics
@@ -293,7 +297,7 @@ The simplest invocation is:
     traject -c conf_file.rb marc_file.mrc
 
 Traject assumes marc files are in ISO 2709 binary format; it is not
-currently able to buess marc format type. If you are reading
+currently able to guess marc format type from filenames. If you are reading
 marc files in another format, you need to tell traject either with the `marc_source.type` or the command-line shortcut:
 
     traject -c conf.rb -t xml marc_file.xml
