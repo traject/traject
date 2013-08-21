@@ -25,7 +25,7 @@ describe "Traject::Macros::Marc21Semantics" do
     end
     output = @indexer.map_record(@record)
 
-    assert_equal %w{2710183 47971712},  output["oclcnum"]
+    assert_equal %w{47971712},  output["oclcnum"]
   end
 
   describe "marc_sortable_author" do
