@@ -7,6 +7,9 @@ them somewhere.
 
 **Currently under development, not production ready**
 
+[![Build Status](https://travis-ci.org/jrochkind/traject.png)](https://travis-ci.org/jrochkind/traject)
+
+
 ## Background/Goals
 
 Existing tools for indexing Marc to Solr exist, and have served us well for many years, and have many useful things about them -- which I've tried to preserve in traject.  But I was having more and more difficulty working with the existing tools, including difficulty providing the custom logic I needed in a maintainable way. I realized that for me, to create a tool with the flexibility, maintainability, and performance I wanted, I would need to do it in jruby (ruby on the JVM).
