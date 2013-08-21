@@ -4,3 +4,4 @@ rvm:
 jdk:
   - openjdk7
   - openjdk6
+bundler_args: --without debug
