@@ -374,8 +374,9 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
   * Either way, all optional/configurable of course. based
     on Settings.
 
-* Command line code. It's only 150 lines, but it's kind of messy
-jammed into one file *and lacks tests*. I couldn't figure out
-what to do with it or how to test it. Needs a bit of love.
+* CommandLine class isn't covered by tests -- it's written using functionality
+from Indexer and other classes taht are well-covered, but the CommandLine itself
+probably needs some tests -- especially covering error handling, which probably
+needs a bit more attention and using exceptions instead of exits, etc. 
 
 * Optional built-in jetty stop/start to allow indexing to Solr that wasn't running before. maybe https://github.com/projecthydra/jettywrapper ?
