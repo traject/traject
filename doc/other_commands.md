@@ -11,11 +11,11 @@ the `-x process`.
 specified in setting `solr.url`.  Other parts of configuration will
 be ignored, but don't hurt.
 
-`traject -x commit -s solr.url=http://some.com/solr`
+    traject -x commit -s solr.url=http://some.com/solr
 
 Or with a config file that includes a solr.url setting:
 
-`traject -x commit -c config_file.rb`
+    traject -x commit -c config_file.rb
 
 ## marcout
 
