@@ -2,7 +2,6 @@
 
 require 'slop'
 
-
 # If we're loading from source instead of a gem, rubygems
 # isn't setting load paths for us, so we need to set it ourselves
 self_load_path = File.expand_path("../lib", File.dirname(__FILE__))
@@ -33,6 +32,8 @@ opts = Slop.new(:strict => true) do
   on :t, :marc_type, "xml, json or binary. shortcut for `-s marc_source.type=*`", :argument => true
   on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
   on :g, "gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => ""
+
+  on :x, "command", "alternate traject command: process (default); marcout", :argument => true, :default => "process"
 end
 
 begin
@@ -46,7 +47,7 @@ rescue Slop::Error => e
 end
 
 
-options = opts.to_hash
+options = opts.to_hash(true)
 
 
 
@@ -63,7 +64,7 @@ end
 # have to use Slop object to tell diff between
 # no arg supplied and no option -g given at all
 if opts.present? :gemfile
-  if options[:gemfile] 
+  if options[:gemfile]
     # tell bundler what gemfile to use
     gem_path = File.expand_path( options[:gemfile] )
     # bundler not good at error reporting, we check ourselves
@@ -111,6 +112,9 @@ end
 if options[:marc_type]
   settings["marc_source.type"] = options[:marc_type]
 end
+if options[:output_file]
+  settings["output_file"] = options[:output_file]
+end
 
 
 (options[:load_path] || []).each do |path|
@@ -120,7 +124,7 @@ end
 indexer = Traject::Indexer.new
 indexer.settings( settings )
 
-unless options[:conf] && options[:conf].length > 0
+if options[:command] == "process" && (options[:conf].nil? || options[:conf].length == 0)
   $stderr.puts "Error: Missing required configuration file"
   $stderr.puts "Exiting..."
   $stderr.puts
@@ -176,6 +180,49 @@ else
   io = File.open(ARGV.first, 'r')
 end
 
-result = indexer.process(io)
+case options[:command]
+when "process"
+  result = indexer.process(io)
+when "marcout"
+  require 'marc'
 
-exit 1 unless result # non-zero exit status on process telling us there's problems. 
+  output_type = indexer.settings["marcout.type"].to_s
+  output_type = "binary" if output_type.empty?
+
+  output_arg      = unless indexer.settings["output_file"].to_s.empty?
+    indexer.settings["output_file"]
+  else
+    $stdout
+  end
+
+  case output_type
+  when "binary"
+    writer = MARC::Writer.new(output_arg)
+  when "xml"
+    writer = MARC::XMLWriter.new(output_arg)
+  when "human"
+    writer = output_arg.kind_of?(String) ? File.open(output_arg, "w:binary") : output_arg
+  else
+    raise ArgumentError.new("traject marcout unrecognized marcout.type: #{output_type}")
+  end
+
+  reader      = indexer.reader!(io)
+
+  reader.each do |record|
+    writer.write record
+  end
+
+  writer.close
+when "commit"
+  require 'open-uri'
+  raise ArgumentError.new("No solr.url setting provided") if indexer.settings['solr.url'].to_s.empty?
+
+  url = "#{indexer.settings['solr.url']}/update?commit=true"
+  indexer.logger.info("Sending commit to: #{url}")
+  indexer.logger.info(  open(url).read )
+else
+  raise ArgumentError.new("Unrecognized traject command: #{options[:command]}")
+end
+
+
+exit 1 unless result # non-zero exit status on process telling us there's problems.
