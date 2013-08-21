@@ -25,7 +25,7 @@ Some goals:
 ## Installation
 
 Traject runs under jruby (ruby on the JVM). I recommend [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme) for installing and managing ruby installations. (traject is tested
-and supported for ruby 1.9 -- recent versions of jruby should run under 1.9 mode by default). 
+and supported for ruby 1.9 -- recent versions of jruby should run under 1.9 mode by default).
 
 Then just `gem install traject`.
 
@@ -344,6 +344,10 @@ If you want to use logic from other gems in your configuration mapping, you can 
 functionality like translation maps and macros, or for anything else.
 To use gems, you can _either_ use straight rubygems, simply by
 installing gems in your system and using `require` or `gem` commands... **or** you can use Bundler for dependency locking and other dependency management. To have traject use Bundler, create a `Gemfile` and then call traject command line with the `-g` option. With the `-g` option alone, Bundler will look in the CWD and parents for the first `Gemfile` it finds. Or supply `-g ./somewhere/MyGemfile` to anywhere.
+
+## More
+
+* [Other traject commands](./doc/other_commands.md) including `marcout`, and `commit`
 
 
 # Development
