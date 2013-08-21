@@ -11,19 +11,28 @@ module Traject::Macros
     # shortcut
     MarcExtractor = Traject::MarcExtractor
 
-    # Extract OCLC numbers from, by default 035a's, then strip known prefixes to get
+    # Extract OCLC numbers from, by default 035a's by known prefixes, then stripped
     # just the num, and de-dup.
     def oclcnum(extract_fields = "035a")
       lambda do |record, accumulator|
         list = MarcExtractor.extract_by_spec(record, extract_fields, :seperator => nil).collect! do |o|
-          Marc21Semantics.oclcnum_trim(o)
-        end
+          Marc21Semantics.oclcnum_extract(o)
+        end.compact
 
         accumulator.concat list.uniq if list
       end
     end
-    def self.oclcnum_trim(num)
-      num.gsub(/\A(ocm)|(ocn)|(on)|(\(OCoLC\))/, '')
+    # If a num begins with a known OCLC prefix, return it without the prefix.
+    # otherwise nil.
+    def self.oclcnum_extract(num)
+      stripped = num.gsub(/\A(ocm)|(ocn)|(on)|(\(OCoLC\))/, '')
+      if num != stripped
+        # it had the prefix, which we've now stripped
+        return stripped
+      else
+        # it didn't have the prefix
+        return nil
+      end
     end
 
 
@@ -346,7 +355,7 @@ module Traject::Macros
           end
         )
 
-        # fields we take z's from have a bit more normalization        
+        # fields we take z's from have a bit more normalization
         MarcExtractor.new(record, z_fields_spec).each_matching_line do |field, spec, extractor|
           z_fields = field.subfields.find_all {|sf| sf.code == "z"}.collect {|sf| sf.value }
           # depending on position in total field, may be a period on the end
@@ -385,7 +394,7 @@ module Traject::Macros
           v.sub(/\. *\Z/, '')
         end)
 
-        # weird ones        
+        # weird ones
         MarcExtractor.new(record, special_fields_spec).each_matching_line do |field, spec, extractor|
           field.subfields.each do |sf|
             next unless sf.code == 'y'
@@ -396,7 +405,7 @@ module Traject::Macros
               accumulator << sf.value.sub(/\. *\Z/, '')
             end
           end
-        end        
+        end
       end
     end
 
