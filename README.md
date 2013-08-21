@@ -19,6 +19,7 @@ Some goals:
 * Built of modular and composable elements: If you want to change part of what traject does, you should be able to do so without having to reimplement other things you don't want to change.
 * A maintainable internal architecture, well-factored with seperated concerns and DRY logic. Aim to be comprehensible to newcomer developers, and well-covered by tests.
 * High performance, using multi-threaded concurrency where appropriate to maximize throughput. Actual throughput can depend on complexity of your mapping rules and capacity of your server(s), but I am getting throughput 2-5x greater than previous solutions.
+* Cooperate well in unix batch/pipeline, with control over output/logging of errors, proper exit codes, use of stdin/stdout, etc.
 
 
 ## Installation
