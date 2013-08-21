@@ -6,3 +6,7 @@ gemspec
 group :development do
   gem "nokogiri" # used only for rake tasks load_maps:
 end
+
+group :debug do
+  gem "pry"
+end
