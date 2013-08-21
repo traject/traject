@@ -7,6 +7,7 @@ them somewhere.
 
 **Currently under development, not production ready**
 
+[![Gem Version](https://badge.fury.io/rb/traject.png)](http://badge.fury.io/rb/traject)
 [![Build Status](https://travis-ci.org/jrochkind/traject.png)](https://travis-ci.org/jrochkind/traject)
 
 
