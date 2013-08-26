@@ -250,12 +250,12 @@ module Traject
         on 'h', 'help', "print usage information to stderr"
         on 'c', 'conf', 'configuration file path (repeatable)', :argument => true, :as => Array
         on :s, :setting, "settings: `-s key=value` (repeatable)", :argument => true, :as => Array
-        on :r, :reader, "Set reader class, shortcut for `-s reader_class_name=*`", :argument => true
+        on :r, :reader, "Set reader class, shortcut for -s reader_class_name=", :argument => true
         on :o, "output_file", "output file for Writer classes that write to files", :argument => true
-        on :w, :writer, "Set writer class, shortcut for `-s writer_class_name=*`", :argument => true
-        on :u, :solr, "Set solr url, shortcut for `-s solr.url=*`", :argument => true
-        on :j, "output as pretty printed json, shortcut for `-s writer_class_name=JsonWriter -s json_writer.pretty_print=true`"
-        on :t, :marc_type, "xml, json or binary. shortcut for `-s marc_source.type=*`", :argument => true
+        on :w, :writer, "Set writer class, shortcut for -s writer_class_name=", :argument => true
+        on :u, :solr, "Set solr url, shortcut for -s solr.url=", :argument => true
+        on :j, "output as pretty printed json, shortcut for -s writer_class_name=JsonWriter -s json_writer.pretty_print=true"
+        on :t, :marc_type, "xml, json or binary. shortcut for -s marc_source.type=", :argument => true
         on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
         on :g, "gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => ""
 
