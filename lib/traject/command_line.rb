@@ -37,7 +37,7 @@ module Traject
         return
       end
       if options[:help]
-        self.console.puts opts.help
+        self.console.puts slop.help
         return
       end
 
@@ -190,7 +190,7 @@ module Traject
         unless File.exists? gem_path
           self.console.puts "Gemfile `#{options[:gemfile]}` does not exist, exiting..."
           self.console.puts
-          self.console.puts opts.help
+          self.console.puts slop.help
           exit 2
         end
         ENV["BUNDLE_GEMFILE"] = gem_path
@@ -278,7 +278,7 @@ module Traject
         self.console.puts "Error: #{e.message}"
         self.console.puts "Exiting..."
         self.console.puts
-        self.console.puts opts.help
+        self.console.puts slop.help
         exit 1
       end
 
