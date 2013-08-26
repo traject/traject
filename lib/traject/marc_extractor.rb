@@ -56,6 +56,9 @@ module Traject
       self.marc_record = marc_record
 
       self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
+      
+      @interesting_tags = self.spec_hash.keys
+      @interesting_tags << '880' if options[:alternate_script] != false
     end
 
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
@@ -151,8 +154,32 @@ module Traject
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
     def each_matching_line
-      self.marc_record.each do |field|
-        if (spec = spec_covering_field(field)) && matches_indicators(field, spec)
+      self.marc_record.fields(@interesting_tags).each do |field|
+        
+        # Get the tag
+        tag = field.tag
+        
+        # Change the tag to the $6 iff we have an 880 with a $6 and we want the alternate script
+        # Note that 880 won't be in @interesting_tag unless options[:alternate_script] != false
+        if tag == "880" && field['6']
+          tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
+        elsif options[:alternate_script] == :only
+          # If it's *not* an 880, and we want :only the alternate script, bail
+          next
+        end
+        
+        # Take the resulting tag and get the spec from it
+        spec = self.spec_hash[tag]  
+        
+        # Don't have one? Bail
+        next unless spec
+        
+        # Check it against the indicators if needed; don't if not
+        if spec[:indicators]
+          if matches_indicators(field, spec)
+            yield(field, spec, self)
+          end
+        else
           yield(field, spec, self)
         end
       end
