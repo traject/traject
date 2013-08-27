@@ -38,7 +38,7 @@ looks like this:
 
     #!/usr/bin/env bash
 
-    chruby-exec jruby -- traject $@"
+    chruby-exec jruby -- traject "$@"
 
 Now any account, in a crontab, in an interactive shell, wherever,
 can just execute `jruby-traject {arguments}`, and execute traject
