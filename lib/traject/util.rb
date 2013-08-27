@@ -41,7 +41,7 @@ module Traject
     # be considered part of the API -- after it's called, those top-level
     # globals should be available, and marc4j should be loaded.
     def self.require_marc4j_jars(settings)
-      require 'java'
+      jruby_ensure_init!
 
       tries = 0
       begin
@@ -86,7 +86,7 @@ module Traject
     # be considered part of the API -- after it's called, those top-level
     # globals should be available, and solrj should be loaded.
     def self.require_solrj_jars(settings)
-      require 'java'
+      jruby_ensure_init!
 
       tries = 0
       begin
@@ -113,6 +113,22 @@ module Traject
         else
           retry
         end
+      end
+    end
+
+    # just does a `require 'java'` but rescues the exception if we
+    # aren't jruby, and raises a better error message.  
+    # Pass in a developer-presentable name of a feature to include in the error
+    # message if you want. 
+    def self.jruby_ensure_init!(feature = nil)
+      begin
+        require 'java'
+      rescue LoadError => e
+        feature ||= "A traject feature is in use that"
+        msg = if feature
+          "#{feature} requires jruby, but you do not appear to be running under jruby. We recommend `chruby` for managing multiple ruby installs."
+        end
+        raise LoadError.new(msg)
       end
     end
 
