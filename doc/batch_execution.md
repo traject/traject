@@ -71,22 +71,6 @@ under an account with rbenv set up properly!
 (Better way? Doc pull requests welcome.)
 
 
-~~~bash
-#!/usr/bin/env bash
-
-/bin/bash -lc RBENV_VERSION=jruby-1.7.2 traject "$@"
-~~~
-
-The `bash -lc` is needed to load rbenv, when calling from a cronjob,
-and then we set the `RBENV_VERSION` env variable to tell it what to do.
-
-Now you can have a crontab or batch script call `jruby-traject {whatever args}`, and execute
-traject in a jruby environment. If you'll be executing it from an interactive shell,
-maybe you don't need the seperate bash invocation.
-
-(Better way with rbenv? Doc pull requests welcome.)
-
-
 ### for rvm
 
 See rvm's [own docs on use with cron](http://rvm.io/integration/cron), it gets a bit confusing.
@@ -144,9 +128,11 @@ script which captures stderr and puts it where you want it.
 However, it's easy enough to tell traject to log somewhere else. Either on
 the command-line:
 
-   traject -s log.file=/some/other/file/log {other args}
+    traject -s log.file=/some/other/file/log {other args}
 
 Or in a traject configuration file, setting the `log.file` configuration setting.
+
+### Seperate error log
 
 You can also seperately have a duplicate log file created with ONLY log messages of
 level ERROR and higher (meaning ERROR and FATAL), with the `log.error_file` setting.
@@ -158,6 +144,8 @@ steps in the batch process.
 
 The error lines will be in the main log file, and also duplicated in the error
 log file.
+
+### Completely customizable logging with yell
 
 Traject uses the [yell](https://github.com/rudionrails/yell) gem for logging.
 You can configure the logger directly to implement whatever crazy logging rules you might
