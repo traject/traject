@@ -1,5 +1,3 @@
-
-
 module Traject
   # MarcExtractor is a class for extracting lists of strings from a MARC::Record,
   # according to specifications. See #parse_string_spec for description of string
@@ -56,6 +54,29 @@ module Traject
       self.marc_record = marc_record
 
       self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
+      
+      
+      # Tags are "interesting" if we have a spec that might cover it
+      @interesting_tags_hash = {}
+      
+      # By default, interesting tags are those represented by keys in spec_hash.
+      # Add them unless we only care about alternate scripts.
+      unless options[:alternate_script] == :only
+        self.spec_hash.keys.each {|tag| @interesting_tags_hash[tag] = true}
+      end
+      
+      # If we *are* interested in alternate scripts, add the 880
+      if options[:alternate_script] != false
+        @interesting_tags_hash['880'] = true
+      end
+    end
+    
+    
+    # Check to see if a tag is interesting (meaning it may be covered by a spec
+    # and the passed-in options about alternate scripts)
+    
+    def interesting_tag?(tag)
+      return @interesting_tags_hash.include?(tag)
     end
 
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
@@ -151,8 +172,19 @@ module Traject
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
     def each_matching_line
-      self.marc_record.each do |field|
-        if (spec = spec_covering_field(field)) && matches_indicators(field, spec)
+      self.marc_record.fields(@interesting_tags_hash.keys).each do |field|
+        
+        spec = spec_covering_field(field)
+                
+        # Don't have a spec that addresses this field? Move on.
+        next unless spec
+        
+        # Check it against the indicators if needed; don't if not
+        if spec[:indicators]
+          if matches_indicators(field, spec)
+            yield(field, spec, self)
+          end
+        else
           yield(field, spec, self)
         end
       end
@@ -187,23 +219,31 @@ module Traject
       return options[:seperator] ? [ subfields.join( options[:seperator]) ] : subfields
     end
 
-    # Is there a spec covering extraction from this field?
-    # May return true on 880's matching other tags depending
-    # on value of :alternate_script
-    # if :alternate_script is :only, will return original spec when field is an 880.
-    # otherwise will always return nil for 880s, you have to handle :alternate_script :include
-    # elsewhere, to add in the 880 in the right order
+
+    # Find a spec, if any, covering extraction from this field
+    #
+    # When given an 880, will return the spec (if any) for the linked tag iff 
+    # we have a $6 and we want the alternate script.
+    #
+    # Returns nil if no matching spec is found
+        
     def spec_covering_field(field)
-      if field.tag == "880" && field['6'] && options[:alternate_script] != false
-        # pull out the spec for corresponding original marc tag this 880 corresponds to
-        # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
-        # to do this weird encode gymnastics, which fixes it for mysterious reasons.
-        orig_field = field["6"].encode(field["6"].encoding).byteslice(0,3)
-        field["6"] && self.spec_hash[  orig_field  ]
-      elsif options[:alternate_script] != :only
-        self.spec_hash[field.tag]
+      tag = field.tag
+      
+      # Short-circuit the unintersting stuff
+      return nil unless interesting_tag?(tag)
+
+      # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
+      # to do this weird encode gymnastics, which fixes it for mysterious reasons.
+      
+      if tag == "880" && field['6']
+        tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
       end
+      
+      # Take the resulting tag and get the spec from it (or the default nil if there isn't a spec for this tag)
+      spec = self.spec_hash[tag]  
     end
+    
 
     def control_field?(field)
       # should the MARC gem have a more efficient way to do this,
