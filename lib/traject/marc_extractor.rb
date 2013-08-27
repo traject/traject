@@ -59,18 +59,19 @@ module Traject
       
       
       # Tags are "interesting" if we have a spec that might cover it
-      @interesting_tags_set = Set.new
+      @interesting_tags_hash = {}
       
       # By default, interesting tags are those represented by keys in spec_hash.
       # Add them unless we only care about alternate scripts.
       unless options[:alternate_script] == :only
-        @interesting_tags_set +=  self.spec_hash.keys 
+        self.spec_hash.keys.each {|tag| @interesting_tags_hash[tag] = true}
       end
       
       # If we *are* interested in alternate scripts, add the 880
       if options[:alternate_script] != false
-        @interesting_tags_set << '880'
+        @interesting_tags_hash['880'] = true
       end
+      
       
     end
     
@@ -79,7 +80,7 @@ module Traject
     # and the passed-in options about alternate scripts)
     
     def interesting_tag?(tag)
-      return @interesting_tags_set.include?(tag)
+      return @interesting_tags_hash.include?(tag)
     end
 
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
@@ -175,7 +176,7 @@ module Traject
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
     def each_matching_line
-      self.marc_record.fields(@interesting_tags_set.to_a).each do |field|
+      self.marc_record.fields(@interesting_tags_hash.keys).each do |field|
         
         spec = spec_covering_field(field)
                 
