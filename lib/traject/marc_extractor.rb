@@ -58,6 +58,8 @@ module Traject
       self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
       
       @interesting_tags = self.spec_hash.keys
+      
+      # We only care about 880s if we're interested in alternate scripts
       @interesting_tags << '880' if options[:alternate_script] != false
     end
 
@@ -208,6 +210,10 @@ module Traject
       
       # Change the tag to the $6 iff we have an 880 with a $6 and we want the alternate script
       # Note that 880 won't be in @interesting_tag unless options[:alternate_script] != false
+      #
+      # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
+      # to do this weird encode gymnastics, which fixes it for mysterious reasons.
+      
       if tag == "880" && field['6']
         tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
       elsif options[:alternate_script] == :only
@@ -215,7 +221,7 @@ module Traject
         return nil
       end
       
-      # Take the resulting tag and get the spec from it
+      # Take the resulting tag and get the spec from it (or the default nil if there isn't a spec for this tag)
       spec = self.spec_hash[tag]  
     end
     
