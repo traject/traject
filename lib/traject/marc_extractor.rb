@@ -156,21 +156,8 @@ module Traject
     def each_matching_line
       self.marc_record.fields(@interesting_tags).each do |field|
         
-        # Get the tag
-        tag = field.tag
-        
-        # Change the tag to the $6 iff we have an 880 with a $6 and we want the alternate script
-        # Note that 880 won't be in @interesting_tag unless options[:alternate_script] != false
-        if tag == "880" && field['6']
-          tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
-        elsif options[:alternate_script] == :only
-          # If it's *not* an 880, and we want :only the alternate script, bail
-          next
-        end
-        
-        # Take the resulting tag and get the spec from it
-        spec = self.spec_hash[tag]  
-        
+        spec = get_matching_spec(field)
+                
         # Don't have one? Bail
         next unless spec
         
@@ -214,23 +201,24 @@ module Traject
       return options[:seperator] ? [ subfields.join( options[:seperator]) ] : subfields
     end
 
-    # # Is there a spec covering extraction from this field?
-    # # May return true on 880's matching other tags depending
-    # # on value of :alternate_script
-    # # if :alternate_script is :only, will return original spec when field is an 880.
-    # # otherwise will always return nil for 880s, you have to handle :alternate_script :include
-    # # elsewhere, to add in the 880 in the right order
-    # def spec_covering_field(field)
-    #   if field.tag == "880" && field['6'] && options[:alternate_script] != false
-    #     # pull out the spec for corresponding original marc tag this 880 corresponds to
-    #     # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
-    #     # to do this weird encode gymnastics, which fixes it for mysterious reasons.
-    #     orig_field = field["6"].encode(field["6"].encoding).byteslice(0,3)
-    #     field["6"] && self.spec_hash[  orig_field  ]
-    #   elsif options[:alternate_script] != :only
-    #     self.spec_hash[field.tag]
-    #   end
-    # end
+
+    def get_matching_spec(field)
+      # Get the tag
+      tag = field.tag
+      
+      # Change the tag to the $6 iff we have an 880 with a $6 and we want the alternate script
+      # Note that 880 won't be in @interesting_tag unless options[:alternate_script] != false
+      if tag == "880" && field['6']
+        tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
+      elsif options[:alternate_script] == :only
+        # If it's *not* an 880, and we want :only the alternate script, bail
+        return nil
+      end
+      
+      # Take the resulting tag and get the spec from it
+      spec = self.spec_hash[tag]  
+    end
+    
 
     def control_field?(field)
       # should the MARC gem have a more efficient way to do this,
