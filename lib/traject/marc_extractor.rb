@@ -1,5 +1,3 @@
-require 'set'
-
 module Traject
   # MarcExtractor is a class for extracting lists of strings from a MARC::Record,
   # according to specifications. See #parse_string_spec for description of string
@@ -59,18 +57,22 @@ module Traject
       
       
       # Tags are "interesting" if we have a spec that might cover it
-      @interesting_tags_set = Set.new
+      @interesting_tags = []
       
       # By default, interesting tags are those represented by keys in spec_hash.
       # Add them unless we only care about alternate scripts.
       unless options[:alternate_script] == :only
-        @interesting_tags_set +=  self.spec_hash.keys 
+        @interesting_tags +=  self.spec_hash.keys 
       end
       
       # If we *are* interested in alternate scripts, add the 880
       if options[:alternate_script] != false
-        @interesting_tags_set << '880'
+        @interesting_tags << '880'
       end
+      
+      # Finally, a quick way to access teh interesting tags
+      @interesting_tags_hash = {}
+      @interesting_tags.each {|t| @interesting_tags_hash[t] = true }
       
     end
     
@@ -79,7 +81,7 @@ module Traject
     # and the passed-in options about alternate scripts)
     
     def interesting_tag?(tag)
-      return @interesting_tags_set.include?(tag)
+      return @interesting_tags_hash[tag]
     end
 
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
@@ -179,7 +181,7 @@ module Traject
         
         spec = spec_covering_field(field)
                 
-        # Don't have one? Bail
+        # Don't have a spec that addresses this field? Move on.
         next unless spec
         
         # Check it against the indicators if needed; don't if not
