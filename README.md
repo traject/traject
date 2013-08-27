@@ -333,7 +333,9 @@ Use `-u` as a shortcut for `s solr.url=X`
 
     traject -c conf_file.rb -u http://example.com/solr marc_file.mrc
 
-Also see `-I load_path` and `-g Gemfile` options under Extending Logic
+Also see `-I load_path` and `-g Gemfile` options under Extending Logic.
+
+See also [Hints for batch and cronjob use](./doc/batch_execution.md) of traject.
 
 ## Extending Logic
 
@@ -352,6 +354,7 @@ installing gems in your system and using `require` or `gem` commands... **or** y
 ## More
 
 * [Other traject commands](./doc/other_commands.md) including `marcout`, and `commit`
+* [Hints for batch and cronjob use](./doc/batch_execution.md) of  traject. 
 
 
 # Development
