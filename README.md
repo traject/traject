@@ -249,8 +249,12 @@ There is also a method `each_record`, which is like `to_field`, but without
 a specific field. It can be used for other side-effects of your choice, or
 even for writing to multiple fields.
 
+It's first argument (parallel to the field name in `to_field`) is 
+descritive only, but helps document the code and shows up in the `context.field_name` 
+for use in logging and debugging.
+
 ~~~ruby
-  each_record do |record, context|
+  each_record("Fill one_field and another_field") do |record, context|
     # example of writing to two fields at once.
     (x, y) = Something.do_stuff
     (context["one_field"] ||= [])     << x

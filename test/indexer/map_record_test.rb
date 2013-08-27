@@ -121,7 +121,7 @@ describe "Traject::Indexer#map_record" do
   describe "#each_record" do
     it "is called with one-arg record" do
       called = false
-      @indexer.each_record do |record|
+      @indexer.each_record("Check that it's called") do |record|
         called = true
         assert_kind_of MARC::Record, record
       end
@@ -131,7 +131,7 @@ describe "Traject::Indexer#map_record" do
     end
     it "is called with two-arg record and context" do
       called = false
-      @indexer.each_record do |record, context|
+      @indexer.each_record("two-arg and context") do |record, context|
         called = true
         assert_kind_of MARC::Record, record
         assert_kind_of Traject::Indexer::Context, context
@@ -146,7 +146,7 @@ describe "Traject::Indexer#map_record" do
         context.output_hash["field"] << "first"
       end
 
-      @indexer.each_record(lambda_arg) do |record, context|
+      @indexer.each_record("Called with lambda", lambda_arg) do |record, context|
         context.output_hash["field"] ||= []
         context.output_hash["field"] << "second"
       end
@@ -157,7 +157,7 @@ describe "Traject::Indexer#map_record" do
     end
     it "is called in order with #to_field" do
       @indexer.to_field("foo") {|record, accumulator| accumulator << "first"}
-      @indexer.each_record {|record, context| context.output_hash["foo"] << "second" }
+      @indexer.each_record("Add second as side effect") {|record, context| context.output_hash["foo"] << "second" }
       @indexer.to_field("foo") {|record, accumulator| accumulator << "third"}
 
       output = @indexer.map_record(@record)

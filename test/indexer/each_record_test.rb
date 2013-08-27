@@ -8,26 +8,26 @@ describe "Traject::Indexer#each_record" do
   describe "checks arguments" do
     it "rejects no-arg block" do
       assert_raises(ArgumentError) do
-        @indexer.each_record do
+        @indexer.each_record("no block") do
         end
       end
     end
     it "rejects three-arg block" do
       assert_raises(ArgumentError) do
-        @indexer.each_record do |one, two, three|
+        @indexer.each_record("three args") do |one, two, three|
         end
       end
     end
     it "accepts one-arg block" do
-      @indexer.each_record do |record|
+      @indexer.each_record("one arg") do |record|
       end
     end
     it "accepts two-arg block" do
-      @indexer.each_record do |record, context|
+      @indexer.each_record("two args") do |record, context|
       end
     end
     it "accepts variable arity block" do
-      @indexer.each_record do |*variable|
+      @indexer.each_record("three args") do |*variable|
       end
     end
   end
