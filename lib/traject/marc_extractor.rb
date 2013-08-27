@@ -179,12 +179,9 @@ module Traject
         # Don't have a spec that addresses this field? Move on.
         next unless spec
         
-        # Check it against the indicators if needed; don't if not
-        if spec[:indicators]
-          if matches_indicators(field, spec)
-            yield(field, spec, self)
-          end
-        else
+        # Make sure it matches indicators too, spec_covering_field
+        # doens't check that. 
+        if matches_indicators(field, spec)
           yield(field, spec, self)
         end
       end
