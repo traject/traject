@@ -5,9 +5,6 @@ require 'json'
 # right now no checks to make sure there is no internal newlines
 # as whitespace in the json. TODO, add that. 
 #
-# Not currently thread-safe (have to make sure whole object and newline
-# get written without context switch. Can be made so.)
-#
 # You can force pretty-printing with setting 'json_writer.pretty_print' of boolean
 # true or string 'true'.  Useful mostly for human checking of output. 
 #
@@ -29,7 +26,8 @@ class Traject::JsonWriter
       else
         JSON.generate(hash)
       end
-    output_file.puts(serialized)
+      serialized << "\n"
+    output_file.print(serialized)
   end
 
   def output_file
