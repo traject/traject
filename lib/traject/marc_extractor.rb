@@ -1,4 +1,4 @@
-
+require 'set'
 
 module Traject
   # MarcExtractor is a class for extracting lists of strings from a MARC::Record,
@@ -57,10 +57,29 @@ module Traject
 
       self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
       
-      @interesting_tags = self.spec_hash.keys
       
-      # We only care about 880s if we're interested in alternate scripts
-      @interesting_tags << '880' if options[:alternate_script] != false
+      # Tags are "interesting" if we have a spec that might cover it
+      @interesting_tags_set = Set.new
+      
+      # By default, interesting tags are those represented by keys in spec_hash.
+      # Add them unless we only care about alternate scripts.
+      unless options[:alternate_script] == :only
+        @interesting_tags_set +=  self.spec_hash.keys 
+      end
+      
+      # If we *are* interested in alternate scripts, add the 880
+      if options[:alternate_script] != false
+        @interesting_tags_set << '880'
+      end
+      
+    end
+    
+    
+    # Check to see if a tag is interesting (meaning it may be covered by a spec
+    # and the passed-in options about alternate scripts)
+    
+    def interesting_tag?(tag)
+      return @interesting_tags_set.include?(tag)
     end
 
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
@@ -156,9 +175,9 @@ module Traject
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
     def each_matching_line
-      self.marc_record.fields(@interesting_tags).each do |field|
+      self.marc_record.fields(@interesting_tags_set.to_a).each do |field|
         
-        spec = get_matching_spec(field)
+        spec = spec_covering_field(field)
                 
         # Don't have one? Bail
         next unless spec
@@ -204,21 +223,24 @@ module Traject
     end
 
 
-    def get_matching_spec(field)
-      # Get the tag
+    # Find a spec, if any, covering extraction from this field
+    #
+    # When given an 880, will return the spec (if any) for the linked tag iff 
+    # we have a $6 and we want the alternate script.
+    #
+    # Returns nil if no matching spec is found
+        
+    def spec_covering_field(field)
       tag = field.tag
       
-      # Change the tag to the $6 iff we have an 880 with a $6 and we want the alternate script
-      # Note that 880 won't be in @interesting_tag unless options[:alternate_script] != false
-      #
+      # Short-circuit the unintersting stuff
+      return nil unless interesting_tag?(tag)
+
       # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
       # to do this weird encode gymnastics, which fixes it for mysterious reasons.
       
       if tag == "880" && field['6']
         tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
-      elsif options[:alternate_script] == :only
-        # If it's *not* an 880, and we want :only the alternate script, bail
-        return nil
       end
       
       # Take the resulting tag and get the spec from it (or the default nil if there isn't a spec for this tag)
