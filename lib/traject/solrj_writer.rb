@@ -114,28 +114,7 @@ class Traject::SolrJWriter
   # in settings["solrj.jar_dir"]
   def ensure_solrj_loaded!
     unless defined?(HttpSolrServer) && defined?(SolrInputDocument)
-      require 'java'
-
-      tries = 0
-      begin
-        tries += 1
-        java_import org.apache.solr.client.solrj.impl.HttpSolrServer
-        java_import org.apache.solr.common.SolrInputDocument
-      rescue NameError  => e
-        # /Users/jrochkind/code/solrj-gem/lib"
-
-        included_jar_dir = File.expand_path("../../vendor/solrj/lib", File.dirname(__FILE__))
-
-        jardir = settings["solrj.jar_dir"] || included_jar_dir
-        Dir.glob("#{jardir}/*.jar") do |x|
-          require x
-        end
-        if tries > 1
-          raise LoadError.new("Can not find SolrJ java classes")
-        else
-          retry
-        end
-      end
+      Traject::Util.require_solrj_jars(settings)
     end
 
     # And for now, SILENCE SolrJ logging

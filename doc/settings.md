@@ -46,8 +46,8 @@ for commonly used settings, see `traject -h`.
 
 * `marc_source.type`: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 
-* `marc4j_reader.jar_dir`:   Path to a directory containing Marc4J jar file to use. All .jar's in dir will
-                           be loaded. If unset, uses marc4j.jar bundled with traject.
+* `marc4j.jar_dir`:   Path to a directory containing Marc4J jar file to use. All .jar's in dir will
+                      be loaded. If unset, uses marc4j.jar bundled with traject.
 
 * `marc4j_reader.permissive`: Used by Marc4JReader only when marc.source_type is 'binary', boolean, argument to the underlying MarcPermissiveStreamReader. Default true.
 

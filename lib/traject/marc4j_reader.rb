@@ -49,33 +49,16 @@ class Traject::Marc4JReader
     ensure_marc4j_loaded!
   end
 
-    # Loads solrj if not already loaded. By loading all jars found
-  # in settings["solrj.jar_dir"]
+  # Loads solrj unless it appears to already be loaded.
+  #
+  # Will load from settings['marc4j_reader.jar_dir'] if given, otherwise
+  # bundled vendor location.
+  #
+  # Will java_import MarcPermissiveStreamReader and MarcXmlReader so you
+  # have those available as un-namespaced classes. 
   def ensure_marc4j_loaded!
-    unless defined?(MarcPermissiveStreamReader)
-      require 'java'
-
-      tries = 0
-      begin
-        tries += 1
-        java_import org.marc4j.MarcPermissiveStreamReader
-        java_import org.marc4j.MarcXmlReader
-      rescue NameError  => e
-        # /Users/jrochkind/code/solrj-gem/lib"
-
-        include_jar_dir = File.expand_path("../../vendor/marc4j/lib", File.dirname(__FILE__))
-
-        jardir = settings["marc4j_reader.jar_dir"] || include_jar_dir
-        Dir.glob("#{jardir}/*.jar") do |x|
-          require x
-        end
-
-        if tries > 1
-          raise LoadError.new("Can not find Marc4J java classes")
-        else
-          retry
-        end
-      end
+    unless defined?(MarcPermissiveStreamReader) && defined?(MarcXmlReader)
+      Traject::Util.require_marc4j_jars(settings)
     end
   end
 
