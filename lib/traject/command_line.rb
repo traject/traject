@@ -138,15 +138,15 @@ module Traject
       #
       # So for now we do just one file, or stdin if none given. Sorry!
       if argv.length > 1
-        self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{ARGV}` Exiting..."
+        self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
         exit 1
       end
       if argv.length == 0
         indexer.logger.info "Reading from STDIN..."
         io = $stdin
       else
-        indexer.logger.info "Reading from #{ARGV.first}"
-        io = File.open(ARGV.first, 'r')
+        indexer.logger.info "Reading from #{argv.first}"
+        io = File.open(argv.first, 'r')
       end
       return io
     end
