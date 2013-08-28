@@ -1,14 +1,19 @@
+#!/usr/bin/env jruby
+
 $:.unshift '../lib'
 require 'traject/command_line'
 
 require 'benchmark'
 
-filename = 'bench.mrc'
+unless ARGV.size >= 2
+  STDERR.puts "\n     Benchmark two (or more) different config files with both 0 and 3 threads against the given marc file\n"
+  STDERR.puts "\n     Usage:"
+  STDERR.puts "         jruby --server bench.rb config1.rb config2.rb [...configN.rb] filename.mrc\n\n"
+  exit
+end
 
-config_files = %w[
-  extract_marc_conf.rb
-  extract_marc2_conf.rb
-]
+filename = ARGV.pop
+config_files = ARGV
 
 puts RUBY_DESCRIPTION
 Benchmark.bmbm do |x|
