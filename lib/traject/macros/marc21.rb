@@ -63,9 +63,6 @@ module Traject::Macros
         end
       end
     end
-    end
-      end
-    end
 
 
     # For benchmarking. The exact same thing as extract_marc, except build the spec once and use it in the lambda's closure
