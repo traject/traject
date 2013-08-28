@@ -80,7 +80,7 @@ from the traject command line, the `-I` flag:
 
     traject -I ./lib -c ./config_file.rb ...
 
-Or, you can hard-code a $LOAD_PATH change directly in your
+Or, you can hard-code a `$LOAD_PATH` change directly in your
 config file. You'll have to use some weird looking
 ruby code to create a file path relative to the current
 file (the config_file.rb), and then make sure it's
@@ -128,6 +128,12 @@ require 'some_gem'
 SomeGem.whatever!
 ~~~
 
+Any gem can provide traject translation map definitions
+in it's `lib` directory, or in a `lib/translation_maps`
+sub-directory, and traject will be able to find those
+translation maps when the gem is loaded. (Because gems'
+`./lib` directories are added to the ruby load path.)
+
 ### Or, with bundler:
 
 However, if you then move your traject project to another system,
@@ -163,6 +169,9 @@ Traject will use bundler to setup with the Gemfile, making sure
 the specified versions of all gems are used (and also making sure
 no gems except those specified in the gemfile are available to
 the program).
+
+You should still `require` the gem in your traject config file,
+then just refer to what it provides in your config code as usual. 
 
 You should check both the `Gemfile` and the `Gemfile.lock`
 that bundler creates into your source control repo. The
