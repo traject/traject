@@ -21,9 +21,7 @@ settings do
   store "reader_class_name", "MarcReader"
   store "writer_class_name", "Traject::JsonWriter"
   store "output_file", "/dev/null"
-  store "log.file", "bench.log"  
   store "log.batch_progress", 10_000
-  store 'processing_thread_pool', 0
 end
 
 to_field "id", extract_marc("001", :first => true) do |marc_record, accumulator, context|
