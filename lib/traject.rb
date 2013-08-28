@@ -1,6 +1,7 @@
 require "traject/version"
 
 require 'traject/indexer'
+require 'traject/util'
 
 require 'traject/macros/basic'
 require 'traject/macros/marc21'
