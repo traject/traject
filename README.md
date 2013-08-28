@@ -333,28 +333,45 @@ Use `-u` as a shortcut for `s solr.url=X`
 
     traject -c conf_file.rb -u http://example.com/solr marc_file.mrc
 
-Also see `-I load_path` and `-g Gemfile` options under Extending Logic.
+Also see `-I load_path` and `-g Gemfile` options under Extending With Your Own Code.
 
 See also [Hints for batch and cronjob use](./doc/batch_execution.md) of traject.
 
-## Extending Logic
+## Extending With Your Own Code
 
-TODO fill out nicer.
+Traject config files are full live ruby files, where you can do anything,
+including declaring new classes, etc.
 
-Basically:
+However, beyond limited trivial logic, you'll want to organize your
+code reasonably into seperate files, not jam everything into config
+files.
 
-command line `-I` can be used to append to the ruby $LOAD_PATH, and then you can simply `require` your local files, and then use them for
-whatever. Macros, utility functions, translation maps, whatever.
+Traject wants to make sure it makes it convenient for you to do so,
+whether project-specific logic in files local to the traject project,
+or in ruby gems that can be shared between projects.
 
-If you want to use logic from other gems in your configuration mapping, you can do that too. This works for traject-specific
-functionality like translation maps and macros, or for anything else.
-To use gems, you can _either_ use straight rubygems, simply by
-installing gems in your system and using `require` or `gem` commands... **or** you can use Bundler for dependency locking and other dependency management. To have traject use Bundler, create a `Gemfile` and then call traject command line with the `-g` option. With the `-g` option alone, Bundler will look in the CWD and parents for the first `Gemfile` it finds. Or supply `-g ./somewhere/MyGemfile` to anywhere.
+There are standard ruby mechanisms you can use to do this, and
+traject provides a couple features to make sure this remains
+convenient with the traject command line.
+
+For more information, see documentation page on [Extending With Your
+Own Code](./doc/extending.md)
+
+**Expert summary** :
+* Traject `-I` argument command line can be used to list directories to
+  add to the load path, similar to the `ruby -I` argument. You
+  can then 'require' local project files from the load path.
+  * translation map files found on the load path or in a
+    "./translation_maps" subdir on the load path will be found
+    for Traject translation maps.
+* Traject `-g` command line can be used to tell traject to use
+  bundler with a `Gemfile` located at current working dirctory
+  (or give an argument to `-g ./some/myGemfile`)
 
 ## More
 
 * [Other traject commands](./doc/other_commands.md) including `marcout`, and `commit`
-* [Hints for batch and cronjob use](./doc/batch_execution.md) of  traject. 
+* [Hints for batch and cronjob use](./doc/batch_execution.md) of  traject.
 
 
 # Development
@@ -384,6 +401,6 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
 * CommandLine class isn't covered by tests -- it's written using functionality
 from Indexer and other classes taht are well-covered, but the CommandLine itself
 probably needs some tests -- especially covering error handling, which probably
-needs a bit more attention and using exceptions instead of exits, etc. 
+needs a bit more attention and using exceptions instead of exits, etc.
 
 * Optional built-in jetty stop/start to allow indexing to Solr that wasn't running before. maybe https://github.com/projecthydra/jettywrapper ?

@@ -168,3 +168,10 @@ object you configure yourself however you like:
 
 See [yell](https://github.com/rudionrails/yell)  docs for more, you can
 do whatever you can make yell, just write ruby.
+
+### Bundler
+
+For automated batch execution, we recommend you consider using
+bundler to manage any gem dependencies. See the [Extending
+With Your Own Code](./extending.md) traject docs for
+information on how traject integrates with bundler.
