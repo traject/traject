@@ -71,6 +71,13 @@ module Traject
       end
     end
     
+    
+    # Check to see if a tag is interesting (meaning it may be covered by a spec
+    # and the passed-in options about alternate scripts)
+    
+    def interesting_tag?(tag)
+      return @interesting_tags_hash.include?(tag)
+    end
 
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
     # to represent the specification.
@@ -220,6 +227,9 @@ module Traject
     def spec_covering_field(field)
       tag = field.tag
       
+      # Short-circuit the unintersting stuff
+      return nil unless interesting_tag?(tag)
+
       # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
       # to do this weird encode gymnastics, which fixes it for mysterious reasons.
       

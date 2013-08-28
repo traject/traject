@@ -52,6 +52,46 @@ describe "Traject::MarcExtractor" do
     end
   end
 
+  # Mostly an internal method, not neccesarily API, but
+  # an important one, so we unit test some parts of it.
+  describe "#spec_covering_field" do
+    describe "for alternate script tags" do
+      before do
+        @record = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
+        @extractor = Traject::MarcExtractor.new(@record, "245")
+
+        @a245 = @record.fields.find {|f| f.tag == "245"}
+        assert ! @a245.nil?, "Found a 245 to test"
+
+        @a880_245 = @record.fields.find do |field|
+          (field.tag == "880") && field['6'] &&
+          "245" == field['6'].slice(0,3)
+        end
+        assert ! @a880_245.nil?, "Found an 880-245 to test"
+
+        @a880_100 = @record.fields.find do |field|
+          (field.tag == "880") && field['6'] &&
+          "100" == field['6'].slice(0,3)
+        end
+
+        assert ! @a880_100.nil?, "Found an 880-100 to test"
+      end
+      it "finds spec for relevant 880" do
+        assert_equal( {}, @extractor.spec_covering_field(@a880_245) )
+        assert_nil        @extractor.spec_covering_field(@a880_100)
+      end
+      it "does not find spec for 880 if disabled" do
+        @extractor = Traject::MarcExtractor.new(@record, "245", :alternate_script => false)
+        assert_nil @extractor.spec_covering_field(@a880_245) 
+      end
+      it "finds only 880 if so configured" do
+        @extractor = Traject::MarcExtractor.new(@record, "245", :alternate_script => :only)
+        assert_nil @extractor.spec_covering_field(@a245) 
+        assert_equal({},  @extractor.spec_covering_field(@a880_245))
+      end
+    end
+  end
+
   describe "#extract_by_spec" do
     before do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
@@ -170,7 +210,7 @@ describe "Traject::MarcExtractor" do
       assert_equal [], values
     end
 
-    it "returns empty array if matching tag but no subfield" do 
+    it "returns empty array if matching tag but no subfield" do
       values = Traject::MarcExtractor.extract_by_spec(@record, "245xyz")
       assert_equal [], values
     end
