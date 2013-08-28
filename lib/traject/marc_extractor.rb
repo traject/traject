@@ -6,11 +6,11 @@ module Traject
   #
   # Examples:
   #
-  #    array_of_stuff = MarcExtractor.new(marc_record, "001:245abc:700a").extract
-  #    values         = MarcExtractor.new(marc_record, "040a", :seperator => nil).extract
+  #    array_of_stuff = MarcExtractor.new("001:245abc:700a").extract(marc_record)
+  #    values         = MarcExtractor.new("040a", :seperator => nil).extract(marc_record)
   #
   class MarcExtractor
-    attr_accessor :options, :marc_record, :spec_hash
+    attr_accessor :options, :spec_hash
 
 
     # Convenience method to construct a MarcExtractor object and
@@ -45,13 +45,11 @@ module Traject
     #                     that match spec. Also:
     #                     * false => do not include.
     #                     * :only => only include linked 880s, not original
-    def initialize(marc_record, spec, options = {})
+    def initialize(spec, options = {})
       self.options = {
         :seperator => ' ',
         :alternate_script => :include
       }.merge(options)
-
-      self.marc_record = marc_record
 
       self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
       
@@ -150,10 +148,10 @@ module Traject
 
 
     # Returns array of strings, extracted values. Maybe empty array.
-    def extract
+    def extract(marc_record)
       results = []
 
-      self.each_matching_line do |field, spec|
+      self.each_matching_line(marc_record) do |field, spec|
         if control_field?(field)
           results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
         else
@@ -171,8 +169,8 @@ module Traject
     #
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
-    def each_matching_line
-      self.marc_record.fields(@interesting_tags_hash.keys).each do |field|
+    def each_matching_line(marc_record)
+      marc_record.fields(@interesting_tags_hash.keys).each do |field|
         
         spec = spec_covering_field(field)
                 
@@ -191,9 +189,9 @@ module Traject
     # but collects results of block into an array -- flattens any subarrays for you!
     #
     # Useful for re-use of this class for custom processing
-    def collect_matching_lines
+    def collect_matching_lines(marc_record)
       results = []
-      self.each_matching_line do |field, spec, extractor|
+      self.each_matching_line(marc_record) do |field, spec, extractor|
         results.concat [yield(field, spec, extractor)].flatten
       end
       return results

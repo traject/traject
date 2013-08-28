@@ -58,7 +58,7 @@ describe "Traject::MarcExtractor" do
     describe "for alternate script tags" do
       before do
         @record = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
-        @extractor = Traject::MarcExtractor.new(@record, "245")
+        @extractor = Traject::MarcExtractor.new("245")
 
         @a245 = @record.fields.find {|f| f.tag == "245"}
         assert ! @a245.nil?, "Found a 245 to test"
@@ -81,11 +81,11 @@ describe "Traject::MarcExtractor" do
         assert_nil        @extractor.spec_covering_field(@a880_100)
       end
       it "does not find spec for 880 if disabled" do
-        @extractor = Traject::MarcExtractor.new(@record, "245", :alternate_script => false)
+        @extractor = Traject::MarcExtractor.new("245", :alternate_script => false)
         assert_nil @extractor.spec_covering_field(@a880_245) 
       end
       it "finds only 880 if so configured" do
-        @extractor = Traject::MarcExtractor.new(@record, "245", :alternate_script => :only)
+        @extractor = Traject::MarcExtractor.new("245", :alternate_script => :only)
         assert_nil @extractor.spec_covering_field(@a245) 
         assert_equal({},  @extractor.spec_covering_field(@a880_245))
       end
@@ -100,7 +100,7 @@ describe "Traject::MarcExtractor" do
     describe "extracts a basic case" do
       before do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("700abcdef:856|*2|:505|1*|:245ba")
-        @values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
+        @values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
       end
 
       it "returns an array" do
@@ -134,19 +134,19 @@ describe "Traject::MarcExtractor" do
     describe "extracts fixed fields" do
       it ", complete" do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("001")
-        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
+        values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
 
         assert_equal ["2710183"], values
       end
       it ", single byte offset" do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("008[5]")
-        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
+        values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
 
         assert_equal ["1"], values
       end
       it ", byte range" do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("008[7-10]")
-        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec)
+        values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
 
         assert_equal ["2002"], values
       end
@@ -155,14 +155,14 @@ describe "Traject::MarcExtractor" do
     describe "seperator argument" do
       it "causes non-join when nil" do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
-        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec, :seperator => nil)
+        values = Traject::MarcExtractor.new(parsed_spec, :seperator => nil).extract(@record)
 
         assert_length 3, values
       end
 
       it "can be non-default" do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
-        values = Traject::MarcExtractor.extract_by_spec(@record, parsed_spec, :seperator => "!! ")
+        values = Traject::MarcExtractor.new(parsed_spec, :seperator => "!! ").extract(@record)
 
         assert_length 1, values
         assert_equal "Manufacturing consent :!! the political economy of the mass media /!! Edward S. Herman and Noam Chomsky ; with a new introduction by the authors.", values.first
@@ -176,19 +176,19 @@ describe "Traject::MarcExtractor" do
       end
       it "from default :include" do
 
-        values = Traject::MarcExtractor.extract_by_spec(@record, @parsed_spec)
+        values = Traject::MarcExtractor.new(@parsed_spec).extract(@record)
 
         assert_length 2, values # both the original and the 880
         assert_equal ["ben Marṭin Buber le-Aharon Daṿid Gordon /", "בין מרטין בובר לאהרן דוד גורדון /"], values
       end
       it "with :only" do
-        values = Traject::MarcExtractor.extract_by_spec(@record, @parsed_spec, :alternate_script => :only)
+        values = Traject::MarcExtractor.new(@parsed_spec, :alternate_script => :only).extract(@record)
 
         assert_length 1, values
         assert_equal ["בין מרטין בובר לאהרן דוד גורדון /"], values
       end
       it "with false" do
-        values = Traject::MarcExtractor.extract_by_spec(@record, @parsed_spec, :alternate_script => false)
+        values = Traject::MarcExtractor.new(@parsed_spec, :alternate_script => false).extract(@record)
 
         assert_length 1, values
         assert_equal ["ben Marṭin Buber le-Aharon Daṿid Gordon /"], values
@@ -196,22 +196,22 @@ describe "Traject::MarcExtractor" do
     end
 
     it "works with string second arg too" do
-      values = Traject::MarcExtractor.extract_by_spec(@record, "245abc")
+      values = Traject::MarcExtractor.new("245abc").extract(@record)
 
       assert_length 1, values
       assert values.first.include?("Manufacturing consent"), "Extracted value includes title"
     end
 
     it "returns empty array if no matching tags" do
-      values = Traject::MarcExtractor.extract_by_spec(@record, "999abc")
+      values = Traject::MarcExtractor.new("999abc").extract(@record)
       assert_equal [], values
 
-      values = Traject::MarcExtractor.extract_by_spec(@record, "999")
+      values = Traject::MarcExtractor.new("999").extract(@record)
       assert_equal [], values
     end
 
     it "returns empty array if matching tag but no subfield" do
-      values = Traject::MarcExtractor.extract_by_spec(@record, "245xyz")
+      values = Traject::MarcExtractor.new("245xyz").extract(@record)
       assert_equal [], values
     end
 
@@ -220,7 +220,7 @@ describe "Traject::MarcExtractor" do
   describe "with bad data" do
     it "can ignore an 880 with no $6" do
       @record = MARC::Reader.new(support_file_path  "880_with_no_6.utf8.marc").to_a.first
-      values = Traject::MarcExtractor.extract_by_spec(@record, "001")
+      values = Traject::MarcExtractor.new("001").extract(@record)
       assert_equal ["3468569"], values
     end
   end
@@ -228,11 +228,11 @@ describe "Traject::MarcExtractor" do
   describe "#each_matching_line" do
     before do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
-      @extractor = Traject::MarcExtractor.new(@record, "245abc")
+      @extractor = Traject::MarcExtractor.new("245abc")
     end
     it "yields two args" do
       called = false
-      @extractor.each_matching_line do |field, spec|
+      @extractor.each_matching_line(@record) do |field, spec|
         called = true
         assert_kind_of MARC::DataField, field
         assert_kind_of Hash, spec
@@ -241,7 +241,7 @@ describe "Traject::MarcExtractor" do
     end
     it "yields three args" do
       called = false
-      @extractor.each_matching_line do |field, spec, extractor|
+      @extractor.each_matching_line(@record) do |field, spec, extractor|
         called = true
         assert_kind_of MARC::DataField, field
         assert_kind_of Hash, spec
@@ -255,10 +255,10 @@ describe "Traject::MarcExtractor" do
   describe "#collect_matching_lines" do
     before do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
-      @extractor = Traject::MarcExtractor.new(@record, "245abc")
+      @extractor = Traject::MarcExtractor.new("245abc")
     end
     it "collects with custom block" do
-      results = @extractor.collect_matching_lines do |field, spec, extractor|
+      results = @extractor.collect_matching_lines(@record) do |field, spec, extractor|
         extractor.collect_subfields(field, spec)
       end
       assert_equal ["Manufacturing consent : the political economy of the mass media / Edward S. Herman and Noam Chomsky ; with a new introduction by the authors."], results
