@@ -26,7 +26,7 @@ module Traject
     def self.extract_by_spec(marc_record, specification, options = {})
       (raise ArgumentError, "first argument must not be nil") if marc_record.nil?
 
-      Traject::MarcExtractor.new(marc_record, specification, options).extract
+      Traject::MarcExtractor.new(:junk, specification, options).extract(marc_record)
     end
 
     # Take a hash that's the output of #parse_string_spec, return
@@ -143,10 +143,10 @@ module Traject
 
 
     # Returns array of strings, extracted values. Maybe empty array.
-    def extract
+    def extract(record = self.marc_record)
       results = []
 
-      self.each_matching_line do |field, spec|
+      self.each_matching_line(record) do |field, spec|
         if control_field?(field)
           results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
         else
@@ -164,8 +164,8 @@ module Traject
     #
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
-    def each_matching_line
-      self.marc_record.fields(@interesting_tags_hash.keys).each do |field|
+    def each_matching_line(record = self.marc_record)
+      record.fields(@interesting_tags_hash.keys).each do |field|
         
         spec = spec_covering_field(field)
                 
