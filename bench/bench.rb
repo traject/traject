@@ -1,4 +1,5 @@
 #!/usr/bin/env jruby
+
 $:.unshift '../lib'
 require 'traject/command_line'
 

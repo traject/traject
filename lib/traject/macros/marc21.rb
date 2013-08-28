@@ -64,6 +64,46 @@ module Traject::Macros
       end
     end
 
+
+    # For benchmarking. The exact same thing as extract_marc, except build the spec once and use it in the lambda's closure
+
+    def extract_marc2(spec, options = {})
+      only_first              = options.delete(:first)
+      trim_punctuation        = options.delete(:trim_punctuation)
+      default_value           = options.delete(:default)
+
+      # We create the TranslationMap here on load, not inside the closure
+      # where it'll be called for every record. Since TranslationMap is supposed
+      # to cache, prob doesn't matter, but doens't hurt. Also causes any syntax
+      # exceptions to raise on load.
+      if translation_map_arg  = options.delete(:translation_map)
+        translation_map = Traject::TranslationMap.new(translation_map_arg)
+      end
+    
+      tme = Traject::MarcExtractor.new(:junk, spec, options)
+
+      lambda do |record, accumulator, context|
+        accumulator.concat tme.extract(record)
+
+        if only_first
+          Marc21.first! accumulator
+        end
+
+        if translation_map
+          translation_map.translate_array! accumulator
+        end
+
+        if trim_punctuation
+          accumulator.collect! {|s| Marc21.trim_punctuation(s)}
+        end
+
+        if default_value && accumulator.empty?
+          accumulator << default_value
+        end
+      end
+    end
+
+
     # Serializes complete marc record to a serialization format.
     # required param :format,
     # serialize_marc(:format => :binary)
