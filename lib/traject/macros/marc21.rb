@@ -35,16 +35,21 @@ module Traject::Macros
       trim_punctuation        = options.delete(:trim_punctuation)
       default_value           = options.delete(:default)
 
-      # We create the TranslationMap here on load, not inside the closure
-      # where it'll be called for every record. Since TranslationMap is supposed
-      # to cache, prob doesn't matter, but doens't hurt. Also causes any syntax
-      # exceptions to raise on load.
+      # We create the TranslationMap and the MarcExtractor here
+      # on load, so the lambda can just refer to already created
+      # ones, and not have to create a new one per-execution.
+      #
+      # Benchmarking shows for MarcExtractor at least, there is
+      # significant performance advantage. 
+
       if translation_map_arg  = options.delete(:translation_map)
         translation_map = Traject::TranslationMap.new(translation_map_arg)
       end
 
+      extractor = Traject::MarcExtractor.new(spec, options)
+
       lambda do |record, accumulator, context|
-        accumulator.concat Traject::MarcExtractor.extract_by_spec(record, spec, options)
+        accumulator.concat extractor.extract(record)
 
         if only_first
           Marc21.first! accumulator
