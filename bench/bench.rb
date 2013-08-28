@@ -1,5 +1,6 @@
 #!/usr/bin/env jruby
-$:.unshift '../lib'
+$:.unshift File.expand_path('../../lib', __FILE__)
+
 require 'traject/command_line'
 
 require 'benchmark'
