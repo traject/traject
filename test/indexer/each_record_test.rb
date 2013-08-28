@@ -30,5 +30,11 @@ describe "Traject::Indexer#each_record" do
       @indexer.each_record do |*variable|
       end
     end
+    
+    it "complains if you give it a field name" do
+      assert_raises(ArgumentError) do
+        @indexer.each_record('no_field') { |x,y,z| x}
+      end
+    end
   end
 end
