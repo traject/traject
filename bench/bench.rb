@@ -5,17 +5,21 @@ require 'benchmark'
 
 filename = 'bench.mrc'
 
+config_files = %w[
+  extract_marc_0_thread.rb
+  extract_marc2_0_thread.rb
+  extract_marc_3_thread.rb
+  extract_marc2_3_thread.rb
+]
+
+puts RUBY_DESCRIPTION
 Benchmark.bmbm do |x|
-  x.report("extract_marc ") do
-    cmdline = Traject::CommandLine.new(["-c", "extract_marc_conf.rb", filename])
-    cmdline.execute
+  config_files.each do |cf|
+    x.report(cf) do
+      cmdline = Traject::CommandLine.new(["-c", cf, '--log.file', 'bench.log', filename])
+      cmdline.execute
+    end
   end
-  
-  x.report("extract_marc2") do
-    cmdline = Traject::CommandLine.new(["-c", "extract_marc2_conf.rb", filename])
-    cmdline.execute
-  end
-    
 end
 
     
