@@ -43,10 +43,8 @@ module Traject::Macros
         translation_map = Traject::TranslationMap.new(translation_map_arg)
       end
 
-      tme = Traject::MarcExtractor.new(:junk, spec, options)
-      
       lambda do |record, accumulator, context|
-        accumulator.concat tme.extract(record)
+        accumulator.concat Traject::MarcExtractor.extract_by_spec(record, spec, options)
 
         if only_first
           Marc21.first! accumulator
@@ -63,6 +61,9 @@ module Traject::Macros
         if default_value && accumulator.empty?
           accumulator << default_value
         end
+      end
+    end
+    end
       end
     end
 
