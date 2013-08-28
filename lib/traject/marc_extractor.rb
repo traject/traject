@@ -23,10 +23,13 @@ module Traject
     #
     # Third arg is an optional options hash that will be passed as
     # third arg of MarcExtractor constructor.
+    #
+    # WARN: Very inefficient to use this one, creating a new MarcExtractor per
+    # record. May be going away!
     def self.extract_by_spec(marc_record, specification, options = {})
       (raise ArgumentError, "first argument must not be nil") if marc_record.nil?
 
-      Traject::MarcExtractor.new(marc_record, specification, options).extract
+      Traject::MarcExtractor.new(specification, options).extract(marc_record)
     end
 
     # Take a hash that's the output of #parse_string_spec, return
