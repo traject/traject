@@ -28,6 +28,17 @@ describe "Traject::Macros::Marc21Semantics" do
     assert_equal %w{47971712},  output["oclcnum"]
   end
 
+  it "#marc_series_facet" do
+    @record = MARC::Reader.new(support_file_path  "louis_armstrong.marc").to_a.first
+
+    @indexer.instance_eval do
+      to_field "series_facet", marc_series_facet
+    end
+    output = @indexer.map_record(@record)
+
+    assert_equal ["Big bands."], output["series_facet"]
+  end
+
   describe "marc_sortable_author" do
     # these probably should be taking only certain subfields, but we're copying
     # from SolrMarc that didn't do so either and nobody noticed, so not bothering for now.

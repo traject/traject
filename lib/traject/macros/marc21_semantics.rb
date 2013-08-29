@@ -154,12 +154,12 @@ module Traject::Macros
     # already covered by another field we're including, so we don't want to double count it, possibly
     # with slight variation.
     def marc_series_facet(spec = "440a:490a:800abcdt:810abcdt:811acdeft:830adfgklmnoprst")
-      extractor = MarcExtractor.new(record, spec)
+      extractor = MarcExtractor.new(spec)
 
       lambda do |record, accumulator|
-        extractor.collect_matching_lines(record) do |field, spec, extractor|
+        accumulator.concat( extractor.collect_matching_lines(record) do |field, spec, extractor|
           extractor.collect_subfields(field, spec) unless (field.tag == "490" && field.indicator1 == "1")
-        end
+        end.compact)
       end
     end
 
