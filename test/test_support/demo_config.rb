@@ -105,11 +105,14 @@ to_field "pub_date",          marc_publication_date
 
 # LCC to broad class, start with built-in from marc record, but then do our own for local
 # call numbers.
-lcc_map = Traject::TranslationMap.new("lcc_top_level")
+lcc_map             = Traject::TranslationMap.new("lcc_top_level")
+holdings_extractor  = Traject::MarcExtractor.new("991:937")
+sudoc_extractor     = Traject::MarcExtractor.new("086a", :seperator =>nil)
+
 to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |record, accumulator|
   # add in our local call numbers
   accumulator.concat(
-    Traject::MarcExtractor.new(record, "991:937").collect_matching_lines do |field, spec, extractor|
+    holdings_extractor.collect_matching_lines(record) do |field, spec, extractor|
         # we output call type 'processor' in subfield 'f' of our holdings
         # fields, that sort of maybe tells us if it's an LCC field.
         # When the data is right, which it often isn't.
@@ -130,7 +133,7 @@ to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |re
 
   # If it's got an 086, we'll put it in "Government Publication", to be
   # consistent with when we do that from a local SuDoc call #.
-  if Traject::MarcExtractor.extract_by_spec(record, "086a", :seperator =>nil).length > 0
+  if sudoc_extractor.extract(record).length > 0
     accumulator << "Government Publication"
   end
 
