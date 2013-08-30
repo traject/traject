@@ -426,7 +426,7 @@ class Traject::Indexer
       # but for positive arrity, we need 2 or 3 args
       if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
         if lns = last_named_step
-          lastone = "last parsed field was #{lns['field_name']}"
+          lastone = "last parsed field was '#{lns[:field_name]}'"
         else
           lastone = "there were no previous named fields successfully parsed"
         end
@@ -446,7 +446,7 @@ class Traject::Indexer
       # but for positive arrity, we need 1 or 2 args
       if proc && (proc.arity == 0 || proc.arity > 2)
         if lns = last_named_step
-          lastone = "last parsed field was #{lns['field_name']}"
+          lastone = "last parsed field was '#{lns[:field_name]}'"
         else
           lastone = "there were no previous named fields successfully parsed"
         end
