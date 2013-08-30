@@ -146,21 +146,36 @@ class Traject::Indexer
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
 
-    if field_name.nil? || field_name.empty?
-      raise ArgumentError.new("to_field requires a non-blank first argument, field name")
+    if field_name.nil? || field_name.is_a?(Proc) || field_name.empty? 
+      if last_named_step = @index_steps.reverse_each.find{|is| is[:field_name]}
+        location = "last good one was '#{last_named_step[:field_name]}'"
+      else
+        location = "there were no previously parsed fields"
+      end
+      raise ArgumentError.new("to_field requires the field name as the first argument (#{location})")
     end
     
     # Do we just have an enclosing block that returns a lambda?
+    
     if aLambda.nil? and block and block.arity == 0
       aLambda = block.call
       block = nil
+      unless aLambda.is_a?(Proc) and [2,3].include?(aLambda.arity)
+        if aLambda.is_a?(Proc)
+          got = "#{aLambda.arity}-arity lambda"
+        else
+          got = aLambda.class
+        end
+        raise ArgumentError.new("error parsing field '#{field_name}': zero-argument block must return a 2 or 3 argument lambda not a #{got}")
+      end
     end
+    
     
     [aLambda, block].each do |proc|
       # allow negative arity, meaning variable/optional, trust em on that.
       # but for positive arrity, we need 2 or 3 args
       if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
-        raise ArgumentError.new("block/proc given to to_field needs 2 or 3 arguments: #{proc}")
+        raise ArgumentError.new("error parsing field '#{field_name}': block/proc given to to_field needs 2 or 3 arguments: #{proc}")
       end
     end
 
