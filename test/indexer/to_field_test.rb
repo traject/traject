@@ -35,5 +35,6 @@ describe "Traject::Indexer.to_field" do
       @indexer.to_field("foo") do |*variable|
       end
     end
+    
   end
 end

@@ -149,6 +149,13 @@ class Traject::Indexer
     if field_name.nil? || field_name.empty?
       raise ArgumentError.new("to_field requires a non-blank first argument, field name")
     end
+    
+    # Do we just have an enclosing block that returns a lambda?
+    if aLambda.nil? and block and block.arity == 0
+      aLambda = block.call
+      block = nil
+    end
+    
     [aLambda, block].each do |proc|
       # allow negative arity, meaning variable/optional, trust em on that.
       # but for positive arrity, we need 2 or 3 args
