@@ -143,20 +143,13 @@ class Traject::Indexer
   end
 
 
+
+
+
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
 
-    if field_name.nil? || field_name.empty?
-      raise ArgumentError.new("to_field requires a non-blank first argument, field name")
-    end
-    [aLambda, block].each do |proc|
-      # allow negative arity, meaning variable/optional, trust em on that.
-      # but for positive arrity, we need 2 or 3 args
-      if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
-        raise ArgumentError.new("block/proc given to to_field needs 2 or 3 arguments: #{proc}")
-      end
-    end
-
+    field_name, aLambda, block = verify_and_modify_to_field_arguments(field_name, aLambda, block)
 
     @index_steps << {
       :field_name => field_name.to_s,
@@ -168,15 +161,7 @@ class Traject::Indexer
   end
 
   def each_record(aLambda = nil, &block)
-    # arity check
-    [aLambda, block].each do |proc|
-      # allow negative arity, meaning variable/optional, trust em on that.
-      # but for positive arrity, we need 1 or 2 args
-      if proc && (proc.arity == 0 || proc.arity > 2)
-        raise ArgumentError.new("block/proc given to to_field needs 1 or 2 arguments: #{proc}")
-      end
-    end
-
+    verify_each_record_arguments(aLambda, block)
     @index_steps << {
       :lambda => aLambda,
       :block  => block,
@@ -392,6 +377,84 @@ class Traject::Indexer
   def id_string(record)
     record && record['001'] && record['001'].value.to_s
   end
+
+
+  # Get the last step for which we have a field_name (e.g., the last to_field, skipping over each_record)
+  def last_named_step
+    @index_steps.reverse_each.find{|is| is[:field_name]}
+  end
+  
+  
+  # Verify that the field name is good, and throw a useful error if not
+  def verify_field_name(field_name)
+    if field_name.nil? || field_name.is_a?(Proc) || field_name.empty? 
+      if lns = last_named_step
+        location = "last good one was '#{last_named_step[:field_name]}'"
+      else
+        location = "there were no previously parsed fields"
+      end
+      raise ArgumentError.new("to_field requires the field name as the first argument (#{location})")
+    end
+  end
+
+  
+  # Verify the various, increasingly-complex things that can be sent to to_field
+  # to make sure it's all kosher.
+  #
+  # "Modification" takes place for zero-argument blocks that return a lambda
+
+  def verify_and_modify_to_field_arguments(field_name, aLambda, block)
+
+    verify_field_name(field_name)
+    
+    # Do we just have an enclosing zero-arity block that returns a lambda?
+    if aLambda.nil? and block and block.arity == 0
+      # Call the block to get a lambda, then make sure it's valid
+      aLambda = block.call
+      block = nil
+      if aLambda.is_a?(Proc) 
+        if aLambda.arity == 0 || aLambda.arity == 1 || aLambda.arity > 3
+          raise ArgumentError.new("error parsing field '#{field_name}': zero-argument block must return a 2 or 3 (or variable) argument lambda not a #{aLambda.arity}-arity lambda}")
+        end
+      else
+        raise ArgumentError.new("error parsing field '#{field_name}': zero-argument block must return a 2 or 3 (or variable) argument lambda not a #{aLambda.class}")
+      end
+    end
+    
+    [aLambda, block].each do |proc|
+      # allow negative arity, meaning variable/optional, trust em on that.
+      # but for positive arrity, we need 2 or 3 args
+      if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
+        if lns = last_named_step
+          lastone = "last parsed field was '#{lns[:field_name]}'"
+        else
+          lastone = "there were no previous named fields successfully parsed"
+        end
+        raise ArgumentError.new("error parsing field '#{field_name}': block/proc given to to_field needs 2 or 3 (or variable) arguments: #{proc} (#{lastone})")
+      end
+    end
+    
+    return [field_name, aLambda, block]
+
+  end
+
+  # Verify the procs sent to each_record to make sure it's all kosher.
+  
+  def verify_each_record_arguments(aLambda, block)
+    [aLambda, block].each do |proc|
+      # allow negative arity, meaning variable/optional, trust em on that.
+      # but for positive arrity, we need 1 or 2 args
+      if proc && (proc.arity == 0 || proc.arity > 2)
+        if lns = last_named_step
+          lastone = "last parsed field was '#{lns[:field_name]}'"
+        else
+          lastone = "there were no previous named fields successfully parsed"
+        end
+        raise ArgumentError.new("block/proc given to each_record needs 1 or 2 arguments: #{proc} (#{lastone})")
+      end
+    end
+  end
+  
 
 
   # Represents the context of a specific record being indexed, passed
