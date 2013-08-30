@@ -36,27 +36,5 @@ describe "Traject::Indexer.to_field" do
       end
     end
     
-    it "accepts a zero-arg block that returns a valid lambda" do
-      @indexer.to_field("foo") do
-        ->(rec,acc) {}
-      end
-    end
-    
-    it "reject a zero-arg block that returns a non-lambda" do
-      assert_raises(ArgumentError) do
-        @indexer.to_field("foo") do
-          11
-        end
-      end
-    end
-    
-    it "reject a zero-arg block that returns an invalid lambda" do
-      assert_raises(ArgumentError) do
-        @indexer.to_field("foo") do
-          ->(x) {}
-        end
-      end
-    end
-
   end
 end

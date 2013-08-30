@@ -149,7 +149,7 @@ class Traject::Indexer
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
 
-    field_name, aLambda, block = verify_and_modify_to_field_arguments(field_name, aLambda, block)
+    verify_to_field_arguments(field_name, aLambda, block)
 
     @index_steps << {
       :field_name => field_name.to_s,
@@ -403,23 +403,9 @@ class Traject::Indexer
   #
   # "Modification" takes place for zero-argument blocks that return a lambda
 
-  def verify_and_modify_to_field_arguments(field_name, aLambda, block)
+  def verify_to_field_arguments(field_name, aLambda, block)
 
     verify_field_name(field_name)
-    
-    # Do we just have an enclosing zero-arity block that returns a lambda?
-    if aLambda.nil? and block and block.arity == 0
-      # Call the block to get a lambda, then make sure it's valid
-      aLambda = block.call
-      block = nil
-      if aLambda.is_a?(Proc) 
-        if aLambda.arity == 0 || aLambda.arity == 1 || aLambda.arity > 3
-          raise ArgumentError.new("error parsing field '#{field_name}': zero-argument block must return a 2 or 3 (or variable) argument lambda not a #{aLambda.arity}-arity lambda}")
-        end
-      else
-        raise ArgumentError.new("error parsing field '#{field_name}': zero-argument block must return a 2 or 3 (or variable) argument lambda not a #{aLambda.class}")
-      end
-    end
     
     [aLambda, block].each do |proc|
       # allow negative arity, meaning variable/optional, trust em on that.
@@ -434,8 +420,6 @@ class Traject::Indexer
       end
     end
     
-    return [field_name, aLambda, block]
-
   end
 
   # Verify the procs sent to each_record to make sure it's all kosher.
