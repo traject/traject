@@ -24,7 +24,8 @@ describe 'Simple output' do
     @writer.put Traject::Indexer::Context.new(:output_hash => @indexer.map_record(@record))
     expected = [
       "#{@id} id #{@id}",
-      "#{@id} title #{@title}"
+      "#{@id} title #{@title}",
+      "\n"
     ]
     assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
     @writer.close
