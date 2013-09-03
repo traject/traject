@@ -50,6 +50,13 @@ require 'traject/macros/basic'
 #  with a String name of class meeting the Writer contract.
 #
 class Traject::Indexer
+  
+  # Arity error on a passed block
+  class ArityError < ArgumentError; end
+  class NamingError < ArgumentError; end
+
+  
+  
   include Traject::QualifiedConstGet
 
   attr_writer :reader_class, :writer_class
@@ -379,21 +386,12 @@ class Traject::Indexer
   end
 
 
-  # Get the last step for which we have a field_name (e.g., the last to_field, skipping over each_record)
-  def last_named_step
-    @index_steps.reverse_each.find{|step| step[:field_name]}
-  end
   
   
   # Verify that the field name is good, and throw a useful error if not
   def verify_field_name(field_name)
-    if field_name.nil? || field_name.is_a?(Proc) || field_name.empty? 
-      if lns = last_named_step
-        location = "last good one was '#{last_named_step[:field_name]}'"
-      else
-        location = "there were no previously parsed fields"
-      end
-      raise ArgumentError.new("to_field requires the field name as the first argument (#{location})")
+    if field_name.nil? || !field_name.is_a?(String) || field_name.empty? 
+      raise NamingError.new("to_field requires the field name (String) as the first argument (#{last_named_step.message})")
     end
   end
 
@@ -411,12 +409,7 @@ class Traject::Indexer
       # allow negative arity, meaning variable/optional, trust em on that.
       # but for positive arrity, we need 2 or 3 args
       if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
-        if lns = last_named_step
-          lastone = "last parsed field was '#{lns[:field_name]}'"
-        else
-          lastone = "there were no previous named fields successfully parsed"
-        end
-        raise ArgumentError.new("error parsing field '#{field_name}': block/proc given to to_field needs 2 or 3 (or variable) arguments: #{proc} (#{lastone})")
+        raise ArityError.new("error parsing field '#{field_name}': block/proc given to to_field needs 2 or 3 (or variable) arguments: #{proc} (#{last_named_step.message})")
       end
     end
     
@@ -425,16 +418,40 @@ class Traject::Indexer
   # Verify the procs sent to each_record to make sure it's all kosher.
   
   def verify_each_record_arguments(aLambda, block)
+    unless aLambda or block
+      raise ArgumentError.new("Missing Argument: each_record must take a block/lambda as an argument (#{last_named_step.message})")
+    end
+    
     [aLambda, block].each do |proc|
       # allow negative arity, meaning variable/optional, trust em on that.
       # but for positive arrity, we need 1 or 2 args
-      if proc && (proc.arity == 0 || proc.arity > 2)
-        if lns = last_named_step
-          lastone = "last parsed field was '#{lns[:field_name]}'"
-        else
-          lastone = "there were no previous named fields successfully parsed"
+      if proc
+        unless proc.is_a?(Proc)
+          raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} (#{last_named_step.message})")
         end
-        raise ArgumentError.new("block/proc given to each_record needs 1 or 2 arguments: #{proc} (#{lastone})")
+        if (proc.arity == 0 || proc.arity > 2)
+          raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: #{proc} (#{last_named_step.message})")
+        end
+      end
+    end
+  end
+  
+  def last_named_step
+    return LastNamedStep.new(@index_steps)
+  end
+  
+  
+  # A convenient way to find, and generate error messages for, the last named step (for helping locate parse errors)
+  class LastNamedStep
+    attr_accessor :step, :message
+
+    # Get the last step for which we have a field_name (e.g., the last to_field, skipping over each_record)
+    def initialize(index_steps)
+      @step = index_steps.reverse_each.find{|step| step[:field_name]}
+      if @step 
+        @message = "last successfully parsed field was '#{@step[:field_name]}'"
+      else
+        @message = "there were no previous named fields successfully parsed"
       end
     end
   end
