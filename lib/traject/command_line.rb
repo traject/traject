@@ -105,6 +105,12 @@ module Traject
       case output_type
       when "binary"
         writer = MARC::Writer.new(output_arg)
+
+        allow_oversized = indexer.settings["marcout.allow_oversized"]
+        if allow_oversized
+          allow_oversized = (allow_oversized.to_s == "true") 
+          writer.allow_oversized = allow_oversized
+        end
       when "xml"
         writer = MARC::XMLWriter.new(output_arg)
       when "human"

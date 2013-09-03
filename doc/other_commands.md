@@ -32,6 +32,12 @@ Set the `marcout.type` setting to 'xml' or 'binary' for type of output.
 Or to `human` for human readable display of marc (that is not meant for
 machine readability, but can be good for manual diagnostics.)
 
+If outputing type binary, setting `marcout.allow_oversized` to
+true or false (boolean or string), to pass that to the MARC::Writer.
+If set to true, then oversized MARC records can still be serialized,
+with length bytes zero'd out -- technically illegal, but can
+be read by MARC::Reader in permissive mode. 
+
 As the standard Marc4JReader always convert to UTF8,
 output will always be in UTF8. For standard readeres, you
 do need to set the `marc_source.type` setting to XML for xml input
