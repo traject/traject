@@ -63,7 +63,7 @@ module Traject
     # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
     # to represent the specification.
     #
-    # a String specification is a string of form:
+    # a String specification is a string (or array of strings) of form:
     #  {tag}{|indicators|}{subfields} seperated by colons
     # tag is three chars (usually but not neccesarily numeric),
     # indicators are optional two chars prefixed by hyphen,
@@ -95,8 +95,9 @@ module Traject
     # See tests for more examples.
     def self.parse_string_spec(spec_string)
       hash = {}
+      spec_strings = spec_string.is_a?(Array) ? spec_string.map{|s| s.split(/\s*:\s*/)}.flatten : spec_string.split(/s*:\s*/)
 
-      spec_string.split(":").each do |part|
+      spec_strings.each do |part|
         if (part =~ /\A([a-zA-Z0-9]{3})(\|([a-z0-9\ \*]{2})\|)?([a-z0-9]*)?\Z/)
           # variable field
           tag, indicators, subfields = $1, $3, $4
