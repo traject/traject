@@ -6,9 +6,16 @@ require 'traject/line_writer'
 # right now no checks to make sure there is no internal newlines
 # as whitespace in the json. TODO, add that.
 #
+# Should be thread-safe (ie, multiple worker threads can be calling #put
+# concurrently), by wrapping write to actual output file in a mutex synchronize.
+# This does not seem to effect performance much, as far as I could tell
+# benchmarking.
+#
 # You can force pretty-printing with setting 'json_writer.pretty_print' of boolean
 # true or string 'true'.  Useful mostly for human checking of output.
-
+#
+# Output will be sent to settings["output_file"] string path, or else
+# settings["output_stream"] (ruby IO object), or else stdout.
 class Traject::JsonWriter < Traject::LineWriter
 
   def serialize(context)

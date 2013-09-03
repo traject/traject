@@ -10,7 +10,10 @@ require 'thread'
 #
 # Output will be sent to settings["output_file"] string path, or else
 # settings["output_stream"] (ruby IO object), or else stdout.
-
+#
+# This class can be sub-classed to write out different serialized
+# reprentations -- subclasses will just override the #serialize
+# method. For instance, see JsonWriter. 
 class Traject::LineWriter
   attr_reader :settings
   attr_reader :write_mutex
