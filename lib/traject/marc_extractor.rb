@@ -6,28 +6,11 @@ module Traject
   #
   # Examples:
   #
-  #    array_of_stuff = MarcExtractor.new(marc_record, "001:245abc:700a").extract
-  #    values         = MarcExtractor.new(marc_record, "040a", :seperator => nil).extract
+  #    array_of_stuff = MarcExtractor.new("001:245abc:700a").extract(marc_record)
+  #    values         = MarcExtractor.new("040a", :seperator => nil).extract(marc_record)
   #
   class MarcExtractor
-    attr_accessor :options, :marc_record, :spec_hash
-
-
-    # Convenience method to construct a MarcExtractor object and
-    # run extract on it.
-    #
-    # First arg is a marc record.
-    #
-    # Second arg is either a string that will be given to parse_string_spec,
-    # OR a hash that's the return value of parse_string_spec.
-    #
-    # Third arg is an optional options hash that will be passed as
-    # third arg of MarcExtractor constructor.
-    def self.extract_by_spec(marc_record, specification, options = {})
-      (raise ArgumentError, "first argument must not be nil") if marc_record.nil?
-
-      Traject::MarcExtractor.new(marc_record, specification, options).extract
-    end
+    attr_accessor :options, :spec_hash
 
     # Take a hash that's the output of #parse_string_spec, return
     # an array of strings extracted from a marc record accordingly
@@ -45,13 +28,11 @@ module Traject
     #                     that match spec. Also:
     #                     * false => do not include.
     #                     * :only => only include linked 880s, not original
-    def initialize(marc_record, spec, options = {})
+    def initialize(spec, options = {})
       self.options = {
         :seperator => ' ',
         :alternate_script => :include
       }.merge(options)
-
-      self.marc_record = marc_record
 
       self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
       
@@ -150,10 +131,10 @@ module Traject
 
 
     # Returns array of strings, extracted values. Maybe empty array.
-    def extract
+    def extract(marc_record)
       results = []
 
-      self.each_matching_line do |field, spec|
+      self.each_matching_line(marc_record) do |field, spec|
         if control_field?(field)
           results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
         else
@@ -171,8 +152,8 @@ module Traject
     #
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
-    def each_matching_line
-      self.marc_record.fields(@interesting_tags_hash.keys).each do |field|
+    def each_matching_line(marc_record)
+      marc_record.fields(@interesting_tags_hash.keys).each do |field|
         
         spec = spec_covering_field(field)
                 
@@ -191,9 +172,9 @@ module Traject
     # but collects results of block into an array -- flattens any subarrays for you!
     #
     # Useful for re-use of this class for custom processing
-    def collect_matching_lines
+    def collect_matching_lines(marc_record)
       results = []
-      self.each_matching_line do |field, spec, extractor|
+      self.each_matching_line(marc_record) do |field, spec, extractor|
         results.concat [yield(field, spec, extractor)].flatten
       end
       return results

@@ -1,5 +1,5 @@
 require 'json'
-require 'thread'
+require 'traject/line_writer'
 
 # A writer for Traject::Indexer, that just writes out
 # all the output as Json. It's newline delimitted json, but
@@ -16,48 +16,15 @@ require 'thread'
 #
 # Output will be sent to settings["output_file"] string path, or else
 # settings["output_stream"] (ruby IO object), or else stdout.
-class Traject::JsonWriter
-  attr_reader :settings
-  attr_reader :write_mutex
+class Traject::JsonWriter < Traject::LineWriter
 
-  def initialize(argSettings)
-    @settings     = argSettings
-    @write_mutex  = Mutex.new
-
-    # trigger lazy loading now for thread-safety
-    output_file
-  end
-
-  def put(context)
+  def serialize(context)
     hash = context.output_hash
-
-    serialized =
-      if settings["json_writer.pretty_print"]
-        JSON.pretty_generate(hash)
-      else
-        JSON.generate(hash)
-      end
-      write_mutex.synchronize do
-        output_file.puts(serialized)
-      end
-  end
-
-  def output_file
-    unless defined? @output_file
-      @output_file =
-        if settings["output_file"]
-          File.open(settings["output_file"], 'w:UTF-8')
-        elsif settings["output_stream"]
-          settings["output_stream"]
-        else
-          $stdout
-        end
+    if settings["json_writer.pretty_print"]
+      JSON.pretty_generate(hash)
+    else
+      JSON.generate(hash)
     end
-    return @output_file
-  end
-
-  def close
-    @output_file.close unless (@output_file.nil? || @output_file.tty?)
-  end
+  end    
 
 end

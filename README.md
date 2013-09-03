@@ -157,6 +157,11 @@ Other examples of the specification string, which can include multiple tag menti
   # "*" is a wildcard in indicator spec.  So
   # 856 with first indicator '0', subfield u.
   to_field "email_addresses", extract_marc("856|0*|u")
+
+  # Instead of joining subfields from the same field
+  # into one string, joined by spaces, leave them
+  # each in seperate strings:
+  to_field "isbn", extract_marc("020az", :seperator => nil)
 ~~~
 
 The `extract_marc` function *by default* includes any linked
@@ -219,8 +224,9 @@ end
 # To make use of marc extraction by specification, just like
 # marc_extract does, you may want to use the Traject::MarcExtractor
 # class
+weirdo_extractor = MarcExtractor.new("700a")
 to_field "weirdo" do |record, accumulator, context|
-   list = MarcExtractor.extract_by_spec(record, "700a")
+   list = weirdo_extractor.extract(record)
    # combine all the 700a's in ONE string, cause we're weird
    list = list.join(" ")
    accumulator << list

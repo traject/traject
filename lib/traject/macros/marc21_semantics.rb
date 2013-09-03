@@ -14,8 +14,10 @@ module Traject::Macros
     # Extract OCLC numbers from, by default 035a's by known prefixes, then stripped
     # just the num, and de-dup.
     def oclcnum(extract_fields = "035a")
+      extractor = MarcExtractor.new(extract_fields, :seperator => nil)
+
       lambda do |record, accumulator|
-        list = MarcExtractor.extract_by_spec(record, extract_fields, :seperator => nil).collect! do |o|
+        list = extractor.extract(record).collect! do |o|
           Marc21Semantics.oclcnum_extract(o)
         end.compact
 
@@ -56,12 +58,16 @@ module Traject::Macros
         accumulator << Marc21Semantics.get_sortable_author(record)
       end
     end
+
+    class << self ; attr_accessor :sortable_author_onexx, :sortable_author_twoxx ; end
+    self.sortable_author_onexx = MarcExtractor.new("100:110:111", :first => true)
+    self.sortable_author_twoxx = MarcExtractor.new("240:245", :first => true)
     def self.get_sortable_author(record)
-      onexx = MarcExtractor.extract_by_spec(record, "100:110:111", :first => true).first
+      onexx = sortable_author_onexx.extract(record).first
       onexx = onexx.strip if onexx
 
       titles = []
-      MarcExtractor.new(record, "240:245", :first => true).each_matching_line do |field, spec|
+      sortable_author_twoxx.each_matching_line(record) do |field, spec|
         non_filing = field.indicator2.to_i
 
         str = field.subfields.collect {|sf| sf.value}.join(" ")
@@ -81,8 +87,11 @@ module Traject::Macros
         accumulator << Marc21Semantics.get_sortable_title(record)
       end
     end
+
+    class << self ; attr_accessor :sortable_title_extract ; end
+    self.sortable_title_extract =  MarcExtractor.new("245ab")
     def self.get_sortable_title(record)
-      MarcExtractor.new(record, "245ab").collect_matching_lines do |field, spec, extractor|
+      Marc21Semantics.sortable_title_extract.collect_matching_lines(record) do |field, spec, extractor|
         str = extractor.collect_subfields(field, spec).first
 
         if str.nil?
@@ -114,8 +123,10 @@ module Traject::Macros
     def marc_languages(spec = "008[35-37]:041a:041d")
       translation_map = Traject::TranslationMap.new("marc_languages")
 
+      extractor = MarcExtractor.new(spec, :seperator => nil)
+
       lambda do |record, accumulator|
-        codes = MarcExtractor.new(record, spec, :seperator => "nil").collect_matching_lines do |field, spec, extractor|
+        codes = extractor.collect_matching_lines(record) do |field, spec, extractor|
           if extractor.control_field?(field)
             (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
           else
@@ -143,10 +154,12 @@ module Traject::Macros
     # already covered by another field we're including, so we don't want to double count it, possibly
     # with slight variation.
     def marc_series_facet(spec = "440a:490a:800abcdt:810abcdt:811acdeft:830adfgklmnoprst")
+      extractor = MarcExtractor.new(spec)
+
       lambda do |record, accumulator|
-        MarcExtractor.new(record, spec).collect_matching_lines do |field, spec, extractor|
+        accumulator.concat( extractor.collect_matching_lines(record) do |field, spec, extractor|
           extractor.collect_subfields(field, spec) unless (field.tag == "490" && field.indicator1 == "1")
-        end
+        end.compact)
       end
     end
 
@@ -158,8 +171,10 @@ module Traject::Macros
     def marc_instrumentation_humanized(spec = "048ab", options = {})
       translation_map = Traject::TranslationMap.new(options[:translation_map] || "marc_instruments")
 
+      extractor = MarcExtractor.new(spec, :seperator => nil)
+
       lambda do |record, accumulator|
-        values = Traject::MarcExtractor.extract_by_spec(record, spec, :seperator => nil)
+        values = extractor.extract(record)
         human = values.collect do |value|
           translation_map[ value.slice(0, 2) ]
         end.uniq
@@ -178,9 +193,12 @@ module Traject::Macros
     # codes.
     def marc_instrument_codes_normalized(spec = "048")
       soloist_suffix = ".s"
+
+      extractor = MarcExtractor.new("048", :seperator => nil)
+
       return lambda do |record, accumulator|
         accumulator.concat(
-          MarcExtractor.new(record, "048", :seperator => nil).collect_matching_lines do |field, spec, extractor|
+          extractor.collect_matching_lines(record) do |field, spec, extractor|
             values = []
 
             field.subfields.each do |sf|
@@ -225,10 +243,16 @@ module Traject::Macros
       end
     end
 
+
+    class << self
+      attr_accessor :publication_date_008_extractor, :publication_date_260c_extractor
+    end
+    self.publication_date_008_extractor  = MarcExtractor.new("008")
+    self.publication_date_260c_extractor = MarcExtractor.new("260c", :seperator => nil)
     # See #marc_publication_date. Yeah, this is a holy mess.
     # Maybe it should actually be extracted to it's own class!
     def self.publication_date(record, estimate_tolerance = 15, min_year = 500, max_year = (Time.new.year + 6))
-      field008 = MarcExtractor.extract_by_spec(record, "008").first
+      field008 = Marc21Semantics.publication_date_008_extractor.extract(record).first
       found_date = nil
 
       if field008 && field008.length >= 11
@@ -273,7 +297,7 @@ module Traject::Macros
       end
       # Okay, nothing from 008, try 260
       if found_date.nil?
-        v260c = MarcExtractor.extract_by_spec(record, "260c", :seperator => nil).first
+        v260c = publication_date_260c_extractor.extract(record).first
         # just try to take the first four digits out of there, we're not going to try
         # anything crazy.
         if v260c =~ /(\d{4})/
@@ -307,8 +331,10 @@ module Traject::Macros
       default_value = options.has_key?(:default) ? options[:default] : "Unknown"
       translation_map = Traject::TranslationMap.new("lcc_top_level")
 
+      extractor = MarcExtractor.new(spec, :seperator => nil)
+
       lambda do |record, accumulator|
-        candidates = MarcExtractor.extract_by_spec(record, spec, :seperator => nil)
+        candidates = extractor.extract(record)
 
         candidates.reject! do |candidate|
           !(candidate =~ lcc_regex)
@@ -337,10 +363,14 @@ module Traject::Macros
       a_fields_spec = options[:geo_a_fields] || "651a:691a"
       z_fields_spec = options[:geo_z_fields] || "600:610:611:630:648:650:654:655:656:690:651:691"
 
+      extractor_043a      = MarcExtractor.new("043a", :seperator => nil)
+      extractor_a_fields  = MarcExtractor.new(a_fields_spec, :seperator => nil)
+      extractor_z_fields  = MarcExtractor.new(z_fields_spec)
+
       lambda do |record, accumulator|
 
         accumulator.concat(
-          MarcExtractor.extract_by_spec(record, "043a", :seperator => nil).collect do |code|
+          extractor_043a.extract(record).collect do |code|
             # remove any trailing hyphens, then map
             marc_geo_map[code.gsub(/\-+\Z/, '')]
           end.compact
@@ -348,7 +378,7 @@ module Traject::Macros
 
         #LCSH 651a and 691a go in more or less normally.
         accumulator.concat(
-          MarcExtractor.extract_by_spec(record, a_fields_spec, :seperator => nil).collect do |s|
+          extractor_a_fields.extract(record).collect do |s|
             # remove trailing periods, which they sometimes have if they were
             # at end of LCSH.
             s.sub(/\. */, '')
@@ -356,7 +386,7 @@ module Traject::Macros
         )
 
         # fields we take z's from have a bit more normalization
-        MarcExtractor.new(record, z_fields_spec).each_matching_line do |field, spec, extractor|
+        extractor_z_fields.each_matching_line(record) do |field, spec, extractor|
           z_fields = field.subfields.find_all {|sf| sf.code == "z"}.collect {|sf| sf.value }
           # depending on position in total field, may be a period on the end
           # we want to remove.
@@ -385,17 +415,21 @@ module Traject::Macros
       ordinary_fields_spec = "600y:610y:611y:630y:648ay:650y:654y:656y:690y"
       special_fields_spec = "651:691"
       seperator = ": "
+
+      extractor_ordinary_fields = MarcExtractor.new(ordinary_fields_spec)
+      extractor_special_fields  = MarcExtractor.new(special_fields_spec)
+
       lambda do |record, accumulator|
         # straightforward ones
 
 
-        accumulator.concat( MarcExtractor.extract_by_spec(record, ordinary_fields_spec).collect do |v|
+        accumulator.concat( extractor_ordinary_fields.extract(record).collect do |v|
           # May have a period we have to remove, if it was at end of tag
           v.sub(/\. *\Z/, '')
         end)
 
         # weird ones
-        MarcExtractor.new(record, special_fields_spec).each_matching_line do |field, spec, extractor|
+        extractor_special_fields.each_matching_line(record) do |field, spec, extractor|
           field.subfields.each do |sf|
             next unless sf.code == 'y'
             if sf.value =~ /\A\s*.+,\s+(ca.\s+)?\d\d\d\d?(-\d\d\d\d?)?( B\.C\.)?[.,; ]*\Z/
