@@ -385,6 +385,9 @@ instance is baked in.  You can provide your own solr instance to test against an
 "solr_url", and the tests will use it. Otherwise, tests will
 use a mocked up Solr instance.
 
+To make a pull request, please make a feature branch *created from the master branch*, not from an existing feature branch. (If you need to do a feature branch dependent on an existing not-yet merged feature branch... discuss
+this with other developers first!)
+
 Pull requests should come with tests, as well as docs where applicable. Docs can be inline rdoc-style, edits to this README,
 and/or extra files in ./docs -- as appropriate for what needs to be docs.
 
