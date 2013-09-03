@@ -157,6 +157,11 @@ Other examples of the specification string, which can include multiple tag menti
   # "*" is a wildcard in indicator spec.  So
   # 856 with first indicator '0', subfield u.
   to_field "email_addresses", extract_marc("856|0*|u")
+
+  # Instead of joining subfields from the same field
+  # into one string, joined by spaces, leave them
+  # each in seperate strings:
+  to_field "isbn", extract_marc("020az", :seperator => nil)
 ~~~
 
 The `extract_marc` function *by default* includes any linked
