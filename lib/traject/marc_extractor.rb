@@ -35,27 +35,27 @@ module Traject
       }.merge(options)
 
       self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
-      
-      
+
+
       # Tags are "interesting" if we have a spec that might cover it
       @interesting_tags_hash = {}
-      
+
       # By default, interesting tags are those represented by keys in spec_hash.
       # Add them unless we only care about alternate scripts.
       unless options[:alternate_script] == :only
         self.spec_hash.keys.each {|tag| @interesting_tags_hash[tag] = true}
       end
-      
+
       # If we *are* interested in alternate scripts, add the 880
       if options[:alternate_script] != false
         @interesting_tags_hash['880'] = true
       end
     end
-    
-    
+
+
     # Check to see if a tag is interesting (meaning it may be covered by a spec
     # and the passed-in options about alternate scripts)
-    
+
     def interesting_tag?(tag)
       return @interesting_tags_hash.include?(tag)
     end
@@ -154,14 +154,14 @@ module Traject
     # implementations.
     def each_matching_line(marc_record)
       marc_record.fields(@interesting_tags_hash.keys).each do |field|
-        
+
         spec = spec_covering_field(field)
-                
+
         # Don't have a spec that addresses this field? Move on.
         next unless spec
-        
+
         # Make sure it matches indicators too, spec_covering_field
-        # doens't check that. 
+        # doens't check that.
         if matches_indicators(field, spec)
           yield(field, spec, self)
         end
@@ -200,28 +200,28 @@ module Traject
 
     # Find a spec, if any, covering extraction from this field
     #
-    # When given an 880, will return the spec (if any) for the linked tag iff 
+    # When given an 880, will return the spec (if any) for the linked tag iff
     # we have a $6 and we want the alternate script.
     #
     # Returns nil if no matching spec is found
-        
+
     def spec_covering_field(field)
       tag = field.tag
-      
+
       # Short-circuit the unintersting stuff
       return nil unless interesting_tag?(tag)
 
       # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
       # to do this weird encode gymnastics, which fixes it for mysterious reasons.
-      
+
       if tag == "880" && field['6']
         tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
       end
-      
+
       # Take the resulting tag and get the spec from it (or the default nil if there isn't a spec for this tag)
-      spec = self.spec_hash[tag]  
+      spec = self.spec_hash[tag]
     end
-    
+
 
     def control_field?(field)
       # should the MARC gem have a more efficient way to do this,
