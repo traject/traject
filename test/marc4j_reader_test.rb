@@ -75,4 +75,14 @@ describe "Marc4JReader" do
     assert first['245']['a'].encoding.name, "UTF-8"
     assert_equal "Fikr-i Ayāz /", first['245']['a']
   end
+  
+  it "keeps marc4j object when asked" do
+    file = File.new(support_file_path "test_data.utf8.marc.xml")
+    settings = Traject::Indexer::Settings.new("marc_source.type" => "xml", 'marc4j_reader.keep_marc4j' => true)
+    record = Traject::Marc4JReader.new(file, settings).to_a.first
+    assert_kind_of MARC::Record, record
+    assert_kind_of Java::org.marc4j.marc.impl::RecordImpl, record.original_marc4j
+  end
+    
+  
 end

@@ -35,8 +35,12 @@ require 'marc'
 #         Default 'BESTGUESS', but marc records in the wild are so wrong here, recommend setting.
 #         (will ALWAYS be transcoded to UTF-8 on the way out. We insist.)
 #
-# * marc4j_reader.jar_dir:   Path to a directory containing Marc4J jar file to use. All .jar's in dir will
+# * marc4j_reader.jar_dir: Path to a directory containing Marc4J jar file to use. All .jar's in dir will
 #                          be loaded. If unset, uses marc4j.jar bundled with traject.
+#
+# * marc4j_reader.keep_marc4j: Keeps the original marc4j record accessible from 
+#                              the eventual ruby-marc record via record#original_marc4j
+
 class Traject::Marc4JReader
   include Enumerable
 
@@ -47,6 +51,11 @@ class Traject::Marc4JReader
     @input_stream = input_stream
 
     ensure_marc4j_loaded!
+    
+    if @settings['marc4j_reader.keep_marc4j']
+      MARC::Record.class_eval('attr_accessor :original_marc4j')
+    end
+    
   end
 
   # Loads solrj unless it appears to already be loaded.
@@ -91,6 +100,9 @@ class Traject::Marc4JReader
       begin
         marc4j = internal_reader.next
         rubymarc = convert_marc4j_to_rubymarc(marc4j)
+        if @settings['marc4j_reader.keep_marc4j']
+          rubymarc.original_marc4j = marc4j
+        end
       rescue Exception =>e
         msg = "MARC4JReader: Error reading MARC, fatal, re-raising"
         if marc4j
