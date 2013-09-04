@@ -9,6 +9,31 @@ module Traject
   #    array_of_stuff = MarcExtractor.new("001:245abc:700a").extract(marc_record)
   #    values         = MarcExtractor.new("040a", :seperator => nil).extract(marc_record)
   #
+  #
+  # == Note on Performance and MarcExtractor creation and reuse
+  #
+  # A MarcExtractor is somewhat expensive to create, and has been shown in profiling/
+  # benchmarking to be a bottleneck if you end up creating one for each marc record
+  # processed.  Instead, a single MarcExtractor should be created, and re-used
+  # per MARC record.
+  #
+  # If you are creating a traject 'macro' method, here's one way to do that,
+  # capturing the MarcExtractor under closure:
+  #
+  #    def some_macro(spec, other_args, whatever)
+  #      extractor = MarcExtractor.new( spec )
+  #      # ...
+  #      return lambda do |record, accumulator, context|
+  #         #...
+  #         accumulator.concat extractor.extract(record)
+  #         #...
+  #      end
+  #    end
+  #
+  # In other cases, you may find it convenient to improve performance by
+  # using the MarcExtractor#cached method, instead of MarcExtractor#new, to
+  # lazily create and then re-use a MarcExtractor object with
+  # particular initialization arguments.
   class MarcExtractor
     attr_accessor :options, :spec_hash
 
@@ -50,6 +75,35 @@ module Traject
       if options[:alternate_script] != false
         @interesting_tags_hash['880'] = true
       end
+    end
+
+    # Takes the same arguments as MarcExtractor.new, but will re-use an existing
+    # cached MarcExtractor already created with given initialization arguments,
+    # if available.
+    #
+    # This can be used to increase performance of indexing routines, as
+    # MarcExtractor creation has been shown via profiling/benchmarking
+    # to be expensive.
+    #
+    # Cache is thread-local, so should be thread-safe.
+    #
+    # You should _not_ modify the state of any MarcExtractor retrieved
+    # via cached, as the MarcExtractor will be re-used and shared (possibly
+    # between threads even!). We try to use ruby #freeze to keep you from doing so,
+    # although if you try hard enough you can surely find a way to do something
+    # you shouldn't.
+    #
+    #    extractor = MarcExtractor.cached("245abc:700a", :seperator => nil)
+    def self.cached(*args)
+      cache = (Thread.current[:marc_extractor_cached] ||= Hash.new)
+      extractor = (cache[args] ||= begin
+        ex = Traject::MarcExtractor.new(*args).freeze
+        ex.options.freeze
+        ex.spec_hash.freeze
+        ex
+      end)
+
+      return extractor
     end
 
 

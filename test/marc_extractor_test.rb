@@ -265,6 +265,19 @@ describe "Traject::MarcExtractor" do
     end
   end
 
+  describe "MarcExtractor.cached" do
+    it "creates" do
+      ext = Traject::MarcExtractor.cached("245abc", :seperator => nil)
+      assert_equal({"245"=>{:subfields=>["a", "b", "c"]}}, ext.spec_hash)
+      assert ext.options[:seperator].nil?, "extractor options[:seperator] is nil"
+    end
+    it "caches" do
+      ext1 = Traject::MarcExtractor.cached("245abc", :seperator => nil)
+      ext2 = Traject::MarcExtractor.cached("245abc", :seperator => nil)
+
+      assert_same ext1, ext2
+    end
+  end
 
 
 end
