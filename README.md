@@ -343,7 +343,7 @@ Use `-u` as a shortcut for `s solr.url=X`
 
     traject -c conf_file.rb -u http://example.com/solr marc_file.mrc
 
-Also see `-I load_path` and `-g Gemfile` options under Extending With Your Own Code.
+Also see `-I load_path` and `-G Gemfile` options under Extending With Your Own Code.
 
 See also [Hints for batch and cronjob use](./doc/batch_execution.md) of traject.
 
@@ -374,9 +374,9 @@ Own Code](./doc/extending.md)
   * translation map files found on the load path or in a
     "./translation_maps" subdir on the load path will be found
     for Traject translation maps.
-* Traject `-g` command line can be used to tell traject to use
+* Traject `-G` command line can be used to tell traject to use
   bundler with a `Gemfile` located at current working dirctory
-  (or give an argument to `-g ./some/myGemfile`)
+  (or give an argument to `-G ./some/myGemfile`)
 
 ## More
 
