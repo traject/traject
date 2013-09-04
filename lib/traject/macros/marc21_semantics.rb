@@ -59,15 +59,12 @@ module Traject::Macros
       end
     end
 
-    class << self ; attr_accessor :sortable_author_onexx, :sortable_author_twoxx ; end
-    self.sortable_author_onexx = MarcExtractor.new("100:110:111", :first => true)
-    self.sortable_author_twoxx = MarcExtractor.new("240:245", :first => true)
     def self.get_sortable_author(record)
-      onexx = sortable_author_onexx.extract(record).first
+      onexx = MarcExtractor.cached("100:110:111", :first => true).extract(record).first
       onexx = onexx.strip if onexx
 
       titles = []
-      sortable_author_twoxx.each_matching_line(record) do |field, spec|
+      MarcExtractor.cached("240:245", :first => true).each_matching_line(record) do |field, spec|
         non_filing = field.indicator2.to_i
 
         str = field.subfields.collect {|sf| sf.value}.join(" ")
@@ -88,10 +85,8 @@ module Traject::Macros
       end
     end
 
-    class << self ; attr_accessor :sortable_title_extract ; end
-    self.sortable_title_extract =  MarcExtractor.new("245ab")
     def self.get_sortable_title(record)
-      Marc21Semantics.sortable_title_extract.collect_matching_lines(record) do |field, spec, extractor|
+      MarcExtractor.cached("245ab").collect_matching_lines(record) do |field, spec, extractor|
         str = extractor.collect_subfields(field, spec).first
 
         if str.nil?
@@ -243,16 +238,10 @@ module Traject::Macros
       end
     end
 
-
-    class << self
-      attr_accessor :publication_date_008_extractor, :publication_date_260c_extractor
-    end
-    self.publication_date_008_extractor  = MarcExtractor.new("008")
-    self.publication_date_260c_extractor = MarcExtractor.new("260c", :seperator => nil)
     # See #marc_publication_date. Yeah, this is a holy mess.
     # Maybe it should actually be extracted to it's own class!
     def self.publication_date(record, estimate_tolerance = 15, min_year = 500, max_year = (Time.new.year + 6))
-      field008 = Marc21Semantics.publication_date_008_extractor.extract(record).first
+      field008 = MarcExtractor.cached("008").extract(record).first
       found_date = nil
 
       if field008 && field008.length >= 11
@@ -297,7 +286,7 @@ module Traject::Macros
       end
       # Okay, nothing from 008, try 260
       if found_date.nil?
-        v260c = publication_date_260c_extractor.extract(record).first
+        v260c = MarcExtractor.cached("260c", :seperator => nil).extract(record).first
         # just try to take the first four digits out of there, we're not going to try
         # anything crazy.
         if v260c =~ /(\d{4})/
