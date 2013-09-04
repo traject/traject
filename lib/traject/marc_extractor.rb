@@ -52,6 +52,34 @@ module Traject
       end
     end
     
+    # Cached access
+    class << self
+      attr_accessor :cached_hash, :cached_mutex
+    end
+    self.cached_hash  = Hash.new
+    self.cached_mutex = Mutex.new
+    def self.cached(*args)
+      cached_mutex.synchronize do
+        return cached_hash[args] ||= Traject::MarcExtractor.new(*args).freeze
+      end
+    end
+    
+    # Cached, no mutex
+    def self.cached_no_mutex(*args)
+      return cached_hash[args] ||= Traject::MarcExtractor.new(*args).freeze
+    end
+    
+    # Cached, one copy per thread
+    def self.cached_per_thread_with_check(*args)
+      Thread.current[:cached_hash] ||= Hash.new
+      return Thread.current[:cached_hash][args] ||= Traject::MarcExtractor.new(*args).freeze
+    end
+
+    def self.cached_per_thread_with_check(*args)
+      Thread.current[:cached_hash] ||= Hash.new
+      return Thread.current[:cached_hash][args] ||= Traject::MarcExtractor.new(*args).freeze
+    end
+    
     
     # Check to see if a tag is interesting (meaning it may be covered by a spec
     # and the passed-in options about alternate scripts)
