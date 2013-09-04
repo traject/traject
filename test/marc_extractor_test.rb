@@ -50,6 +50,27 @@ describe "Traject::MarcExtractor" do
       assert_equal 5, parsed["005"][:bytes]
       assert_equal 7..10, parsed["008"][:bytes]
     end
+    
+    it "allows arrays of specs" do
+      parsed = Traject::MarcExtractor.parse_string_spec %w(
+        245abcde
+        810
+        700|*4|bcd
+      )
+      assert_length 3, parsed
+    end
+    
+    it "allows mixture of array and colon-delimited specs" do
+      parsed = Traject::MarcExtractor.parse_string_spec %w(
+        245abcde
+        100:110:111
+        810
+        700|*4|bcd
+      )
+      assert_length 6, parsed
+    end
+      
+    
   end
 
   # Mostly an internal method, not neccesarily API, but
