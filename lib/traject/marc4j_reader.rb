@@ -51,11 +51,13 @@ class Traject::Marc4JReader
     @input_stream = input_stream
 
     ensure_marc4j_loaded!
-    
-    if @settings['marc4j_reader.keep_marc4j']
+
+    if @settings['marc4j_reader.keep_marc4j'] &&
+      ! (MARC::Record.instance_methods.include?(:original_marc4j) &&
+         MARC::Record.instance_methods.include?(:"original_marc4j="))
       MARC::Record.class_eval('attr_accessor :original_marc4j')
     end
-    
+
   end
 
   # Loads solrj unless it appears to already be loaded.
