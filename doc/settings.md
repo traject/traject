@@ -54,6 +54,11 @@ for commonly used settings, see `traject -h`.
 * `marc4j_reader.source_encoding`: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
   by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
 
+* `marcout.allow_oversized`: Used with `-x marcout` command to output marc when outputting
+     as ISO 2709 binary, set to true or string "true", and the MARC::Writer will have
+     allow_oversized=true set, allowing oversized records to be serialized with length
+    bytes zero'd out -- technically illegal, but can be read by MARC::Reader in permissive mode.
+
 * `output_file`: Output file to write to for operations that write to files: For instance the `marcout` command,
                  or Writer classes that write to files, like Traject::JsonWriter. Has an shortcut
                  `-o` on command line. 
