@@ -27,7 +27,7 @@ module Traject
     # @param [Hash] settings (looks only for an integer in 'mock_reader.limit')
     def initialize(input_stream, settings = {})
       @records = []
-      @limit = settings["mock_reader.limit"]  || 10_000
+      @limit = (settings["mock_reader.limit"]  || 10_000).to_i
       
       this_file_iter = File.open(__FILE__).each_line
       

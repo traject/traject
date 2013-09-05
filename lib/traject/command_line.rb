@@ -160,15 +160,24 @@ module Traject
     def load_configuration_files!(my_indexer, conf_files)
       conf_files.each do |conf_path|
         begin
-          my_indexer.instance_eval(File.open(conf_path).read, conf_path)
+          file_io = File.open(conf_path)
         rescue Errno::ENOENT => e
           self.console.puts "Could not find configuration file '#{conf_path}', exiting..."
           exit 2
+        end
+
+        begin
+          my_indexer.instance_eval(file_io.read, conf_path)
         rescue Exception => e
-          self.console.puts "Could not parse configuration file '#{conf_path}'"
-          self.console.puts "  #{e.message}"
+          if (conf_trace = e.backtrace.find {|l| l.start_with? conf_path}) &&
+             (conf_trace =~ /\A.*\:(\d+)\:in/)
+            line_number = $1
+          end
+
+          self.console.puts "Error processing configuration file '#{conf_path}' at line #{line_number}"
+          self.console.puts "  #{e.class}: #{e.message}"
           if e.backtrace.first =~ /\A(.*)\:in/
-            self.console.puts "  #{$1}"
+            self.console.puts "  from #{$1}"
           end
           exit 3
         end
@@ -263,7 +272,7 @@ module Traject
         on :j, "output as pretty printed json, shortcut for -s writer_class_name=JsonWriter -s json_writer.pretty_print=true"
         on :t, :marc_type, "xml, json or binary. shortcut for -s marc_source.type=", :argument => true
         on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
-        on :g, "gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => ""
+        on :G, "Gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => ""
 
         on :x, "command", "alternate traject command: process (default); marcout", :argument => true, :default => "process"
       end

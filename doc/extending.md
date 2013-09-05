@@ -19,9 +19,9 @@ of a couple traject features meant to make it easier.
   * translation map files found on the load path or in a
     "./translation_maps" subdir on the load path will be found
     for Traject translation maps.
-* Traject `-g` command line can be used to tell traject to use
+* Traject `-G` command line can be used to tell traject to use
   bundler with a `Gemfile` located at current working dirctory
-  (or give an argument to `-g ./some/myGemfile`)
+  (or give an argument to `-G ./some/myGemfile`)
 
 ## Custom code local to your project
 
@@ -161,9 +161,9 @@ possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemf
 Run `bundle install` from the directory with the Gemfile, on any system
 at any time, to make sure specified gems are installed.
 
-**Run traject** with the `-g` flag to tell it to use the Gemfile:
+**Run traject** with the `-G` flag to tell it to use the Gemfile:
 
-   traject -g -c some_traject_config.rb ...
+   traject -G -c some_traject_config.rb ...
 
 Traject will use bundler to setup with the Gemfile, making sure
 the specified versions of all gems are used (and also making sure
