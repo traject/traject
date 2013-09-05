@@ -257,6 +257,12 @@ class Traject::SolrJWriter
       return true
     end
 
+    # Consider Solr server returning HTTP 500 Internal Server Error to be fatal.
+    # This can mean, for instance, that disk space is exhausted on solr server.
+    if e.kind_of?(Java::OrgApacheSolrCommon::SolrException) && e.code == 500
+      return true
+    end
+
     return false
   end
 
