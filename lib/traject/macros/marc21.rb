@@ -78,18 +78,25 @@ module Traject::Macros
     # [json] marc-in-json (http://dilettantes.code4lib.org/blog/2010/09/a-proposal-to-serialize-marc-in-json/)
     # [binary] Standard ISO 2709 binary marc. By default WILL be base64-encoded,
     #          assumed destination a solr 'binary' field.
-    #          add option `:binary_escape => false` to do straight binary -- unclear
+    #          * add option `:binary_escape => false` to do straight binary -- unclear
     #          what Solr's documented behavior is when you do this, and add a string
     #          with binary control chars to solr. May do different things in diff
     #          Solr versions, including raising exceptions.
+    #          * add option `:allow_oversized => true` to pass that flat
+    #          to the MARC::Writer. Oversized records will then still be
+    #          serialized, with certain header bytes filled with ascii 0's
+    #          -- technically illegal MARC, but can still be read by
+    #          ruby MARC::Reader in permissive mode.
     def serialized_marc(options)
       options[:format] = options[:format].to_s
       raise ArgumentError.new("Need :format => [binary|xml|json] arg") unless %w{binary xml json}.include?(options[:format])
 
+      allow_oversized = (options[:allow_oversized] == true)
+
       lambda do |record, accumulator, context|
         case options[:format]
         when "binary"
-          binary = record.to_marc
+          binary = MARC::Writer.encode(record, allow_oversized)
           binary = Base64.encode64(binary) unless options[:binary_escape] == false
           accumulator << binary
         when "xml"
