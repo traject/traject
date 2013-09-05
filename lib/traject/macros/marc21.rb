@@ -88,7 +88,9 @@ module Traject::Macros
     #          -- technically illegal MARC, but can still be read by
     #          ruby MARC::Reader in permissive mode.
     def serialized_marc(options)
-      format = options[:format].to_s
+      format        = options[:format].to_s
+      binary_escape = (options[:binary_escape] != false)
+
       raise ArgumentError.new("Need :format => [binary|xml|json] arg") unless %w{binary xml json}.include?(format)
 
       allow_oversized = (options[:allow_oversized] == true)
@@ -97,7 +99,7 @@ module Traject::Macros
         case format
         when "binary"
           binary = MARC::Writer.encode(record, allow_oversized)
-          binary = Base64.encode64(binary) unless options[:binary_escape] == false
+          binary = Base64.encode64(binary) if binary_escape
           accumulator << binary
         when "xml"
           # ruby-marc #to_xml returns a REXML object at time of this writing, bah!@
