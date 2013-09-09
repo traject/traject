@@ -205,6 +205,8 @@ class Traject::Indexer
   # Returns the context passed in as second arg, as a convenience for chaining etc.
   def map_to_context!(context)
     @index_steps.each do |index_step|
+      # Don't bother if we're skipping this record
+      break if context.skip?
       if index_step[:type] == :to_field
 
         accumulator = []
