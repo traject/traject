@@ -40,7 +40,9 @@ module Traject
         while true
           json = this_file_iter.next
           next unless json =~ /\S/
-          @records << MARC::Record.new_from_hash(JSON.parse(json))
+          r = MARC::Record.new_from_hash(JSON.parse(json))
+          r.fields.freeze
+          @records << r
         end
       rescue StopIteration
       end
