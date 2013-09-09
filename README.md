@@ -321,9 +321,10 @@ You can supply more than one conf file with repeated `-c` arguments.
 
     traject -c connection_conf.rb -c indexing_conf.rb marc_file.mrc
 
-If you leave off the marc_file, traject will try to read from stdin. You can only supply one marc file at a time, but we can take advantage of stdin to get around this:
+If you supply a `--stdin` argument, traject will try to read from stdin.
+You can only supply one marc file at a time, but we can take advantage of stdin to get around this:
 
-    cat some/dir/*.marc | traject -c conf_file.rb
+    cat some/dir/*.marc | traject -c conf_file.rb --stdin
 
 You can set any setting on the command line with `-s key=value`.
 This will over-ride any settings set with `provide` in conf files.
