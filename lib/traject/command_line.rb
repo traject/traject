@@ -1,6 +1,7 @@
+# Require as little as possible at top, so we can bundle require later
+# if needed, before requiring anything from the bundle. Can't avoid slop
+# though, to get our bundle arg out, sorry. 
 require 'slop'
-require 'traject'
-require 'traject/indexer'
 
 module Traject
   # The class that executes for the Traject command line utility.
@@ -43,9 +44,15 @@ module Traject
 
       # have to use Slop object to tell diff between
       # no arg supplied and no option -g given at all
-      if slop.present? :gemfile
-        require_bundler_setup(options[:gemfile])
+      if slop.present? :Gemfile
+        require_bundler_setup(options[:Gemfile])
       end
+
+      # We require them here instead of top of file,
+      # so we have done bundler require before we require these.
+      require 'traject'
+      require 'traject/indexer'
+
 
       (options[:load_path] || []).each do |path|
         $LOAD_PATH << path unless $LOAD_PATH.include? path
@@ -200,10 +207,10 @@ module Traject
     def require_bundler_setup(gemfile=nil)
       if gemfile
         # tell bundler what gemfile to use
-        gem_path = File.expand_path( options[:gemfile] )
+        gem_path = File.expand_path( gemfile )
         # bundler not good at error reporting, we check ourselves
         unless File.exists? gem_path
-          self.console.puts "Gemfile `#{options[:gemfile]}` does not exist, exiting..."
+          self.console.puts "Gemfile `#{gemfile}` does not exist, exiting..."
           self.console.puts
           self.console.puts slop.help
           exit 2
