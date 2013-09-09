@@ -26,10 +26,20 @@ module Traject
     # @param [Ignored] input_stream (ignored)
     # @param [Hash] settings (looks only for an integer in 'mock_reader.limit')
     def initialize(input_stream, settings = {})
-      @records = []
       @limit = (settings["mock_reader.limit"]  || 10_000).to_i
 
-      this_file_iter = File.open(__FILE__).each_line
+      @records = load_ndjson(File.open(__FILE__))
+
+      # freeze it immutable for thread safety and performance
+      @records.each {|r| r.fields.freeze}
+    end
+
+    # newline delimited json, assuming no internal unescaped
+    # newlines in json too!
+    def load_ndjson(file_io)
+      records = []
+
+      this_file_iter = file_io.each_line
 
       while true
         line = this_file_iter.next
@@ -40,13 +50,12 @@ module Traject
         while true
           json = this_file_iter.next
           next unless json =~ /\S/
-          r = MARC::Record.new_from_hash(JSON.parse(json))
-          r.fields.freeze
-          @records << r
+          records << MARC::Record.new_from_hash(JSON.parse(json))          
         end
       rescue StopIteration
       end
 
+      return records
     end
 
 
