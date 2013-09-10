@@ -74,30 +74,47 @@ module Traject
     end
 
     # Pass it a block, MAYBE gets executed in the bg in a thread pool. Maybe
-    # gets executed in the calling thread. 
+    # gets executed in the calling thread.
     #
     # There are actually two 'maybes':
-    # 
+    #
     # * If Traject::ThreadPool was configured with null thread pool, then ALL
-    #   work will be executed in calling thread. 
+    #   work will be executed in calling thread.
     #
     # * If there is a thread pool, but it's work queue is full, then a job
     #   will be executed in calling thread (because we configured our java
     #   thread pool with a limited sized queue, and CallerRunsPolicy rejection strategy)
-    def maybe_in_thread_pool
+    #
+    # You can pass arbitrary arguments to the method, that will then be passed
+    # to your block -- similar to how ruby Thread.new works. This is convenient
+    # for creating variables unique to the block that won't be shared outside
+    # the thread:
+    #
+    #     thread_pool.maybe_in_thread_pool(x, y) do |x1, y1|
+    #       100.times do
+    #         something_with(x1)
+    #       end
+    #     end
+    #     x = "someting else"
+    #     # If we hadn't passed args with block, and had just
+    #     # used x in the block, it'd be the SAME x as this one,
+    #     # and would be pointing to a different string now!
+    #
+    #  Note, that just makes block-local variables, it doesn't
+    #  help you with whether a data structure itself is thread safe. 
+    def maybe_in_thread_pool(*args)
       start_t = Time.now
 
       if @thread_pool
-        
         @thread_pool.execute do
           begin
-            yield
+            yield(*args)
           rescue Exception => e
             collect_exception(e)
           end
         end
       else
-        yield
+        yield(*args)
       end
 
     end
