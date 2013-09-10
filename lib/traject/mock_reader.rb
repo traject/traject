@@ -2,7 +2,7 @@
 require 'marc'
 require 'json'
 module Traject
-  
+
   # A mock reader, designed to do almost no work during a run to provide better benchmarking
   #
   # It pulls in 20 records from the end of this file and then just returns
@@ -12,42 +12,53 @@ module Traject
   #
     # require 'traject/mock_writer'
     # require 'traject/mock_reader'
-    #   
+    #
     # settings do
     #   store "reader_class_name", "Traject::MockReader"
     #   store "writer_class_name", "Traject::MockWriter"
     #   store "mock_reader.limit", 4_000 # default is 10_000
     # end
-  
+
   class MockReader
-    
+
     attr_accessor :limit
-    
+
     # @param [Ignored] input_stream (ignored)
     # @param [Hash] settings (looks only for an integer in 'mock_reader.limit')
     def initialize(input_stream, settings = {})
-      @records = []
       @limit = (settings["mock_reader.limit"]  || 10_000).to_i
-      
-      this_file_iter = File.open(__FILE__).each_line
-      
+
+      @records = load_ndjson(File.open(__FILE__))
+
+      # freeze it immutable for thread safety and performance
+      @records.each {|r| r.fields.freeze}
+    end
+
+    # newline delimited json, assuming no internal unescaped
+    # newlines in json too!
+    def load_ndjson(file_io)
+      records = []
+
+      this_file_iter = file_io.each_line
+
       while true
         line = this_file_iter.next
         break if line =~ /^\_\_END\_\_/
       end
-      
+
       begin
         while true
           json = this_file_iter.next
           next unless json =~ /\S/
-          @records << MARC::Record.new_from_hash(JSON.parse(json))
+          records << MARC::Record.new_from_hash(JSON.parse(json))          
         end
       rescue StopIteration
       end
-      
+
+      return records
     end
 
-    
+
     def each
       unless block_given?
         enum_for(:each)
@@ -58,8 +69,8 @@ module Traject
         end
       end
     end
-    
-    
+
+
   end
 end
 

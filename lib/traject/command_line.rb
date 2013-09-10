@@ -1,6 +1,7 @@
+# Require as little as possible at top, so we can bundle require later
+# if needed, before requiring anything from the bundle. Can't avoid slop
+# though, to get our bundle arg out, sorry. 
 require 'slop'
-require 'traject'
-require 'traject/indexer'
 
 module Traject
   # The class that executes for the Traject command line utility.
@@ -8,7 +9,7 @@ module Traject
   # Warning, does do things like exit entire program on error at present.
   # You probably don't want to use this class for anything but an actual
   # shell command line, if you want to execute indexing directly, just
-  # use the Traject::Indexer directly. 
+  # use the Traject::Indexer directly.
   #
   # A CommandLine object has a single persistent Indexer object it uses
   class CommandLine
@@ -43,9 +44,15 @@ module Traject
 
       # have to use Slop object to tell diff between
       # no arg supplied and no option -g given at all
-      if slop.present? :gemfile
-        require_bundler_setup(options[:gemfile])
+      if slop.present? :Gemfile
+        require_bundler_setup(options[:Gemfile])
       end
+
+      # We require them here instead of top of file,
+      # so we have done bundler require before we require these.
+      require 'traject'
+      require 'traject/indexer'
+
 
       (options[:load_path] || []).each do |path|
         $LOAD_PATH << path unless $LOAD_PATH.include? path
@@ -114,7 +121,7 @@ module Traject
       when "xml"
         writer = MARC::XMLWriter.new(output_arg)
       when "human"
-        writer = output_arg.kind_of?(String) ? File.open(output_arg, "w:binary") : output_arg
+        writer = output_arg.kind_of?(String) ? File.open(output_arg, "w:binary") : output_arg        
       else
         raise ArgumentError.new("traject marcout unrecognized marcout.type: #{output_type}")
       end
@@ -142,14 +149,17 @@ module Traject
       # * It INSISTS on reading from ARGFV, making it hard to test, or use when you want to give
       #   it a list of files on something other than ARGV.
       #
-      # So for now we do just one file, or stdin if none given. Sorry!
-      if argv.length > 1
-        self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
-        exit 1
-      end
-      if argv.length == 0
+      # So for now we do just one file, or stdin if specified. Sorry!
+
+      if options[:stdin]
         indexer.logger.info "Reading from STDIN..."
         io = $stdin
+      elsif argv.length > 1
+        self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
+        exit 1
+      elsif argv.length == 0
+        indexer.logger.warn "Warning, no file input given..."
+        io = File.open(File::NULL, 'r')
       else
         indexer.logger.info "Reading from #{argv.first}"
         io = File.open(argv.first, 'r')
@@ -200,10 +210,10 @@ module Traject
     def require_bundler_setup(gemfile=nil)
       if gemfile
         # tell bundler what gemfile to use
-        gem_path = File.expand_path( options[:gemfile] )
+        gem_path = File.expand_path( gemfile )
         # bundler not good at error reporting, we check ourselves
         unless File.exists? gem_path
-          self.console.puts "Gemfile `#{options[:gemfile]}` does not exist, exiting..."
+          self.console.puts "Gemfile `#{gemfile}` does not exist, exiting..."
           self.console.puts
           self.console.puts slop.help
           exit 2
@@ -275,6 +285,8 @@ module Traject
         on :G, "Gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => ""
 
         on :x, "command", "alternate traject command: process (default); marcout", :argument => true, :default => "process"
+
+        on "stdin", "read input from stdin"
       end
     end
 
