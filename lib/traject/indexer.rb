@@ -364,7 +364,7 @@ class Traject::Indexer
   # Log that the current record is being skipped, using
   # data in context.position and context.skipmessage
   def log_skip(context)
-    logger.info "Skipped record #{context.position}: #{context.skipmessage}"
+    logger.debug "Skipped record #{context.position}: #{context.skipmessage}"
   end
 
   def reader_class
