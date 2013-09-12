@@ -205,6 +205,8 @@ class Traject::Indexer
   # Returns the context passed in as second arg, as a convenience for chaining etc.
   def map_to_context!(context)
     @index_steps.each do |index_step|
+      # Don't bother if we're skipping this record
+      break if context.skip?
       if index_step[:type] == :to_field
 
         accumulator = []
@@ -327,7 +329,12 @@ class Traject::Indexer
       thread_pool.maybe_in_thread_pool do
         context = Context.new(:source_record => record, :settings => settings, :position => position)
         map_to_context!(context)
-        writer.put context
+        if context.skip?
+          log_skip(context)
+        else
+          writer.put context
+        end
+          
       end
 
     end
@@ -352,6 +359,12 @@ class Traject::Indexer
     end
 
     return true
+  end
+  
+  # Log that the current record is being skipped, using
+  # data in context.position and context.skipmessage
+  def log_skip(context)
+    logger.debug "Skipped record #{context.position}: #{context.skipmessage}"
   end
 
   def reader_class
@@ -471,11 +484,29 @@ class Traject::Indexer
       hash_init.each_pair do |key, value|
         self.send("#{key}=", value)
       end
+      
+      @skip = false
     end
 
     attr_accessor :clipboard, :output_hash
     attr_accessor :field_name, :source_record, :settings
     # 1-based position in stream of processed records.
     attr_accessor :position
+    
+    # Should we be skipping this record?
+    attr_accessor :skipmessage
+    
+    # Set the fact that this record should be skipped, with an
+    # optional message
+    def skip!(msg = '(no message given)')
+      @skipmessage = msg
+      @skip = true
+    end
+    
+    # Should we skip this record?
+    def skip?
+      @skip
+    end
+    
   end
 end
