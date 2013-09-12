@@ -57,6 +57,11 @@ class Traject::Marc4JReader
       MARC::Record.class_eval('attr_accessor :original_marc4j')
     end
     
+    # Creating a converter will do the following:
+    #  - nothing, if it detects that the marc4j jar is already loaded
+    #  - load all the .jar files in settings['marc4j_reader.jar_dir'] if set
+    #  - load the marc4j jar file bundled with MARC::MARC4J otherwise
+     
     @converter = MARC::MARC4J.new(:jardir => settings['marc4j_reader.jar_dir'], :logger => logger)
     
     # Convenience
@@ -114,37 +119,6 @@ class Traject::Marc4JReader
 
   def logger
     @logger ||= (settings[:logger] || Yell.new(STDERR, :level => "gt.fatal")) # null logger)
-  end
-
-  def convert_marc4j_to_rubymarc(marc4j)
-    rmarc = MARC::Record.new
-    rmarc.leader = marc4j.getLeader.marshal
-
-    marc4j.getControlFields.each do |marc4j_control|
-      rmarc.append( MARC::ControlField.new(marc4j_control.getTag(), marc4j_control.getData )  )
-    end
-
-    marc4j.getDataFields.each do |marc4j_data|
-      rdata = MARC::DataField.new(  marc4j_data.getTag,  marc4j_data.getIndicator1.chr, marc4j_data.getIndicator2.chr )
-
-      marc4j_data.getSubfields.each do |subfield|
-
-        # We assume Marc21, skip corrupted data
-        # if subfield.getCode is more than 255, subsequent .chr
-        # would raise.
-        if subfield.getCode > 255
-          logger.warn("Marc4JReader: Corrupted MARC data, record id #{marc4j.getControlNumber}, field #{marc4j_data.tag}, corrupt subfield code byte #{subfield.getCode}. Skipping subfield, but continuing with record.")
-          next
-        end
-
-        rsubfield = MARC::Subfield.new(subfield.getCode.chr, subfield.getData)
-        rdata.append rsubfield
-      end
-
-      rmarc.append rdata
-    end
-
-    return rmarc
   end
 
 end
