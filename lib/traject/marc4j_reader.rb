@@ -57,7 +57,7 @@ class Traject::Marc4JReader
       MARC::Record.class_eval('attr_accessor :original_marc4j')
     end
     
-    @converter = MARC::MARC4J.new(:jardir => settings['marc4j_reader.jar_dir'])
+    @converter = MARC::MARC4J.new(:jardir => settings['marc4j_reader.jar_dir'], :logger => logger)
     
     # Convenience
     java_import org.marc4j.MarcPermissiveStreamReader
