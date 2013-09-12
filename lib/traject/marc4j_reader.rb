@@ -1,5 +1,6 @@
 require 'traject'
 require 'marc'
+require 'marc/marc4j'
 
 # Uses Marc4J to read the marc records, but then translates them to
 # ruby-marc before delivering them still, Marc4J is just inside the black
@@ -50,28 +51,20 @@ class Traject::Marc4JReader
     @settings     = Traject::Indexer::Settings.new settings
     @input_stream = input_stream
 
-    ensure_marc4j_loaded!
-
     if @settings['marc4j_reader.keep_marc4j'] &&
       ! (MARC::Record.instance_methods.include?(:original_marc4j) &&
          MARC::Record.instance_methods.include?(:"original_marc4j="))
       MARC::Record.class_eval('attr_accessor :original_marc4j')
     end
+    
+    @converter = MARC::MARC4J.new(:jardir => settings['marc4j_reader.jar_dir'], :logger => logger)
+    
+    # Convenience
+    java_import org.marc4j.MarcPermissiveStreamReader
+    java_import org.marc4j.MarcXmlReader
 
   end
 
-  # Loads solrj unless it appears to already be loaded.
-  #
-  # Will load from settings['marc4j_reader.jar_dir'] if given, otherwise
-  # bundled vendor location.
-  #
-  # Will java_import MarcPermissiveStreamReader and MarcXmlReader so you
-  # have those available as un-namespaced classes. 
-  def ensure_marc4j_loaded!
-    unless defined?(MarcPermissiveStreamReader) && defined?(MarcXmlReader)
-      Traject::Util.require_marc4j_jars(settings)
-    end
-  end
 
   def internal_reader
     @internal_reader ||= create_marc_reader!
@@ -101,7 +94,7 @@ class Traject::Marc4JReader
     while (internal_reader.hasNext)
       begin
         marc4j = internal_reader.next
-        rubymarc = convert_marc4j_to_rubymarc(marc4j)
+        rubymarc = @converter.marc4j_to_rubymarc(marc4j)
         if @settings['marc4j_reader.keep_marc4j']
           rubymarc.original_marc4j = marc4j
         end
