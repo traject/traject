@@ -148,10 +148,7 @@ class Traject::SolrJWriter
 
     if settings["solrj_writer.batch_size"].to_i > 1
       ready_batch = []
-
-      # Synchronize access to our shared batched_queue state,
-      # but once we've pulled out what we want in local var
-      # `ready_batch`, don't need to synchronize anymore.
+      
       batched_queue.add(package)
       if batched_queue.size >= settings["solrj_writer.batch_size"].to_i
         batched_queue.drain_to(ready_batch)
