@@ -15,15 +15,19 @@ them somewhere.
 
 Existing tools for indexing Marc to Solr exist, and have served us well for many years, and have many useful things about them -- which I've tried to preserve in traject.  But I was having more and more difficulty working with the existing tools, including difficulty providing the custom logic I needed in a maintainable way. I realized that for me, to create a tool with the flexibility, maintainability, and performance I wanted, I would need to do it in jruby (ruby on the JVM).
 
-Some goals:
+* *Easy to use*, getting started with standard use cases should be easy, even for non-rubyists.
+* *Support customization and flexiblity*, common customization use cases, including simple local
+  logic, should be very easy. More sophisticated and even complex customization use cases should still be possible,
+  changing just the parts of traject you want to change.
+* *Maintainable local logic*, including supporting sharing of reusable logic via ruby gems.
+* *Maintainable understandable internal logic*; well-covered by tests, well-factored seperation of concerns,
+easy for newcomer developers who know ruby to understand the codebase.
+* *High performance*, using multi-threaded concurrency where appropriate to maximize throughput.
+While it depends on your configuration and the size of your server(s), traject is likely higher
+performance than other similar solutions.
+* *Well-behaved shell script*, for painless integration in batch processes and cronjobs, with
+exit codes, sufficiently flexible control of logging, proper use of stderr, etc.
 
-* Aim to be accessible even to non-rubyists
-* Concise and maintainable local configuration -- including an only gradual increase in difficulty to write your own simple logic.
-* Support reusable and shareable mapping logic routines.
-* Built of modular and composable elements: If you want to change part of what traject does, you should be able to do so without having to reimplement other things you don't want to change.
-* A maintainable internal architecture, well-factored with seperated concerns and DRY logic. Aim to be comprehensible to newcomer developers, and well-covered by tests.
-* High performance, using multi-threaded concurrency where appropriate to maximize throughput. Actual throughput can depend on complexity of your mapping rules and capacity of your server(s), but I am getting throughput 2-5x greater than previous solutions.
-* Cooperate well in unix batch/pipeline, with control over output/logging of errors, proper exit codes, use of stdin/stdout, etc.
 
 
 ## Installation
