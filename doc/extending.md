@@ -160,9 +160,14 @@ possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemf
 Run `bundle install` from the directory with the Gemfile, on any system
 at any time, to make sure specified gems are installed.
 
-**Run traject** with the `-G` flag to tell it to use the Gemfile:
+**Run traject** with the `-G` flag to tell it to use the Gemfile, for instance if
+your working directory is the one that includes your Gemfile:
 
-   traject -G -c some_traject_config.rb ...
+    traject -G -c some_traject_config.rb ...
+    
+Or explicitly specify a Gemfile somewhere else:
+
+    traject -G /some/path/Gemfile -c some_config.rb ...
 
 Traject will use bundler to setup with the Gemfile, making sure
 the specified versions of all gems are used (and also making sure
