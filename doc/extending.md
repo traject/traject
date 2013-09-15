@@ -97,8 +97,8 @@ That's pretty much it!
 
 What about that translation map? The `$LOAD_PATH` modification
 took care of that too, the Traject::TranslationMap will look
-up translation map definition files on the load path, or
-in a `./translation_maps` subdir on the load path.
+up translation map definition files 
+in a `./translation_maps` subdir on the load path, as in `./lib/translation_maps` in this case. 
 
 
 ## Using gems in your traject project
@@ -128,11 +128,10 @@ require 'some_gem'
 SomeGem.whatever!
 ~~~
 
-Any gem can provide traject translation map definitions
-in it's `lib` directory, or in a `lib/translation_maps`
-sub-directory, and traject will be able to find those
+A gem can provide traject translation map definitions
+in a `lib/translation_maps` sub-directory, and traject will be able to find those
 translation maps when the gem is loaded. (Because gems'
-`./lib` directories are added to the ruby load path.)
+`./lib` directories are by default added to the ruby load path.)
 
 ### Or, with bundler:
 
