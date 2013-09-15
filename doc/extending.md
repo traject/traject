@@ -26,7 +26,7 @@ of a couple traject features meant to make it easier.
 ## Custom code local to your project
 
 You might want local translation maps, or local ruby
-code. Here's a standard way you might lay out
+code. Here's a standard recommended way you might lay out
 this extra code in the file system, using a 'lib'
 directory kept next to your traject config files:
 
