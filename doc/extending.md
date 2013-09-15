@@ -16,7 +16,7 @@ of a couple traject features meant to make it easier.
 * Traject `-I` argument command line can be used to list directories to
   add to the load path, similar to the `ruby -I` argument. You
   can then 'require' local project files from the load path.
-  * translation map files found on the load path or in a
+  * translation map files found in a
     "./translation_maps" subdir on the load path will be found
     for Traject translation maps.
 * Traject `-G` command line can be used to tell traject to use
