@@ -5,7 +5,7 @@ organize it in files other than traject config files, but then
 use it in traject config files.
 
 You might want to have code local to your traject project; or you
-might want to use ruby gems with shared code in your traject project.
+might want to use ruby gems to share code between projects and developers. 
 A given project may use both of these techniques.
 
 Here are some suggestions for how to do this, along with mention
