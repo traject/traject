@@ -5,7 +5,7 @@ organize it in files other than traject config files, but then
 use it in traject config files.
 
 You might want to have code local to your traject project; or you
-might want to use ruby gems with shared code in your traject project.
+might want to use ruby gems to share code between projects and developers. 
 A given project may use both of these techniques.
 
 Here are some suggestions for how to do this, along with mention
@@ -16,7 +16,7 @@ of a couple traject features meant to make it easier.
 * Traject `-I` argument command line can be used to list directories to
   add to the load path, similar to the `ruby -I` argument. You
   can then 'require' local project files from the load path.
-  * translation map files found on the load path or in a
+  * translation map files found in a
     "./translation_maps" subdir on the load path will be found
     for Traject translation maps.
 * Traject `-G` command line can be used to tell traject to use
@@ -26,7 +26,7 @@ of a couple traject features meant to make it easier.
 ## Custom code local to your project
 
 You might want local translation maps, or local ruby
-code. Here's a standard way you might lay out
+code. Here's a standard recommended way you might lay out
 this extra code in the file system, using a 'lib'
 directory kept next to your traject config files:
 
@@ -97,8 +97,8 @@ That's pretty much it!
 
 What about that translation map? The `$LOAD_PATH` modification
 took care of that too, the Traject::TranslationMap will look
-up translation map definition files on the load path, or
-in a `./translation_maps` subdir on the load path.
+up translation map definition files 
+in a `./translation_maps` subdir on the load path, as in `./lib/translation_maps` in this case. 
 
 
 ## Using gems in your traject project
@@ -128,11 +128,10 @@ require 'some_gem'
 SomeGem.whatever!
 ~~~
 
-Any gem can provide traject translation map definitions
-in it's `lib` directory, or in a `lib/translation_maps`
-sub-directory, and traject will be able to find those
+A gem can provide traject translation map definitions
+in a `lib/translation_maps` sub-directory, and traject will be able to find those
 translation maps when the gem is loaded. (Because gems'
-`./lib` directories are added to the ruby load path.)
+`./lib` directories are by default added to the ruby load path.)
 
 ### Or, with bundler:
 
@@ -161,9 +160,14 @@ possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemf
 Run `bundle install` from the directory with the Gemfile, on any system
 at any time, to make sure specified gems are installed.
 
-**Run traject** with the `-G` flag to tell it to use the Gemfile:
+**Run traject** with the `-G` flag to tell it to use the Gemfile, for instance if
+your working directory is the one that includes your Gemfile:
 
-   traject -G -c some_traject_config.rb ...
+    traject -G -c some_traject_config.rb ...
+    
+Or explicitly specify a Gemfile somewhere else:
+
+    traject -G /some/path/Gemfile -c some_config.rb ...
 
 Traject will use bundler to setup with the Gemfile, making sure
 the specified versions of all gems are used (and also making sure
