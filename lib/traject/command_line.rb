@@ -33,6 +33,21 @@ module Traject
     # Returns true on success or false on failure; may also raise exceptions;
     # may also exit program directly itself (yeah, could use some normalization)
     def execute
+      # Do bundler setup FIRST to try and initialize all gems from gemfile
+      # if requested.
+
+      # have to use Slop object to tell diff between
+      # no arg supplied and no option -g given at all
+      if slop.present? :Gemfile
+        require_bundler_setup(options[:Gemfile])
+      end
+
+
+      # We require them here instead of top of file,
+      # so we have done bundler require before we require these.
+      require 'traject'
+      require 'traject/indexer'
+
       if options[:version]
         self.console.puts "traject version #{Traject::VERSION}"
         return
@@ -41,17 +56,6 @@ module Traject
         self.console.puts slop.help
         return
       end
-
-      # have to use Slop object to tell diff between
-      # no arg supplied and no option -g given at all
-      if slop.present? :Gemfile
-        require_bundler_setup(options[:Gemfile])
-      end
-
-      # We require them here instead of top of file,
-      # so we have done bundler require before we require these.
-      require 'traject'
-      require 'traject/indexer'
 
 
       (options[:load_path] || []).each do |path|
