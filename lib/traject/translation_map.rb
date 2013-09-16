@@ -162,6 +162,12 @@ module Traject
     end
     alias_method :map, :[]
 
+    # Returns a dup of internal hash, dup so you can modify it
+    # if you like. 
+    def to_hash
+      @hash.dup
+    end
+
     # Run every element of an array through this translation map,
     # return the resulting array. If translation map returns nil,
     # original element will be missing from output. 

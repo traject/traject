@@ -116,4 +116,17 @@ describe "TranslationMap" do
 
     assert_equal ["hola", "first", "second", "last thing", "buenas noches", "hola", "everything else"], arr
   end
+
+  it "#to_hash" do
+    map = Traject::TranslationMap.new("yaml_map")
+
+    hash = map.to_hash
+
+    assert_kind_of Hash, hash
+
+    assert ! hash.frozen?, "#to_hash result is not frozen"
+
+    refute_same hash, map.to_hash, "each #to_hash result is a copy"
+  end
+
 end
