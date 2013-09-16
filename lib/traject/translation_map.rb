@@ -109,6 +109,10 @@ module Traject
           end
         end
 
+        # Cached hash can't be mutated without weird consequences, let's
+        # freeze it! 
+        found.freeze if found
+
         return found
       end
 
@@ -141,7 +145,7 @@ module Traject
       if options[:default]
         @default = options[:default]
       elsif @hash.has_key? "__default__"
-        @default = @hash.delete("__default__")
+        @default = @hash["__default__"]
       end
     end
 

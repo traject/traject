@@ -27,6 +27,19 @@ describe "TranslationMap" do
       assert_equal "value1", found["key1"]
     end
 
+    it "freezes the hash" do
+      found = @cache.lookup("yaml_map")
+
+      assert found.frozen?
+    end
+
+    it "respects in-file default, even on second load" do
+      map = Traject::TranslationMap.new("default_literal")
+      map = Traject::TranslationMap.new("default_literal")
+
+      assert_equal "DEFAULT LITERAL", map["not in the map"] 
+    end
+
     it "finds .rb over .yaml" do
       found = @cache.lookup("both_map")
 
