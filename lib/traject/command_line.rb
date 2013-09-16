@@ -282,7 +282,7 @@ module Traject
         on :j, "output as pretty printed json, shortcut for -s writer_class_name=JsonWriter -s json_writer.pretty_print=true"
         on :t, :marc_type, "xml, json or binary. shortcut for -s marc_source.type=", :argument => true
         on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
-        on :G, "Gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => ""
+        on :G, "Gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => nil
 
         on :x, "command", "alternate traject command: process (default); marcout", :argument => true, :default => "process"
 
