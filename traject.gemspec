@@ -17,6 +17,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
+  spec.extra_rdoc_files = spec.files.grep(%r{^doc/})
+
 
   spec.add_dependency "marc", ">= 0.7.1"
   spec.add_dependency "marc-marc4j", ">=0.1.1"
