@@ -226,6 +226,7 @@ class Traject::Indexer
             end
           end
         end
+        accumulator.compact!
         (context.output_hash[context.field_name] ||= []).concat accumulator unless accumulator.empty?
         context.field_name = nil
 
