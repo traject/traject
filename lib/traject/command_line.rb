@@ -246,6 +246,12 @@ module Traject
       if options[:debug]
         settings["log.level"] = "debug"
       end
+      if options[:'debug-mode']
+        require 'traject/debug_writer'
+        settings["writer_class_name"] = "Traject::DebugWriter"
+        settings["log.level"] = "debug"        
+        settings["processing_thread_pool"] = 0
+      end
       if options[:writer]
         settings["writer_class_name"] = options[:writer]
       end
@@ -291,6 +297,7 @@ module Traject
         on :x, "command", "alternate traject command: process (default); marcout", :argument => true, :default => "process"
 
         on "stdin", "read input from stdin"
+        on "debug-mode", "debug logging, single threaded, output human readable hashes"
       end
     end
 
