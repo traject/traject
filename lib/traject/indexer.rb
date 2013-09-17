@@ -265,7 +265,7 @@ class Traject::Indexer
   def log_mapping_errors(context, index_step, aProc)
     begin
       yield
-    rescue Exception => e        
+    rescue Exception => e
       msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
 
       conf = context.field_name ? "to_field '#{context.field_name}'" : "each_record"
@@ -273,10 +273,14 @@ class Traject::Indexer
       msg += "    while executing #{conf} defined at #{index_step[:source_location]}\n"
       msg += Traject::Util.exception_to_log_message(e)
 
-      logger.error msg      
-      logger.debug "Record: " + context.source_record.to_s
+      logger.error msg
+      begin
+        logger.debug "Record: " + context.source_record.to_s
+      rescue Exception => marc_to_s_exception
+        logger.debug "(Could not log record, #{marc_to_s_exception})"
+      end
 
-      raise e        
+      raise e
     end
   end
 
