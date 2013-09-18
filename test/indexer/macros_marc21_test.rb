@@ -57,7 +57,7 @@ describe "Traject::Macros::Marc21" do
       assert_equal ["DEFAULT VALUE"], output["only_default"]
     end
     
-    it "respects the :deduplicate option" do
+    it "respects the :deduplicate option (and its alias 'uniq')" do
       # Add a second 008
       f = @record.fields('008').first
       @record.append(f)
@@ -65,11 +65,13 @@ describe "Traject::Macros::Marc21" do
       @indexer.instance_eval do
         to_field "lang1", extract_marc('008[35-37]')
         to_field "lang2", extract_marc('008[35-37]', :deduplicate=>true)
+        to_field "lang3", extract_marc('008[35-37]', :uniq=>true)
       end
       
       output = @indexer.map_record(@record)
       assert_equal ["eng", "eng"], output['lang1']
       assert_equal ["eng"], output['lang2']
+      assert_equal ["eng"], output['lang3']
       
     end
     
