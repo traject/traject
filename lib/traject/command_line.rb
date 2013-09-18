@@ -78,9 +78,13 @@ module Traject
       result =
         case options[:command]
         when "process"
-          indexer.process get_input_io(self.remaining_argv)
+          (io, filename) = get_input_io(self.remaining_argv)
+          indexer.settings['command_line.filename'] = filename if filename
+          indexer.process(io)
         when "marcout"
-          command_marcout! get_input_io(self.remaining_argv)
+           (io, filename) = get_input_io(self.remaining_argv)
+          indexer.settings['command_line.filename'] = filename if filename
+          command_marcout!(io)
         when "commit"
           command_commit!
         else
@@ -155,20 +159,23 @@ module Traject
       #
       # So for now we do just one file, or stdin if specified. Sorry!
 
+      filename = nil
       if options[:stdin]
-        indexer.logger.info "Reading from STDIN..."
+        indexer.logger.info("Reading from standard input")
         io = $stdin
       elsif argv.length > 1
         self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
         exit 1
       elsif argv.length == 0
-        indexer.logger.warn "Warning, no file input given..."
         io = File.open(File::NULL, 'r')
+        indexer.logger.info("Reading from null file (e.g., /dev/null). Use command-line argument '--stdin' to use standard input ")
       else
-        indexer.logger.info "Reading from #{argv.first}"
         io = File.open(argv.first, 'r')
+        filename = argv.first
+        indexer.logger.info "Reading from #{filename}"
       end
-      return io
+      
+      return io, filename
     end
 
     def load_configuration_files!(my_indexer, conf_files)
