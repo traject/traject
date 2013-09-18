@@ -320,8 +320,8 @@ class Traject::Indexer
         $stderr.write "." if count % settings["solrj_writer.batch_size"] == 0
       end
 
-      if settings["log.batch_progress"] && (count % settings["log.batch_progress"].to_i == 0)
-        batch_rps = settings["log.batch_progress"].to_i / (Time.now - batch_start_time)
+      if settings["log.batch_size"] && (count % settings["log.batch_size"].to_i == 0)
+        batch_rps = settings["log.batch_size"].to_i / (Time.now - batch_start_time)
         overall_rps = count / (Time.now - start_time)
         logger.info "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall"
         batch_start_time = Time.now
