@@ -161,15 +161,18 @@ module Traject
 
       filename = nil
       if options[:stdin]
+        indexer.logger.info("Reading from standard input")
         io = $stdin
       elsif argv.length > 1
         self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
         exit 1
       elsif argv.length == 0
         io = File.open(File::NULL, 'r')
+        indexer.logger.info("Reading from null file (e.g., /dev/null). Use command-line argument '--stdin' to use standard input ")
       else
         io = File.open(argv.first, 'r')
         filename = argv.first
+        indexer.logger.info "Reading from #{filename}"
       end
       
       return io, filename
