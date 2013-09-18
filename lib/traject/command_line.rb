@@ -78,9 +78,9 @@ module Traject
       result =
         case options[:command]
         when "process"
-          indexer.process get_input_io(self.remaining_argv)
+          indexer.process get_input_io(indexer, self.remaining_argv)
         when "marcout"
-          command_marcout! get_input_io(self.remaining_argv)
+          command_marcout! get_input_io(indexer, self.remaining_argv)
         when "commit"
           command_commit!
         else
@@ -141,7 +141,7 @@ module Traject
       return true
     end
 
-    def get_input_io(argv)
+    def get_input_io(indexer, argv)
       # ARGF might be perfect for this, but problems with it include:
       # * jruby is broken, no way to set it's encoding, leads to encoding errors reading non-ascii
       #   https://github.com/jruby/jruby/issues/891
@@ -158,16 +158,21 @@ module Traject
       if options[:stdin]
         indexer.logger.info "Reading from STDIN..."
         io = $stdin
+        filename = "stdin"
       elsif argv.length > 1
         self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
         exit 1
       elsif argv.length == 0
         indexer.logger.warn "Warning, no file input given..."
         io = File.open(File::NULL, 'r')
+        filename = 'null'
       else
         indexer.logger.info "Reading from #{argv.first}"
         io = File.open(argv.first, 'r')
+        filename = argv.first
       end
+      
+      indexer.settings.store('command_line.filename', filename)
       return io
     end
 
