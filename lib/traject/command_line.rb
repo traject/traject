@@ -168,7 +168,7 @@ module Traject
         exit 1
       elsif argv.length == 0
         io = File.open(File::NULL, 'r')
-        indexer.logger.info("Reading from null file (e.g., /dev/null). Use command-line argument '--stdin' to use standard input ")
+        indexer.logger.info("Warning, no file input given. Use command-line argument '--stdin' to use standard input ")
       else
         io = File.open(argv.first, 'r')
         filename = argv.first
