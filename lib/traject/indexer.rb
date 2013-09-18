@@ -298,7 +298,7 @@ class Traject::Indexer
 
     count      =       0
     start_time = batch_start_time = Time.now
-    logger.info "beginning Indexer#process with settings: #{settings.inspect}"
+    logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
 
     reader = self.reader!(io_stream)
     writer = self.writer!
