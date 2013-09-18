@@ -34,6 +34,7 @@ module Traject::Macros
       only_first              = options.delete(:first)
       trim_punctuation        = options.delete(:trim_punctuation)
       default_value           = options.delete(:default)
+      deduplicate                 = options.delete(:deduplicate)
 
       # We create the TranslationMap and the MarcExtractor here
       # on load, so the lambda can just refer to already created
@@ -62,10 +63,15 @@ module Traject::Macros
         if trim_punctuation
           accumulator.collect! {|s| Marc21.trim_punctuation(s)}
         end
+        
+        if deduplicate
+          accumulator.uniq!
+        end
 
         if default_value && accumulator.empty?
           accumulator << default_value
         end
+        
       end
     end
 
