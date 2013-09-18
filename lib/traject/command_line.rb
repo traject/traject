@@ -79,11 +79,11 @@ module Traject
         case options[:command]
         when "process"
           (io, filename) = get_input_io(self.remaining_argv)
-          indexer.settings['command_line.filename'] = filename
+          indexer.settings['command_line.filename'] = filename if filename
           indexer.process(io)
         when "marcout"
            (io, filename) = get_input_io(self.remaining_argv)
-          indexer.settings['command_line.filename'] = filename
+          indexer.settings['command_line.filename'] = filename if filename
           command_marcout!(io)
         when "commit"
           command_commit!
@@ -159,15 +159,14 @@ module Traject
       #
       # So for now we do just one file, or stdin if specified. Sorry!
 
+      filename = nil
       if options[:stdin]
         io = $stdin
-        filename = :stdin
       elsif argv.length > 1
         self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
         exit 1
       elsif argv.length == 0
         io = File.open(File::NULL, 'r')
-        filename = :null
       else
         io = File.open(argv.first, 'r')
         filename = argv.first
