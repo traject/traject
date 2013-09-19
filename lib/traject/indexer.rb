@@ -157,24 +157,12 @@ class Traject::Indexer
   def to_field(field_name, aLambda = nil, &block)
 
     verify_to_field_arguments(field_name, aLambda, block)
-
-    @index_steps << {
-      :field_name => field_name.to_s,
-      :lambda => aLambda,
-      :block  => block,
-      :type   => :to_field,
-      :source_location => Traject::Util.extract_caller_location(caller.first)
-    }
+    @index_steps << ToField.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
   def each_record(aLambda = nil, &block)
     verify_each_record_arguments(aLambda, block)
-    @index_steps << {
-      :lambda => aLambda,
-      :block  => block,
-      :type   => :each_record,
-      :source_location => Traject::Util.extract_caller_location(caller.first)
-    }
+    @index_steps << EachRecord.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
 
@@ -203,86 +191,21 @@ class Traject::Indexer
   # to mapping routines.
   #
   # Returns the context passed in as second arg, as a convenience for chaining etc.
+  
   def map_to_context!(context)
     @index_steps.each do |index_step|
       # Don't bother if we're skipping this record
       break if context.skip?
-      if index_step[:type] == :to_field
-
-        accumulator = []
-        context.field_name = index_step[:field_name]
-
-        # Might have a lambda arg AND a block, we execute in order,
-        # with same accumulator.
-
-        [index_step[:lambda], index_step[:block]].each do |aProc|
-          if aProc
-            log_mapping_errors(context, index_step, aProc) do
-              if aProc.arity == 2
-                aProc.call(context.source_record, accumulator)
-              else
-                aProc.call(context.source_record, accumulator, context)
-              end
-            end
-          end
-        end
-        accumulator.compact!
-        (context.output_hash[context.field_name] ||= []).concat accumulator unless accumulator.empty?
-        context.field_name = nil
-
-      elsif index_step[:type] == :each_record
-
-        # one or two arg
-        [index_step[:lambda], index_step[:block]].each do |aProc|
-          if aProc
-            log_mapping_errors(context, index_step, aProc) do
-              if aProc.arity == 1
-                aProc.call(context.source_record)
-              else
-                aProc.call(context.source_record, context)
-              end
-            end
-          end
-        end
-
-      else
-        raise ArgumentError.new("An @index_step we don't know how to deal with: #{@index_step}")
+      accumulator = index_step.call_procs(context)
+      accumulator.compact!
+      if index_step.to_field? && accumulator.size > 0
+        (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
     end
 
     return context
   end
 
-  # just a wrapper that captures and records any unexpected
-  # errors raised in mapping, along with contextual information
-  # on record and location in source file of mapping rule. 
-  #
-  # Re-raises error at the moment. 
-  #
-  # log_errors(context, some_lambda) do
-  #    all_sorts_of_stuff # that will have errors logged
-  # end
-  def log_mapping_errors(context, index_step, aProc)
-    begin
-      yield
-    rescue Exception => e
-      msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
-
-      conf = context.field_name ? "to_field '#{context.field_name}'" : "each_record"
-
-      msg += "    while executing #{conf} defined at #{index_step[:source_location]}\n"
-      msg += Traject::Util.exception_to_log_message(e)
-
-      logger.error msg
-      begin
-        logger.debug "Record: " + context.source_record.to_s
-      rescue Exception => marc_to_s_exception
-        logger.debug "(Could not log record, #{marc_to_s_exception})"
-      end
-
-      raise e
-    end
-  end
 
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
@@ -335,6 +258,7 @@ class Traject::Indexer
       #thread_pool.maybe_in_thread_pool &make_lambda(count, record, writer)
       thread_pool.maybe_in_thread_pool do
         context = Context.new(:source_record => record, :settings => settings, :position => position)
+        context.logger = logger
         map_to_context!(context)
         if context.skip?
           log_skip(context)
@@ -399,13 +323,6 @@ class Traject::Indexer
     return writer_class.new(settings.merge("logger" => logger))
   end
 
-  # get a printable id from record for error logging. 
-  # Maybe override this for a future XML version. 
-  def id_string(record)
-    record && record['001'] && record['001'].value.to_s
-  end
-
-
   
   
   # Verify that the field name is good, and throw a useful error if not
@@ -467,9 +384,9 @@ class Traject::Indexer
 
     # Get the last step for which we have a field_name (e.g., the last to_field, skipping over each_record)
     def initialize(index_steps)
-      @step = index_steps.reverse_each.find{|step| step[:field_name]}
+      @step = index_steps.reverse_each.find{|step| step.to_field?}
       if @step 
-        @message = "last successfully parsed field was '#{@step[:field_name]}'"
+        @message = "last successfully parsed field was '#{@step.field_name}'"
       else
         @message = "there were no previous named fields successfully parsed"
       end
@@ -495,7 +412,7 @@ class Traject::Indexer
       @skip = false
     end
 
-    attr_accessor :clipboard, :output_hash
+    attr_accessor :clipboard, :output_hash, :logger
     attr_accessor :field_name, :source_record, :settings
     # 1-based position in stream of processed records.
     attr_accessor :position
@@ -516,4 +433,141 @@ class Traject::Indexer
     end
     
   end
+  
+  
+  
+  # A class to hold everything an indexing step needs to know,
+  # including how to call its own procs and log its progress
+  #
+  class Traject::Indexer::EachRecord
+    attr_accessor :source_location, :lambda, :block
+    
+    def initialize(lambda, block, source_location)
+      self.lambda = lambda
+      self.block = block
+      self.source_location = source_location
+    end    
+    
+    # Presumes tht the context being passed in will hold
+    # everything it needs to know, including having #logger set
+    #
+    # For each_record, always return an empty array as the
+    # accumulator, since it doesn't have those kinds of side effects
+    
+    def call_procs(context)
+      [@lambda, @block].each do |aProc|
+        next unless aProc
+        log_mapping_errors(context, aProc) do
+          if aProc.arity == 1
+            aProc.call(context.source_record)
+          else
+            aProc.call(context.source_record, context)
+          end
+        end
+      end
+      return [] # empty -- no accumulator for each_record
+    end
+
+    
+    # Utility methods to identify what type of object this is
+    def to_field?
+      false
+    end
+    
+    def each_record?
+      true
+    end
+    
+    # get a printable id from record for error logging. 
+    # Maybe override this for a future XML version. 
+    def id_string(record)
+      record && record['001'] && record['001'].value.to_s
+    end
+    
+    # How to identify the context in which this step was defined for 
+    # logging purposes?
+    def context_for_logging
+      "each_record"
+    end
+    
+    
+    # just a wrapper that captures and records any unexpected
+    # errors raised in mapping, along with contextual information
+    # on record and location in source file of mapping rule. 
+    #
+    # Re-raises error at the moment. 
+    #
+    # log_errors(context, some_lambda) do
+    #    all_sorts_of_stuff that will have errors logged
+    # end
+    def log_mapping_errors(context, aProc)
+      begin
+        yield
+      rescue Exception => e
+        msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
+
+        conf = self.context_for_logging
+
+        msg += "    while executing #{conf} defined at #{self.source_location}\n"
+        msg += Traject::Util.exception_to_log_message(e)
+
+        context.logger.error msg
+        begin
+          context.logger.debug "Record: " + context.source_record.to_s
+        rescue Exception => marc_to_s_exception
+          context.logger.debug "(Could not log record, #{marc_to_s_exception})"
+        end
+
+        raise e
+      end
+    end
+    
+    
+  end
+  
+  
+  # Minor subclass of EachRecord that knows the name of the 
+  # field being addressed and actually returns the 
+  # accumulator built up during processing
+  
+  class Traject::Indexer::ToField < Traject::Indexer::EachRecord
+    
+    attr_accessor :field_name
+    def initialize(fieldname, lambda, block, source_location)
+      super(lambda, block, source_location)
+      self.field_name = fieldname.to_s
+    end
+    
+    def to_field?
+      true
+    end
+    
+    def each_record? 
+      false
+    end
+    
+    def context_for_logging
+      "to field #{self.field_name}"
+    end
+    
+    def call_procs(context)
+      accumulator = []
+      [@lambda, @block].each do |aProc|
+        next unless aProc
+        log_mapping_errors(context, aProc) do
+          if aProc.arity == 2
+            aProc.call(context.source_record, accumulator)
+          else
+            aProc.call(context.source_record, accumulator, context)
+          end
+        end
+      end
+      return accumulator
+    end
+    
+  end
+  
+
+  
+  
 end
