@@ -108,6 +108,8 @@ class Traject::SolrJWriter
     @thread_pool = Traject::ThreadPool.new( @settings["solrj_writer.thread_pool"].to_i )
 
     @debug_ascii_progress = (@settings["debug_ascii_progress"].to_s == "true")
+
+    logger.info("   SolrJWriter writing to '#{settings['solr.url']}'")
   end
 
   # Loads solrj if not already loaded. By loading all jars found
