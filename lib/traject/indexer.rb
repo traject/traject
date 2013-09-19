@@ -198,7 +198,7 @@ class Traject::Indexer
       break if context.skip?
       accumulator = index_step.call_procs(context)
       accumulator.compact!
-      if index_step.to_field? && accumulator.size > 0
+      if accumulator.size > 0
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
     end
