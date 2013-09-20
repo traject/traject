@@ -132,9 +132,9 @@ the command-line:
 
 Or in a traject configuration file, setting the `log.file` configuration setting.
 
-### Seperate error log
+### separate error log
 
-You can also seperately have a duplicate log file created with ONLY log messages of
+You can also separately have a duplicate log file created with ONLY log messages of
 level ERROR and higher (meaning ERROR and FATAL), with the `log.error_file` setting.
 Then, if there's any lines in this error log file at all, you know something bad
 happened, maybe your batch process needs to notify someone, or abort further

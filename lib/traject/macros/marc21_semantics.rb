@@ -127,7 +127,7 @@ module Traject::Macros
           else
             extractor.collect_subfields(field, spec).collect do |value|
               # sometimes multiple language codes are jammed together in one subfield, and
-              # we need to seperate ourselves. sigh.
+              # we need to separate ourselves. sigh.
               unless value.length == 3
                 value = value.scan(/.{1,3}/) # split into an array of 3-length substrs
               end
@@ -162,7 +162,7 @@ module Traject::Macros
     # Takes marc 048ab instrument code, and translates it to human-displayable
     # string. Takes first two chars of 048a or b, to translate (ignores numeric code)
     #
-    # Pass in custom spec if you want just a or b, to seperate soloists or whatever.
+    # Pass in custom spec if you want just a or b, to separate soloists or whatever.
     def marc_instrumentation_humanized(spec = "048ab", options = {})
       translation_map = Traject::TranslationMap.new(options[:translation_map] || "marc_instruments")
 

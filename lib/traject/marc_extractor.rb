@@ -46,7 +46,7 @@ module Traject
     #
     # options:
     #
-    # [:separator]  default ' ' (space), what to use to seperate
+    # [:separator]  default ' ' (space), what to use to separate
     #               subfield values when joining strings
     #
     # [:alternate_script] default :include, include linked 880s for tags
@@ -118,7 +118,7 @@ module Traject
     # to represent the specification.
     #
     # a String specification is a string (or array of strings) of form:
-    #  {tag}{|indicators|}{subfields} seperated by colons
+    #  {tag}{|indicators|}{subfields} separated by colons
     # tag is three chars (usually but not neccesarily numeric),
     # indicators are optional two chars prefixed by hyphen,
     # subfields are optional list of chars (alphanumeric)
