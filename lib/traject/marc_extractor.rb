@@ -156,26 +156,31 @@ module Traject
           # variable field
           tag, indicators, subfields = $1, $3, $4
 
-          hash[tag] ||= {}
+          hash[tag] ||= []
+          spec = {}
 
-          if subfields
-            subfields.each_char do |subfield|
-              hash[tag][:subfields] ||= Array.new
-              hash[tag][:subfields] << subfield
-            end
+          if subfields and !subfields.empty?
+            spec[:subfields] = subfields.split('')
           end
+
           if indicators
-            hash[tag][:indicators] = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
+           spec[:indicators] = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
           end
+          
+          hash[tag] << spec
+          
         elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
-          hash[tag] ||= {}
+          hash[tag] ||= []
+          spec = {}
 
           if byte1 && byte2
-            hash[tag][:bytes] = ((byte1.to_i)..(byte2.to_i))
+            spec[:bytes] = ((byte1.to_i)..(byte2.to_i))
           elsif byte1
-            hash[tag][:bytes] = byte1.to_i
+           spec[:bytes] = byte1.to_i
           end
+          
+          hash[tag] << spec
         else
           raise ArgumentError.new("Unrecognized marc extract specification: #{part}")
         end
@@ -210,15 +215,18 @@ module Traject
     def each_matching_line(marc_record)
       marc_record.fields(@interesting_tags_hash.keys).each do |field|
 
-        spec = spec_covering_field(field)
+        specs = spec_covering_field(field)
 
         # Don't have a spec that addresses this field? Move on.
-        next unless spec
+        next unless specs
 
         # Make sure it matches indicators too, spec_covering_field
         # doens't check that.
-        if matches_indicators(field, spec)
-          yield(field, spec, self)
+        
+        specs.each do |spec|
+          if matches_indicators(field, spec)
+            yield(field, spec, self)
+          end
         end
       end
     end
