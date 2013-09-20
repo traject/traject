@@ -14,7 +14,7 @@ module Traject::Macros
     # Extract OCLC numbers from, by default 035a's by known prefixes, then stripped
     # just the num, and de-dup.
     def oclcnum(extract_fields = "035a")
-      extractor = MarcExtractor.new(extract_fields, :seperator => nil)
+      extractor = MarcExtractor.new(extract_fields, :separator => nil)
 
       lambda do |record, accumulator|
         list = extractor.extract(record).collect! do |o|
@@ -118,7 +118,7 @@ module Traject::Macros
     def marc_languages(spec = "008[35-37]:041a:041d")
       translation_map = Traject::TranslationMap.new("marc_languages")
 
-      extractor = MarcExtractor.new(spec, :seperator => nil)
+      extractor = MarcExtractor.new(spec, :separator => nil)
 
       lambda do |record, accumulator|
         codes = extractor.collect_matching_lines(record) do |field, spec, extractor|
@@ -166,7 +166,7 @@ module Traject::Macros
     def marc_instrumentation_humanized(spec = "048ab", options = {})
       translation_map = Traject::TranslationMap.new(options[:translation_map] || "marc_instruments")
 
-      extractor = MarcExtractor.new(spec, :seperator => nil)
+      extractor = MarcExtractor.new(spec, :separator => nil)
 
       lambda do |record, accumulator|
         values = extractor.extract(record)
@@ -189,7 +189,7 @@ module Traject::Macros
     def marc_instrument_codes_normalized(spec = "048")
       soloist_suffix = ".s"
 
-      extractor = MarcExtractor.new("048", :seperator => nil)
+      extractor = MarcExtractor.new("048", :separator => nil)
 
       return lambda do |record, accumulator|
         accumulator.concat(
@@ -286,7 +286,7 @@ module Traject::Macros
       end
       # Okay, nothing from 008, try 260
       if found_date.nil?
-        v260c = MarcExtractor.cached("260c", :seperator => nil).extract(record).first
+        v260c = MarcExtractor.cached("260c", :separator => nil).extract(record).first
         # just try to take the first four digits out of there, we're not going to try
         # anything crazy.
         if v260c =~ /(\d{4})/
@@ -320,7 +320,7 @@ module Traject::Macros
       default_value = options.has_key?(:default) ? options[:default] : "Unknown"
       translation_map = Traject::TranslationMap.new("lcc_top_level")
 
-      extractor = MarcExtractor.new(spec, :seperator => nil)
+      extractor = MarcExtractor.new(spec, :separator => nil)
 
       lambda do |record, accumulator|
         candidates = extractor.extract(record)
@@ -352,8 +352,8 @@ module Traject::Macros
       a_fields_spec = options[:geo_a_fields] || "651a:691a"
       z_fields_spec = options[:geo_z_fields] || "600:610:611:630:648:650:654:655:656:690:651:691"
 
-      extractor_043a      = MarcExtractor.new("043a", :seperator => nil)
-      extractor_a_fields  = MarcExtractor.new(a_fields_spec, :seperator => nil)
+      extractor_043a      = MarcExtractor.new("043a", :separator => nil)
+      extractor_a_fields  = MarcExtractor.new(a_fields_spec, :separator => nil)
       extractor_z_fields  = MarcExtractor.new(z_fields_spec)
 
       lambda do |record, accumulator|
@@ -403,7 +403,7 @@ module Traject::Macros
     def marc_era_facet
       ordinary_fields_spec = "600y:610y:611y:630y:648ay:650y:654y:656y:690y"
       special_fields_spec = "651:691"
-      seperator = ": "
+      separator = ": "
 
       extractor_ordinary_fields = MarcExtractor.new(ordinary_fields_spec)
       extractor_special_fields  = MarcExtractor.new(special_fields_spec)
@@ -423,7 +423,7 @@ module Traject::Macros
             next unless sf.code == 'y'
             if sf.value =~ /\A\s*.+,\s+(ca.\s+)?\d\d\d\d?(-\d\d\d\d?)?( B\.C\.)?[.,; ]*\Z/
               # it's our pattern, add the $a in please
-              accumulator << "#{field['a']}#{seperator}#{sf.value.sub(/\. *\Z/, '')}"
+              accumulator << "#{field['a']}#{separator}#{sf.value.sub(/\. *\Z/, '')}"
             else
               accumulator << sf.value.sub(/\. *\Z/, '')
             end

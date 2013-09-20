@@ -95,7 +95,7 @@ describe "Traject::Macros::Marc21" do
 
     it "uses :translation_map" do
       @indexer.instance_eval do
-        to_field "cataloging_agency", extract_marc("040a", :seperator => nil, :translation_map => "marc_040a_translate_test")
+        to_field "cataloging_agency", extract_marc("040a", :separator => nil, :translation_map => "marc_040a_translate_test")
       end
       output = @indexer.map_record(@record)
 
