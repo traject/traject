@@ -196,7 +196,7 @@ class Traject::Indexer
     @index_steps.each do |index_step|
       # Don't bother if we're skipping this record
       break if context.skip?
-      accumulator = index_step.call_procs(context)
+      accumulator = index_step.call_procs(context) # will always be [] for an each_record step
       accumulator.compact!
       if accumulator.size > 0
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
