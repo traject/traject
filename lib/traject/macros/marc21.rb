@@ -29,7 +29,7 @@ module Traject::Macros
     #
     # to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
     # to_field("id"),    extract_marc("001", :first => true)
-    # to_field("geo"),   extract_marc("040a", :seperator => nil, :translation_map => "marc040")
+    # to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
     def extract_marc(spec, options = {})
       only_first              = options.delete(:first)
       trim_punctuation        = options.delete(:trim_punctuation)
@@ -123,14 +123,14 @@ module Traject::Macros
     # options
     # [:from] default 100, only tags >= lexicographically
     # [:to]   default 899, only tags <= lexicographically
-    # [:seperator] how to join subfields, default space, nil means don't join
+    # [:separator] how to join subfields, default space, nil means don't join
     #
     # All fields in from-to must be marc DATA (not control fields), or weirdness
     #
     # Can always run this thing multiple times on the same field if you need
     # non-contiguous ranges of fields.
     def extract_all_marc_values(options = {})
-      options = {:from => "100", :to => "899", :seperator => ' '}.merge(options)
+      options = {:from => "100", :to => "899", :separator => ' '}.merge(options)
 
       lambda do |record, accumulator, context|
         record.each do |field|
@@ -138,8 +138,8 @@ module Traject::Macros
           subfield_values = field.subfields.collect {|sf| sf.value}
           next unless subfield_values.length > 0
 
-          if options[:seperator]
-            accumulator << subfield_values.join( options[:seperator])
+          if options[:separator]
+            accumulator << subfield_values.join( options[:separator])
           else
             accumulator.concat subfield_values
           end
