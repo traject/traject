@@ -13,19 +13,21 @@ them somewhere.
 
 ## Background/Goals
 
-Existing tools for indexing Marc to Solr exist, and have served us well for many years, and have many useful things about them -- which I've tried to preserve in traject.  But I was having more and more difficulty working with the existing tools, including difficulty providing the custom logic I needed in a maintainable way. I realized that for me, to create a tool with the flexibility, maintainability, and performance I wanted, I would need to do it in jruby (ruby on the JVM).
+Existing tools for indexing Marc to Solr served us well for many years, and have many features.
+But we were having more and more difficulty with them, including in extending/customizing in maintainable ways.
+We realized that to create a tool with the API (internal and external) we wanted, we could do a better
+job with jruby (ruby on the JVM).
 
-* *Easy to use*, getting started with standard use cases should be easy, even for non-rubyists.
-* *Support customization and flexiblity*, common customization use cases, including simple local
+* **Easy to use**, getting started with standard use cases should be easy, even for non-rubyists.
+* **Support customization and flexiblity**, common customization use cases, including simple local
   logic, should be very easy. More sophisticated and even complex customization use cases should still be possible,
   changing just the parts of traject you want to change.
-* *Maintainable local logic*, including supporting sharing of reusable logic via ruby gems.
-* *Maintainable understandable internal logic*; well-covered by tests, well-factored separation of concerns,
+* **Maintainable local logic**, supporting sharing of reusable logic via ruby gems.
+* **Comprehensible internal logic*; well-covered by tests, well-factored separation of concerns,
 easy for newcomer developers who know ruby to understand the codebase.
-* *High performance*, using multi-threaded concurrency where appropriate to maximize throughput.
-While it depends on your configuration and the size of your server(s), traject is likely higher
-performance than other similar solutions.
-* *Well-behaved shell script*, for painless integration in batch processes and cronjobs, with
+* **High performance**, using multi-threaded concurrency where appropriate to maximize throughput.
+traject likely will provide higher throughput than other similar solutions.
+* **Well-behaved shell script**, for painless integration in batch processes and cronjobs, with
 exit codes, sufficiently flexible control of logging, proper use of stderr, etc.
 
 
