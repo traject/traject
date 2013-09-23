@@ -194,14 +194,18 @@ class Traject::Indexer
       # Don't bother if we're skipping this record
       break if context.skip?
 
+      context.index_step = index_step
       accumulator = log_mapping_errors(context, index_step) do
         index_step.execute(context) # will always return [] for an each_record step
       end
+      context.index_step =
 
       accumulator.compact!
       if accumulator.size > 0
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
+
+      context.index_step = index_step
     end
 
     return context
@@ -375,7 +379,7 @@ class Traject::Indexer
     end
 
     attr_accessor :clipboard, :output_hash, :logger
-    attr_accessor :field_name, :source_record, :settings
+    attr_accessor :index_step, :source_record, :settings
     # 1-based position in stream of processed records.
     attr_accessor :position
 
