@@ -34,7 +34,9 @@ describe "Traject::Indexer#process" do
     @indexer.to_field("title") do |record, accumulator, context|
       times_called += 1
       accumulator << "ADDED TITLE"
-      assert_equal "title", context.field_name
+      
+      # context no longer holds the field name; get it from the index step itself
+      # assert_equal "title", context.field_name
 
       assert_equal times_called, context.position
     end

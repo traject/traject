@@ -40,30 +40,17 @@ describe "Traject::Indexer.to_field" do
     end
   end
   
-  describe "gives location in error message" do
-
-    it "finds no previous field on initial error" do
-      begin
-        @indexer.to_field('') {|one, two| }   # bad field name
-        flunk("Should have rejected empty field name")
-      rescue Traject::Indexer::NamingError => e
-        assert_match(/no previous named fields/, e.message)
-      rescue 
-        flunk("Should only fail with a NamingError")
-      end
-    end
-
-    it "finds first (only) field on error" do
-      begin
-        @indexer.to_field('foo') {|one, two| }
-        @indexer.to_field('') {|one, two| }   # bad field name
-        flunk("Should have rejected empty field name")
-      rescue Traject::Indexer::NamingError => e
-        assert_match(/foo/, e.message)
-      rescue 
-        flunk("Should only fail with a NamingError")
-      end
+  it "outputs error with source location" do
+    begin
+      @indexer.to_field('foo') {|one, two| }
+      @indexer.to_field('') {|one, two| }   # bad field name
+      flunk("Should have rejected empty field name")
+    rescue Traject::Indexer::NamingError => e
+      assert_match(/at .*\/.*:\d+/, e.message)
+    rescue
+      flunk("Should only fail with a NamingError")
     end
   end
+
   
 end

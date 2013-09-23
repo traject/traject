@@ -31,14 +31,14 @@ describe "Traject::Indexer#each_record" do
       end
     end
 
-    it "finds first (only) field on each_record error" do
+    it "outputs error with source location" do
       begin
         @indexer.to_field('foo') {|one, two| }
         @indexer.each_record {|one, two, three| }   # bad arity
         flunk("Should have rejected bad arity ")
       rescue Traject::Indexer::ArityError => e
-        assert_match(/foo/, e.message)
-      rescue 
+        assert_match(/each_record at .*\/.*:\d+/, e.message)
+      rescue
         flunk("Should only fail with a ArityError")
       end
     end
@@ -54,6 +54,8 @@ describe "Traject::Indexer#each_record" do
         @indexer.each_record()
       end
     end
+
+    it ""
 
   end
 end
