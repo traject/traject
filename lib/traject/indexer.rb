@@ -155,26 +155,11 @@ class Traject::Indexer
 
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
-
-    verify_to_field_arguments(field_name, aLambda, block)
-
-    @index_steps << {
-      :field_name => field_name.to_s,
-      :lambda => aLambda,
-      :block  => block,
-      :type   => :to_field,
-      :source_location => Traject::Util.extract_caller_location(caller.first)
-    }
+    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
   def each_record(aLambda = nil, &block)
-    verify_each_record_arguments(aLambda, block)
-    @index_steps << {
-      :lambda => aLambda,
-      :block  => block,
-      :type   => :each_record,
-      :source_location => Traject::Util.extract_caller_location(caller.first)
-    }
+    @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
 
@@ -203,50 +188,19 @@ class Traject::Indexer
   # to mapping routines.
   #
   # Returns the context passed in as second arg, as a convenience for chaining etc.
+
   def map_to_context!(context)
     @index_steps.each do |index_step|
       # Don't bother if we're skipping this record
       break if context.skip?
-      if index_step[:type] == :to_field
 
-        accumulator = []
-        context.field_name = index_step[:field_name]
+      accumulator = log_mapping_errors(context, index_step) do
+        index_step.execute(context) # will always return [] for an each_record step
+      end
 
-        # Might have a lambda arg AND a block, we execute in order,
-        # with same accumulator.
-
-        [index_step[:lambda], index_step[:block]].each do |aProc|
-          if aProc
-            log_mapping_errors(context, index_step, aProc) do
-              if aProc.arity == 2
-                aProc.call(context.source_record, accumulator)
-              else
-                aProc.call(context.source_record, accumulator, context)
-              end
-            end
-          end
-        end
-        accumulator.compact!
-        (context.output_hash[context.field_name] ||= []).concat accumulator unless accumulator.empty?
-        context.field_name = nil
-
-      elsif index_step[:type] == :each_record
-
-        # one or two arg
-        [index_step[:lambda], index_step[:block]].each do |aProc|
-          if aProc
-            log_mapping_errors(context, index_step, aProc) do
-              if aProc.arity == 1
-                aProc.call(context.source_record)
-              else
-                aProc.call(context.source_record, context)
-              end
-            end
-          end
-        end
-
-      else
-        raise ArgumentError.new("An @index_step we don't know how to deal with: #{@index_step}")
+      accumulator.compact!
+      if accumulator.size > 0
+        (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
     end
 
@@ -255,22 +209,19 @@ class Traject::Indexer
 
   # just a wrapper that captures and records any unexpected
   # errors raised in mapping, along with contextual information
-  # on record and location in source file of mapping rule. 
+  # on record and location in source file of mapping rule.
   #
-  # Re-raises error at the moment. 
+  # Re-raises error at the moment.
   #
-  # log_errors(context, some_lambda) do
+  # log_mapping_errors(context, index_step) do
   #    all_sorts_of_stuff # that will have errors logged
   # end
-  def log_mapping_errors(context, index_step, aProc)
+  def log_mapping_errors(context, index_step)
     begin
       yield
     rescue Exception => e
       msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
-
-      conf = context.field_name ? "to_field '#{context.field_name}'" : "each_record"
-
-      msg += "    while executing #{conf} defined at #{index_step[:source_location]}\n"
+      msg += "    while executing #{index_step.inspect}\n"
       msg += Traject::Util.exception_to_log_message(e)
 
       logger.error msg
@@ -282,6 +233,12 @@ class Traject::Indexer
 
       raise e
     end
+  end
+
+  # get a printable id from record for error logging.
+  # Maybe override this for a future XML version.
+  def id_string(record)
+    record && record['001'] && record['001'].value.to_s
   end
 
   # Processes a stream of records, reading from the configured Reader,
@@ -335,6 +292,7 @@ class Traject::Indexer
       #thread_pool.maybe_in_thread_pool &make_lambda(count, record, writer)
       thread_pool.maybe_in_thread_pool do
         context = Context.new(:source_record => record, :settings => settings, :position => position)
+        context.logger = logger
         map_to_context!(context)
         if context.skip?
           log_skip(context)
@@ -399,85 +357,6 @@ class Traject::Indexer
     return writer_class.new(settings.merge("logger" => logger))
   end
 
-  # get a printable id from record for error logging. 
-  # Maybe override this for a future XML version. 
-  def id_string(record)
-    record && record['001'] && record['001'].value.to_s
-  end
-
-
-  
-  
-  # Verify that the field name is good, and throw a useful error if not
-  def verify_field_name(field_name)
-    if field_name.nil? || !field_name.is_a?(String) || field_name.empty? 
-      raise NamingError.new("to_field requires the field name (String) as the first argument (#{last_named_step.message})")
-    end
-  end
-
-  
-  # Verify the various, increasingly-complex things that can be sent to to_field
-  # to make sure it's all kosher.
-  #
-  # "Modification" takes place for zero-argument blocks that return a lambda
-
-  def verify_to_field_arguments(field_name, aLambda, block)
-
-    verify_field_name(field_name)
-    
-    [aLambda, block].each do |proc|
-      # allow negative arity, meaning variable/optional, trust em on that.
-      # but for positive arrity, we need 2 or 3 args
-      if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
-        raise ArityError.new("error parsing field '#{field_name}': block/proc given to to_field needs 2 or 3 (or variable) arguments: #{proc} (#{last_named_step.message})")
-      end
-    end
-    
-  end
-
-  # Verify the procs sent to each_record to make sure it's all kosher.
-  
-  def verify_each_record_arguments(aLambda, block)
-    unless aLambda or block
-      raise ArgumentError.new("Missing Argument: each_record must take a block/lambda as an argument (#{last_named_step.message})")
-    end
-    
-    [aLambda, block].each do |proc|
-      # allow negative arity, meaning variable/optional, trust em on that.
-      # but for positive arrity, we need 1 or 2 args
-      if proc
-        unless proc.is_a?(Proc)
-          raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} (#{last_named_step.message})")
-        end
-        if (proc.arity == 0 || proc.arity > 2)
-          raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: #{proc} (#{last_named_step.message})")
-        end
-      end
-    end
-  end
-  
-  def last_named_step
-    return LastNamedStep.new(@index_steps)
-  end
-  
-  
-  # A convenient way to find, and generate error messages for, the last named step (for helping locate parse errors)
-  class LastNamedStep
-    attr_accessor :step, :message
-
-    # Get the last step for which we have a field_name (e.g., the last to_field, skipping over each_record)
-    def initialize(index_steps)
-      @step = index_steps.reverse_each.find{|step| step[:field_name]}
-      if @step 
-        @message = "last successfully parsed field was '#{@step[:field_name]}'"
-      else
-        @message = "there were no previous named fields successfully parsed"
-      end
-    end
-  end
-  
-
-
   # Represents the context of a specific record being indexed, passed
   # to indexing logic blocks
   #
@@ -495,7 +374,7 @@ class Traject::Indexer
       @skip = false
     end
 
-    attr_accessor :clipboard, :output_hash
+    attr_accessor :clipboard, :output_hash, :logger
     attr_accessor :field_name, :source_record, :settings
     # 1-based position in stream of processed records.
     attr_accessor :position
@@ -516,4 +395,122 @@ class Traject::Indexer
     end
     
   end
+
+
+
+  # An indexing step definition, including it's source location
+  # for logging
+  #
+  # This one represents an "each_record" step, a subclass below
+  # for "to_field"
+  #
+  # source_location is just a string with filename and line number for
+  # showing to devs in debugging. 
+  class Traject::Indexer::EachRecordStep
+    attr_accessor :source_location, :lambda, :block
+    
+    def initialize(lambda, block, source_location)
+      self.lambda = lambda
+      self.block = block
+      self.source_location = source_location
+
+      self.validate!
+    end
+
+    # raises if bad data
+    def validate!
+      unless self.lambda or self.block
+        raise ArgumentError.new("Missing Argument: each_record must take a block/lambda as an argument (#{self.inspect})")
+      end
+
+      [self.lambda, self.block].each do |proc|
+        # allow negative arity, meaning variable/optional, trust em on that.
+        # but for positive arrity, we need 1 or 2 args
+        if proc
+          unless proc.is_a?(Proc)
+            raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} (#{self.inspect})")
+          end
+          if (proc.arity == 0 || proc.arity > 2)
+            raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: (#{self.inspect})")
+          end
+        end
+      end
+    end
+
+    # For each_record, always return an empty array as the
+    # accumulator, since it doesn't have those kinds of side effects
+    def execute(context)
+      [@lambda, @block].each do |aProc|
+        next unless aProc
+
+        if aProc.arity == 1
+          aProc.call(context.source_record)
+        else
+          aProc.call(context.source_record, context)
+        end
+
+      end
+      return [] # empty -- no accumulator for each_record
+    end
+
+    # Over-ride inspect for outputting error messages etc.
+    def inspect
+      "<each_record at #{source_location}>"
+    end
+  end
+  
+  
+  # An indexing step definition for a "to_field" step to specific
+  # field. 
+  class Traject::Indexer::ToFieldStep
+    attr_accessor :field_name, :lambda, :block, :source_location
+    def initialize(fieldname, lambda, block, source_location)
+      self.field_name = fieldname
+      self.lambda = lambda
+      self.block = block
+      self.source_location = source_location
+
+      validate!
+    end
+
+    def validate!
+
+      if self.field_name.nil? || !self.field_name.is_a?(String) || self.field_name.empty?
+        raise NamingError.new("to_field requires the field name (as a string) as the first argument at #{self.source_location})")
+      end
+
+      [self.lambda, self.block].each do |proc|
+        # allow negative arity, meaning variable/optional, trust em on that.
+        # but for positive arrity, we need 2 or 3 args
+        if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
+          raise ArityError.new("error parsing field '#{self.field_name}': block/proc given to to_field needs 2 or 3 (or variable) arguments: #{proc} (#{self.inspect})")
+        end
+      end
+    end
+
+    # Override inspect for developer debug messages
+    def inspect
+      "<to_field #{self.field_name} at #{self.source_location}>"
+    end
+    
+    def execute(context)
+      accumulator = []
+      [@lambda, @block].each do |aProc|
+        next unless aProc
+
+        if aProc.arity == 2
+          aProc.call(context.source_record, accumulator)
+        else
+          aProc.call(context.source_record, accumulator, context)
+        end
+
+      end
+      return accumulator
+    end
+    
+  end
+  
+
+  
+  
 end
