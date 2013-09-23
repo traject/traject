@@ -157,12 +157,12 @@ class Traject::Indexer
   def to_field(field_name, aLambda = nil, &block)
 
     verify_to_field_arguments(field_name, aLambda, block)
-    @index_steps << ToField.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
+    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
   def each_record(aLambda = nil, &block)
     verify_each_record_arguments(aLambda, block)
-    @index_steps << EachRecord.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
+    @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
 
@@ -470,13 +470,15 @@ class Traject::Indexer
     end
     
   end
-  
-  
-  
-  # A class to hold everything an indexing step needs to know,
-  # including how to call its own procs and log its progress
+
+
+
+  # An indexing step definition, including it's source location
+  # for logging
   #
-  class Traject::Indexer::EachRecord
+  # This one represents an "each_record" step, a subclass below
+  # for "to_field"
+  class Traject::Indexer::EachRecordStep
     attr_accessor :source_location, :lambda, :block
     
     def initialize(lambda, block, source_location)
@@ -485,12 +487,8 @@ class Traject::Indexer
       self.source_location = source_location
     end    
     
-    # Presumes tht the context being passed in will hold
-    # everything it needs to know, including having #logger set
-    #
     # For each_record, always return an empty array as the
     # accumulator, since it doesn't have those kinds of side effects
-    
     def call_procs(context)
       [@lambda, @block].each do |aProc|
         next unless aProc
@@ -524,11 +522,9 @@ class Traject::Indexer
   end
   
   
-  # Minor subclass of EachRecord that knows the name of the 
-  # field being addressed and actually returns the 
-  # accumulator built up during processing
-  
-  class Traject::Indexer::ToField < Traject::Indexer::EachRecord
+  # Subclass of EachRecordStep for a "to_field" step to specific
+  # field, with differnet args in yield. 
+  class Traject::Indexer::ToFieldStep < Traject::Indexer::EachRecordStep
     
     attr_accessor :field_name
     def initialize(fieldname, lambda, block, source_location)
