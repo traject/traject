@@ -23,7 +23,7 @@ job with jruby (ruby on the JVM).
   logic, should be very easy. More sophisticated and even complex customization use cases should still be possible,
   changing just the parts of traject you want to change.
 * **Maintainable local logic**, supporting sharing of reusable logic via ruby gems.
-* **Comprehensible internal logic*; well-covered by tests, well-factored separation of concerns,
+* **Comprehensible internal logic**; well-covered by tests, well-factored separation of concerns,
 easy for newcomer developers who know ruby to understand the codebase.
 * **High performance**, using multi-threaded concurrency where appropriate to maximize throughput.
 traject likely will provide higher throughput than other similar solutions.
