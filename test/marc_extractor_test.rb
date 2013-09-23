@@ -12,43 +12,47 @@ describe "Traject::MarcExtractor" do
 
       assert_kind_of Hash, parsed
       assert_equal 1, parsed.keys.length
-      assert_kind_of Hash, parsed["245"]
+      spec = parsed['245'].first
+      assert_kind_of Hash, spec
 
-      assert_kind_of Array, parsed["245"][:indicators]
-      assert_equal 2, parsed["245"][:indicators].length
-      assert_equal "1", parsed["245"][:indicators][0]
-      assert_nil parsed["245"][:indicators][1]
+      assert_kind_of Array, spec[:indicators]
+      assert_equal 2, spec[:indicators].length
+      assert_equal "1", spec[:indicators][0]
+      assert_nil spec[:indicators][1]
 
-      assert_kind_of Array, parsed["245"][:subfields]
+      assert_kind_of Array, spec[:subfields]
 
     end
 
     it "parses a mixed bag" do
       parsed = Traject::MarcExtractor.parse_string_spec("245abcde:810:700|*4|bcd")
+      spec245 = parsed['245'].first
+      spec810 = parsed['810'].first
+      spec700 = parsed['700'].first
 
       assert_length 3, parsed
 
       #245abcde
-      assert parsed["245"]
-      assert_nil parsed["245"][:indicators]
-      assert_equal %w{a b c d e}, parsed["245"][:subfields]
+      assert spec245
+      assert_nil spec245[:indicators]
+      assert_equal %w{a b c d e}, spec245[:subfields]
 
       #810
-      assert parsed["810"]
-      assert_nil parsed["810"][:indicators]
-      assert_nil parsed["810"][:subfields]
+      assert spec810
+      assert_nil spec810[:indicators]
+      assert_nil spec810[:subfields], "No subfields"
 
       #700-*4bcd
-      assert parsed["700"]
-      assert_equal [nil, "4"], parsed["700"][:indicators]
-      assert_equal %w{b c d}, parsed["700"][:subfields]
+      assert spec700
+      assert_equal [nil, "4"], spec700[:indicators]
+      assert_equal %w{b c d}, spec700[:subfields]
     end
 
     it "parses fixed field byte offsets" do
       parsed = Traject::MarcExtractor.parse_string_spec("005[5]:008[7-10]")
 
-      assert_equal 5, parsed["005"][:bytes]
-      assert_equal 7..10, parsed["008"][:bytes]
+      assert_equal 5, parsed["005"].first[:bytes]
+      assert_equal 7..10, parsed["008"].first[:bytes]
     end
     
     it "allows arrays of specs" do
@@ -98,7 +102,7 @@ describe "Traject::MarcExtractor" do
         assert ! @a880_100.nil?, "Found an 880-100 to test"
       end
       it "finds spec for relevant 880" do
-        assert_equal( {}, @extractor.spec_covering_field(@a880_245) )
+        assert_equal( [{}], @extractor.spec_covering_field(@a880_245) )
         assert_nil        @extractor.spec_covering_field(@a880_100)
       end
       it "does not find spec for 880 if disabled" do
@@ -108,7 +112,7 @@ describe "Traject::MarcExtractor" do
       it "finds only 880 if so configured" do
         @extractor = Traject::MarcExtractor.new("245", :alternate_script => :only)
         assert_nil @extractor.spec_covering_field(@a245) 
-        assert_equal({},  @extractor.spec_covering_field(@a880_245))
+        assert_equal([{}],  @extractor.spec_covering_field(@a880_245))
       end
     end
   end
@@ -289,7 +293,7 @@ describe "Traject::MarcExtractor" do
   describe "MarcExtractor.cached" do
     it "creates" do
       ext = Traject::MarcExtractor.cached("245abc", :separator => nil)
-      assert_equal({"245"=>{:subfields=>["a", "b", "c"]}}, ext.spec_hash)
+      assert_equal({"245"=>[{:subfields=>["a", "b", "c"]}]}, ext.spec_hash)
       assert ext.options[:separator].nil?, "extractor options[:separator] is nil"
     end
     it "caches" do
@@ -300,5 +304,54 @@ describe "Traject::MarcExtractor" do
     end
   end
 
+
+  describe "Allows multiple uses of the same tag" do
+    before do
+      @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+    end
+    
+    it "allows repated tags for a variable field" do
+      extractor = Traject::MarcExtractor.new("245a:245b")
+      values = extractor.extract(@record)
+      assert_equal ['Manufacturing consent :', 'the political economy of the mass media /'], values
+    end
+    
+    it "allows repeated tags with indicators specs" do
+      extractor = Traject::MarcExtractor.new("245|1*|a:245|2*|b")
+      @record.append(MARC::DataField.new('245', '2', '0', ['a', 'Subfield A Value'], ['b', 'Subfield B Value']))
+      results = extractor.extract(@record)
+      assert_equal ['Manufacturing consent :', 'Subfield B Value'], results
+    end
+      
+      
+      
+    
+    it "works the same as ::separator=>nil" do
+      ex1 = Traject::MarcExtractor.new("245a:245b")
+      ex2 = Traject::MarcExtractor.new("245ab", :separator=>nil)
+      assert_equal ex1.extract(@record), ex2.extract(@record)
+    end
+      
+  
+    it "allows repeated tags for a control field" do
+      extractor = Traject::MarcExtractor.new("001[0-1]:001[0-3]")
+      values = extractor.extract(@record)
+      assert_equal ["27", "2710"], values
+    end
+
+    it "associates indicators properly with repeated tags" do
+      @record = MARC::Record.new
+      @record.append MARC::DataField.new("100", '1', ' ', ['a', '100a first indicator 1'], ['b', 'should not include 100|1|b'])
+      @record.append MARC::DataField.new("100", '2', ' ', ['b', '100b first indicator 2'], ['a', 'should not include 100|2|a'])
+
+      extractor = Traject::MarcExtractor.new("100|1*|a:100|2*|b")
+
+      values = extractor.extract(@record)
+
+      assert_equal ['100a first indicator 1', '100b first indicator 2'], values
+    end
+
+  end
+      
 
 end
