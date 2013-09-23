@@ -328,6 +328,19 @@ describe "Traject::MarcExtractor" do
       values = extractor.extract(@record)
       assert_equal ["27", "2710"], values
     end
+
+    it "associates indicators properly with repeated tags" do
+      @record = MARC::Record.new
+      @record.append MARC::DataField.new("100", '1', ' ', ['a', '100a first indicator 1'], ['b', 'should not include 100|1|b'])
+      @record.append MARC::DataField.new("100", '2', ' ', ['b', '100b first indicator 2'], ['a', 'should not include 100|2|a'])
+
+      extractor = Traject::MarcExtractor.new("100|1*|a:100|2*|b")
+
+      values = extractor.extract(@record)
+
+      assert_equal ['100a first indicator 1', '100b first indicator 2'], values
+    end
+
   end
       
 
