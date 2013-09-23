@@ -198,7 +198,7 @@ class Traject::Indexer
       break if context.skip?
 
       accumulator = log_mapping_errors(context, index_step) do
-        index_step.call_procs(context) # will always return [] for an each_record step
+        index_step.execute(context) # will always return [] for an each_record step
       end
 
       accumulator.compact!
@@ -492,7 +492,7 @@ class Traject::Indexer
     
     # For each_record, always return an empty array as the
     # accumulator, since it doesn't have those kinds of side effects
-    def call_procs(context)
+    def execute(context)
       [@lambda, @block].each do |aProc|
         next unless aProc
 
@@ -546,7 +546,7 @@ class Traject::Indexer
       "<to_field #{self.field_name} at #{self.source_location}>"
     end
     
-    def call_procs(context)
+    def execute(context)
       accumulator = []
       [@lambda, @block].each do |aProc|
         next unless aProc
