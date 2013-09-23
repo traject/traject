@@ -316,6 +316,16 @@ describe "Traject::MarcExtractor" do
       assert_equal ['Manufacturing consent :', 'the political economy of the mass media /'], values
     end
     
+    it "allows repeated tags with indicators specs" do
+      extractor = Traject::MarcExtractor.new("245|1*|a:245|2*|b")
+      @record.append(MARC::DataField.new('245', '2', '0', ['a', 'Subfield A Value'], ['b', 'Subfield B Value']))
+      results = extractor.extract(@record)
+      assert_equal ['Manufacturing consent :', 'Subfield B Value'], results
+    end
+      
+      
+      
+    
     it "works the same as ::separator=>nil" do
       ex1 = Traject::MarcExtractor.new("245a:245b")
       ex2 = Traject::MarcExtractor.new("245ab", :separator=>nil)
