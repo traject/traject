@@ -1,5 +1,6 @@
 require 'traject/marc_extractor'
 require 'traject/translation_map'
+require 'traject/util'
 require 'base64'
 require 'json'
 
@@ -30,7 +31,22 @@ module Traject::Macros
     # to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
     # to_field("id"),    extract_marc("001", :first => true)
     # to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
+    
+
+    #  A list of symbols that are valid keys in the options hash
+    EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default, 
+                                  :deduplicate, :uniq, :separator, :translation_map, 
+                                  :alternate_script]
+    
     def extract_marc(spec, options = {})
+      
+      # Raise an error if there are any invalid options, indicating a
+      # misspelled or illegal option, using a string instead of a symbol, etc.
+      
+      unless (options.keys - EXTRACT_MARC_VALID_OPTIONS).empty?
+        raise RuntimeError.new("Illegal/Unknown argument '#{options.keys.join(', ')}' in extract_marc at #{Traject::Util.extract_caller_location(caller.first)}")
+      end
+      
       only_first              = options.delete(:first)
       trim_punctuation        = options.delete(:trim_punctuation)
       default_value           = options.delete(:default)
@@ -46,6 +62,7 @@ module Traject::Macros
       if translation_map_arg  = options.delete(:translation_map)
         translation_map = Traject::TranslationMap.new(translation_map_arg)
       end
+      
 
       extractor = Traject::MarcExtractor.new(spec, options)
 
@@ -93,7 +110,14 @@ module Traject::Macros
     #          serialized, with certain header bytes filled with ascii 0's
     #          -- technically illegal MARC, but can still be read by
     #          ruby MARC::Reader in permissive mode.
+    
+    SERIALZED_MARC_VALID_OPTIONS = [:format, :binary_escape, :allow_oversize, :format]
+    
     def serialized_marc(options)
+      unless (options.keys - SERIALZED_MARC_VALID_OPTIONS).empty?
+        raise RuntimeError.new("Illegal/Unknown argument '#{options.keys.join(', ')}' in seralized_marc at #{Traject::Util.extract_caller_location(caller.first)}")
+      end
+
       format          = options[:format].to_s
       binary_escape   = (options[:binary_escape] != false)
       allow_oversized = (options[:allow_oversized] == true)
@@ -129,7 +153,13 @@ module Traject::Macros
     #
     # Can always run this thing multiple times on the same field if you need
     # non-contiguous ranges of fields.
+    
+    EXTRACT_ALL_MARC_VALID_OPTIONS = [:separator, :from, :to]
+    
     def extract_all_marc_values(options = {})
+      unless (options.keys - EXTRACT_ALL_MARC_VALID_OPTIONS).empty?
+        raise RuntimeError.new("Illegal/Unknown argument '#{options.keys.join(', ')}' in extract_all_marc at #{Traject::Util.extract_caller_location(caller.first)}")
+      end
       options = {:from => "100", :to => "899", :separator => ' '}.merge(options)
 
       lambda do |record, accumulator, context|
