@@ -109,7 +109,7 @@ class Traject::SolrJWriter
 
     @debug_ascii_progress = (@settings["debug_ascii_progress"].to_s == "true")
 
-    logger.info("   SolrJWriter writing to '#{settings['solr.url']}'")
+    logger.info("   #{self.class.name} writing to '#{settings['solr.url']}'")
   end
 
   # Loads solrj if not already loaded. By loading all jars found
