@@ -53,9 +53,7 @@ describe "Traject::Indexer#each_record" do
       assert_raises(ArgumentError) do
         @indexer.each_record()
       end
-    end
-
-    it ""
+    end    
 
   end
 end
