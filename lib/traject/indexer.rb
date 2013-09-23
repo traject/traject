@@ -155,13 +155,10 @@ class Traject::Indexer
 
   # Used to define an indexing mapping.
   def to_field(field_name, aLambda = nil, &block)
-
-    verify_to_field_arguments(field_name, aLambda, block)
     @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
   def each_record(aLambda = nil, &block)
-    verify_each_record_arguments(aLambda, block)
     @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
@@ -359,56 +356,6 @@ class Traject::Indexer
   def writer!
     return writer_class.new(settings.merge("logger" => logger))
   end
-
-  
-  
-  # Verify that the field name is good, and throw a useful error if not
-  def verify_field_name(field_name)
-    if field_name.nil? || !field_name.is_a?(String) || field_name.empty? 
-      raise NamingError.new("to_field requires the field name (String) as the first argument (#{last_named_step.message})")
-    end
-  end
-
-  
-  # Verify the various, increasingly-complex things that can be sent to to_field
-  # to make sure it's all kosher.
-  #
-  # "Modification" takes place for zero-argument blocks that return a lambda
-
-  def verify_to_field_arguments(field_name, aLambda, block)
-
-    verify_field_name(field_name)
-    
-    [aLambda, block].each do |proc|
-      # allow negative arity, meaning variable/optional, trust em on that.
-      # but for positive arrity, we need 2 or 3 args
-      if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
-        raise ArityError.new("error parsing field '#{field_name}': block/proc given to to_field needs 2 or 3 (or variable) arguments: #{proc} (#{last_named_step.message})")
-      end
-    end
-    
-  end
-
-  # Verify the procs sent to each_record to make sure it's all kosher.
-  
-  def verify_each_record_arguments(aLambda, block)
-    unless aLambda or block
-      raise ArgumentError.new("Missing Argument: each_record must take a block/lambda as an argument (#{last_named_step.message})")
-    end
-    
-    [aLambda, block].each do |proc|
-      # allow negative arity, meaning variable/optional, trust em on that.
-      # but for positive arrity, we need 1 or 2 args
-      if proc
-        unless proc.is_a?(Proc)
-          raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} (#{last_named_step.message})")
-        end
-        if (proc.arity == 0 || proc.arity > 2)
-          raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: #{proc} (#{last_named_step.message})")
-        end
-      end
-    end
-  end
   
   def last_named_step
     return LastNamedStep.new(@index_steps)
@@ -488,8 +435,30 @@ class Traject::Indexer
       self.lambda = lambda
       self.block = block
       self.source_location = source_location
-    end    
-    
+
+      self.validate!
+    end
+
+    # raises if bad data
+    def validate!
+      unless self.lambda or self.block
+        raise ArgumentError.new("Missing Argument: each_record must take a block/lambda as an argument (#{self.inspect})")
+      end
+
+      [self.lambda, self.block].each do |proc|
+        # allow negative arity, meaning variable/optional, trust em on that.
+        # but for positive arrity, we need 1 or 2 args
+        if proc
+          unless proc.is_a?(Proc)
+            raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} (#{self.inspect})")
+          end
+          if (proc.arity == 0 || proc.arity > 2)
+            raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: (#{self.inspect})")
+          end
+        end
+      end
+    end
+
     # For each_record, always return an empty array as the
     # accumulator, since it doesn't have those kinds of side effects
     def execute(context)
@@ -529,10 +498,25 @@ class Traject::Indexer
     
     attr_accessor :field_name
     def initialize(fieldname, lambda, block, source_location)
+      self.field_name = fieldname
       super(lambda, block, source_location)
-      self.field_name = fieldname.to_s
     end
-    
+
+    def validate!
+
+      if self.field_name.nil? || !self.field_name.is_a?(String) || self.field_name.empty?
+        raise NamingError.new("to_field requires the field name (as a string) as the first argument at #{self.source_location})")
+      end
+
+      [self.lambda, self.block].each do |proc|
+        # allow negative arity, meaning variable/optional, trust em on that.
+        # but for positive arrity, we need 2 or 3 args
+        if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
+          raise ArityError.new("error parsing field '#{self.field_name}': block/proc given to to_field needs 2 or 3 (or variable) arguments: #{proc} (#{self.inspect})")
+        end
+      end
+    end
+
     def to_field?
       true
     end
