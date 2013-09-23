@@ -356,28 +356,6 @@ class Traject::Indexer
   def writer!
     return writer_class.new(settings.merge("logger" => logger))
   end
-  
-  def last_named_step
-    return LastNamedStep.new(@index_steps)
-  end
-  
-  
-  # A convenient way to find, and generate error messages for, the last named step (for helping locate parse errors)
-  class LastNamedStep
-    attr_accessor :step, :message
-
-    # Get the last step for which we have a field_name (e.g., the last to_field, skipping over each_record)
-    def initialize(index_steps)
-      @step = index_steps.reverse_each.find{|step| step.to_field?}
-      if @step 
-        @message = "last successfully parsed field was '#{@step.field_name}'"
-      else
-        @message = "there were no previous named fields successfully parsed"
-      end
-    end
-  end
-  
-
 
   # Represents the context of a specific record being indexed, passed
   # to indexing logic blocks
