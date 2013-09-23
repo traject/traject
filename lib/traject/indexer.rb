@@ -457,16 +457,6 @@ class Traject::Indexer
     def inspect
       "<each_record at #{source_location}>"
     end
-
-    # Utility methods to identify what type of object this is
-    def to_field?
-      false
-    end
-    
-    def each_record?
-      true
-    end    
-    
   end
   
   
@@ -498,14 +488,6 @@ class Traject::Indexer
       end
     end
 
-    def to_field?
-      true
-    end
-    
-    def each_record? 
-      false
-    end
-    
     # Override inspect for developer debug messages
     def inspect
       "<to_field #{self.field_name} at #{self.source_location}>"
