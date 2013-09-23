@@ -6,7 +6,7 @@ require 'traject/version'
 Gem::Specification.new do |spec|
   spec.name          = "traject"
   spec.version       = Traject::VERSION
-  spec.authors       = ["Jonathan Rochkind"]
+  spec.authors       = ["Jonathan Rochkind", "Bill Dueber"]
   spec.email         = ["none@nowhere.org"]
   spec.summary       = %q{Index MARC to Solr; or generally process source records to hash-like structures}
   spec.homepage      = "http://github.com/jrochkind/traject"
