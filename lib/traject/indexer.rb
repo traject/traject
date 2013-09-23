@@ -224,7 +224,7 @@ class Traject::Indexer
       yield
     rescue Exception => e
       msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
-      msg += "    while executing #{index_step.context_for_logging} defined at #{index_step.source_location}\n"
+      msg += "    while executing #{index_step.inspect}\n"
       msg += Traject::Util.exception_to_log_message(e)
 
       logger.error msg
@@ -478,6 +478,9 @@ class Traject::Indexer
   #
   # This one represents an "each_record" step, a subclass below
   # for "to_field"
+  #
+  # source_location is just a string with filename and line number for
+  # showing to devs in debugging. 
   class Traject::Indexer::EachRecordStep
     attr_accessor :source_location, :lambda, :block
     
@@ -503,13 +506,11 @@ class Traject::Indexer
       return [] # empty -- no accumulator for each_record
     end
 
-    # How to identify the context in which this step was defined for 
-    # logging purposes?
-    def context_for_logging
-      "each_record"
+    # Over-ride inspect for outputting error messages etc.
+    def inspect
+      "<each_record at #{source_location}>"
     end
 
-    
     # Utility methods to identify what type of object this is
     def to_field?
       false
@@ -540,8 +541,9 @@ class Traject::Indexer
       false
     end
     
-    def context_for_logging
-      "to field #{self.field_name}"
+    # Override inspect for developer debug messages
+    def inspect
+      "<to_field #{self.field_name} at #{self.source_location}>"
     end
     
     def call_procs(context)
