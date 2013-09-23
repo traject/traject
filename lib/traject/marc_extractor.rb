@@ -135,13 +135,23 @@ module Traject
     #  "008[35-37]:LDR[5]"
     #  => bytes 35-37 inclusive of field 008, and byte 5 of the marc leader.
     #
-    # Returns a nested hash keyed by tags.
-    # { tag => {
-    #     :subfields => ['a', 'b', '2'] # actually, a SET. may be empty or nil
-    #     :indicators => ['1', '0'] # An array. may be empty or nil; duple, either one can be nil
-    #    }
-    #}
-    # For byte offsets, :bytes => 12 or :bytes => (7..10)
+    # Returns a nested hash whose keys are tags and whose value is an array
+    # of hash structures indicating what indicators and subfields (or
+    # byte-offsets for control fields) are needed, e.g.
+    #
+    # '245|1*|a:245ab:110:008[15-17]:008[17]' would give us
+    #
+    # {
+    #   '245' => [
+    #     {:indicators => ['1', nil], :subfields=>['a']},
+    #     {:subfields => ['a', 'b']}
+    #    ]
+    #    '110' => [{}] # all subfields, indicators don't matter
+    #    '008' => [
+    #      {:bytes => (15..17)}
+    #      {:bytes => 17}
+    #    ]
+    # }
     #
     # * subfields and indicators can only be provided for marc data/variable fields
     # * byte slice can only be provided for marc control fields (generally tags less than 010)
@@ -156,26 +166,31 @@ module Traject
           # variable field
           tag, indicators, subfields = $1, $3, $4
 
-          hash[tag] ||= {}
+          hash[tag] ||= []
+          spec = {}
 
-          if subfields
-            subfields.each_char do |subfield|
-              hash[tag][:subfields] ||= Array.new
-              hash[tag][:subfields] << subfield
-            end
+          if subfields and !subfields.empty?
+            spec[:subfields] = subfields.split('')
           end
+
           if indicators
-            hash[tag][:indicators] = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
+           spec[:indicators] = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
           end
+          
+          hash[tag] << spec
+          
         elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
-          hash[tag] ||= {}
+          hash[tag] ||= []
+          spec = {}
 
           if byte1 && byte2
-            hash[tag][:bytes] = ((byte1.to_i)..(byte2.to_i))
+            spec[:bytes] = ((byte1.to_i)..(byte2.to_i))
           elsif byte1
-            hash[tag][:bytes] = byte1.to_i
+           spec[:bytes] = byte1.to_i
           end
+          
+          hash[tag] << spec
         else
           raise ArgumentError.new("Unrecognized marc extract specification: #{part}")
         end
@@ -210,15 +225,18 @@ module Traject
     def each_matching_line(marc_record)
       marc_record.fields(@interesting_tags_hash.keys).each do |field|
 
-        spec = spec_covering_field(field)
+        specs = spec_covering_field(field)
 
         # Don't have a spec that addresses this field? Move on.
-        next unless spec
+        next unless specs
 
         # Make sure it matches indicators too, spec_covering_field
         # doens't check that.
-        if matches_indicators(field, spec)
-          yield(field, spec, self)
+        
+        specs.each do |spec|
+          if matches_indicators(field, spec)
+            yield(field, spec, self)
+          end
         end
       end
     end
