@@ -75,6 +75,15 @@ describe "Traject::Macros::Marc21" do
       
     end
     
+    it "fails on an extra/misspelled argument to extract_marc" do
+      assert_raises(RuntimeError) do
+        @indexer.instance_eval do
+          to_field "foo", extract_marc("9999", :misspelled => "Who cares")
+        end
+      end
+    end
+      
+    
       
 
     it "Marc21::trim_punctuation class method" do
