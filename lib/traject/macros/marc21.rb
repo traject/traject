@@ -111,7 +111,7 @@ module Traject::Macros
     #          -- technically illegal MARC, but can still be read by
     #          ruby MARC::Reader in permissive mode.
     
-    SERIALZED_MARC_VALID_OPTIONS = [:format, :binary_escape, :allow_oversize, :format]
+    SERIALZED_MARC_VALID_OPTIONS = [:format, :binary_escape, :allow_oversized, :format]
     
     def serialized_marc(options)
       unless (options.keys - SERIALZED_MARC_VALID_OPTIONS).empty?
