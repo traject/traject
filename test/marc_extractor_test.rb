@@ -293,7 +293,7 @@ describe "Traject::MarcExtractor" do
   describe "MarcExtractor.cached" do
     it "creates" do
       ext = Traject::MarcExtractor.cached("245abc", :separator => nil)
-      assert_equal({"245"=>{:subfields=>["a", "b", "c"]}}, ext.spec_hash)
+      assert_equal({"245"=>[{:subfields=>["a", "b", "c"]}]}, ext.spec_hash)
       assert ext.options[:separator].nil?, "extractor options[:separator] is nil"
     end
     it "caches" do
@@ -316,9 +316,9 @@ describe "Traject::MarcExtractor" do
       assert_equal ['Manufacturing consent :', 'the political economy of the mass media /'], values
     end
     
-    it "works the same as ::seperator=>nil" do
+    it "works the same as ::separator=>nil" do
       ex1 = Traject::MarcExtractor.new("245a:245b")
-      ex2 = Traject::MarcExtractor.new("245ab", :seperator=>nil)
+      ex2 = Traject::MarcExtractor.new("245ab", :separator=>nil)
       assert_equal ex1.extract(@record), ex2.extract(@record)
     end
       
