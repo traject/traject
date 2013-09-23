@@ -16,8 +16,8 @@ require 'marc'
 #   ["marc_source.type"]  serialization type. default 'binary'
 #                 * "binary". Actual marc.
 #                 * "xml", MarcXML
-#                 * "json". (NOT YET IMPLEMENTED) The "marc-in-json" format, encoded as newline-seperated
-#                   json. A simplistic newline-seperated json, with no comments
+#                 * "json". (NOT YET IMPLEMENTED) The "marc-in-json" format, encoded as newline-separated
+#                   json. A simplistic newline-separated json, with no comments
 #                   allowed, and no unescpaed internal newlines allowed in the json
 #                   objects -- we just read line by line, and assume each line is a
 #                   marc-in-json. http://dilettantes.code4lib.org/blog/2010/09/a-proposal-to-serialize-marc-in-json/

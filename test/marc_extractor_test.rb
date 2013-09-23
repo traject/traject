@@ -177,17 +177,17 @@ describe "Traject::MarcExtractor" do
       end
     end
 
-    describe "seperator argument" do
+    describe "separator argument" do
       it "causes non-join when nil" do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
-        values = Traject::MarcExtractor.new(parsed_spec, :seperator => nil).extract(@record)
+        values = Traject::MarcExtractor.new(parsed_spec, :separator => nil).extract(@record)
 
         assert_length 3, values
       end
 
       it "can be non-default" do
         parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
-        values = Traject::MarcExtractor.new(parsed_spec, :seperator => "!! ").extract(@record)
+        values = Traject::MarcExtractor.new(parsed_spec, :separator => "!! ").extract(@record)
 
         assert_length 1, values
         assert_equal "Manufacturing consent :!! the political economy of the mass media /!! Edward S. Herman and Noam Chomsky ; with a new introduction by the authors.", values.first
@@ -292,13 +292,13 @@ describe "Traject::MarcExtractor" do
 
   describe "MarcExtractor.cached" do
     it "creates" do
-      ext = Traject::MarcExtractor.cached("245abc", :seperator => nil)
-      assert_equal({"245"=>[{:subfields=>["a", "b", "c"]}]}, ext.spec_hash)
-      assert ext.options[:seperator].nil?, "extractor options[:seperator] is nil"
+      ext = Traject::MarcExtractor.cached("245abc", :separator => nil)
+      assert_equal({"245"=>{:subfields=>["a", "b", "c"]}}, ext.spec_hash)
+      assert ext.options[:separator].nil?, "extractor options[:separator] is nil"
     end
     it "caches" do
-      ext1 = Traject::MarcExtractor.cached("245abc", :seperator => nil)
-      ext2 = Traject::MarcExtractor.cached("245abc", :seperator => nil)
+      ext1 = Traject::MarcExtractor.cached("245abc", :separator => nil)
+      ext2 = Traject::MarcExtractor.cached("245abc", :separator => nil)
 
       assert_same ext1, ext2
     end

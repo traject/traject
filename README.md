@@ -20,7 +20,7 @@ Existing tools for indexing Marc to Solr exist, and have served us well for many
   logic, should be very easy. More sophisticated and even complex customization use cases should still be possible,
   changing just the parts of traject you want to change.
 * *Maintainable local logic*, including supporting sharing of reusable logic via ruby gems.
-* *Maintainable understandable internal logic*; well-covered by tests, well-factored seperation of concerns,
+* *Maintainable understandable internal logic*; well-covered by tests, well-factored separation of concerns,
 easy for newcomer developers who know ruby to understand the codebase.
 * *High performance*, using multi-threaded concurrency where appropriate to maximize throughput.
 While it depends on your configuration and the size of your server(s), traject is likely higher
@@ -164,8 +164,8 @@ Other examples of the specification string, which can include multiple tag menti
 
   # Instead of joining subfields from the same field
   # into one string, joined by spaces, leave them
-  # each in seperate strings:
-  to_field "isbn", extract_marc("020az", :seperator => nil)
+  # each in separate strings:
+  to_field "isbn", extract_marc("020az", :separator => nil)
   
   # Same thing, but more explicit
   to_field "isbn", extract_marc("020a:020z")
@@ -370,7 +370,7 @@ Traject config files are full live ruby files, where you can do anything,
 including declaring new classes, etc.
 
 However, beyond limited trivial logic, you'll want to organize your
-code reasonably into seperate files, not jam everything into config
+code reasonably into separate files, not jam everything into config
 files.
 
 Traject wants to make sure it makes it convenient for you to do so,
