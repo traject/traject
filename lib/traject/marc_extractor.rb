@@ -135,13 +135,23 @@ module Traject
     #  "008[35-37]:LDR[5]"
     #  => bytes 35-37 inclusive of field 008, and byte 5 of the marc leader.
     #
-    # Returns a nested hash keyed by tags.
-    # { tag => {
-    #     :subfields => ['a', 'b', '2'] # actually, a SET. may be empty or nil
-    #     :indicators => ['1', '0'] # An array. may be empty or nil; duple, either one can be nil
-    #    }
-    #}
-    # For byte offsets, :bytes => 12 or :bytes => (7..10)
+    # Returns a nested hash whose keys are tags and whose value is an array
+    # of hash structures indicating what indicators and subfields (or
+    # byte-offsets for control fields) are needed, e.g.
+    #
+    # '245|1*|a:245ab:110:008[15-17]:008[17]' would give us
+    #
+    # {
+    #   '245' => [
+    #     {:indicators => ['1', nil], :subfields=>['a']},
+    #     {:subfields => ['a', 'b']}
+    #    ]
+    #    '110' => [{}] # all subfields, indicators don't matter
+    #    '008' => [
+    #      {:bytes => (15..17)}
+    #      {:bytes => 17}
+    #    ]
+    # }
     #
     # * subfields and indicators can only be provided for marc data/variable fields
     # * byte slice can only be provided for marc control fields (generally tags less than 010)
