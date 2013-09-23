@@ -364,7 +364,7 @@ class Traject::Indexer
   # Represents the context of a specific record being indexed, passed
   # to indexing logic blocks
   #
-  class Traject::Indexer::Context
+  class Context
     def initialize(hash_init = {})
       # TODO, argument checking for required args?
 
@@ -410,7 +410,7 @@ class Traject::Indexer
   #
   # source_location is just a string with filename and line number for
   # showing to devs in debugging.
-  class Traject::Indexer::EachRecordStep
+  class EachRecordStep
     attr_accessor :source_location, :lambda, :block
 
     def initialize(lambda, block, source_location)
@@ -466,7 +466,7 @@ class Traject::Indexer
 
   # An indexing step definition for a "to_field" step to specific
   # field.
-  class Traject::Indexer::ToFieldStep
+  class ToFieldStep
     attr_accessor :field_name, :lambda, :block, :source_location
     def initialize(fieldname, lambda, block, source_location)
       self.field_name = fieldname
