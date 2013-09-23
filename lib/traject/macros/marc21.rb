@@ -44,7 +44,7 @@ module Traject::Macros
       # misspelled or illegal option, using a string instead of a symbol, etc.
       
       unless (options.keys - EXTRACT_MARC_VALID_OPTIONS).empty?
-        raise RuntimeError.new("Illegal/Unknown argument '#{options.keys.join(', ')}' in extract_marc at #{Traject::Util.extract_caller_location(caller.first)}")
+        raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - EXTRACT_MARC_VALID_OPTIONS).join(', ')}' in extract_marc at #{Traject::Util.extract_caller_location(caller.first)}")
       end
       
       only_first              = options.delete(:first)
@@ -115,7 +115,7 @@ module Traject::Macros
     
     def serialized_marc(options)
       unless (options.keys - SERIALZED_MARC_VALID_OPTIONS).empty?
-        raise RuntimeError.new("Illegal/Unknown argument '#{options.keys.join(', ')}' in seralized_marc at #{Traject::Util.extract_caller_location(caller.first)}")
+        raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - SERIALZED_MARC_VALID_OPTIONS).join(', ')}' in seralized_marc at #{Traject::Util.extract_caller_location(caller.first)}")
       end
 
       format          = options[:format].to_s
@@ -158,7 +158,7 @@ module Traject::Macros
     
     def extract_all_marc_values(options = {})
       unless (options.keys - EXTRACT_ALL_MARC_VALID_OPTIONS).empty?
-        raise RuntimeError.new("Illegal/Unknown argument '#{options.keys.join(', ')}' in extract_all_marc at #{Traject::Util.extract_caller_location(caller.first)}")
+        raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - EXTRACT_ALL_MARC_VALID_OPTIONS).join(', ')}' in extract_all_marc at #{Traject::Util.extract_caller_location(caller.first)}")
       end
       options = {:from => "100", :to => "899", :separator => ' '}.merge(options)
 
