@@ -50,7 +50,7 @@ to_field "format",              marc_formats
 to_field "isbn_t",              extract_marc("020a:773z:776z:534z:556z")
 to_field "lccn",                extract_marc("010a")
 
-to_field "material_type_display", extract_marc("300a", :seperator => nil, :trim_punctuation => true)
+to_field "material_type_display", extract_marc("300a", :separator => nil, :trim_punctuation => true)
 
 to_field "title_t",             extract_marc("245ak")
 to_field "title1_t",            extract_marc("245abk")
@@ -107,7 +107,7 @@ to_field "pub_date",          marc_publication_date
 # call numbers.
 lcc_map             = Traject::TranslationMap.new("lcc_top_level")
 holdings_extractor  = Traject::MarcExtractor.new("991:937")
-sudoc_extractor     = Traject::MarcExtractor.new("086a", :seperator =>nil)
+sudoc_extractor     = Traject::MarcExtractor.new("086a", :separator =>nil)
 
 to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |record, accumulator|
   # add in our local call numbers
@@ -147,8 +147,8 @@ end
 to_field "instrumentation_facet",       marc_instrumentation_humanized
 to_field "instrumentation_code_unstem", marc_instrument_codes_normalized
 
-to_field "issn",                extract_marc("022a:022l:022y:773x:774x:776x", :seperator => nil)
-to_field "issn_related",        extract_marc("490x:440x:800x:400x:410x:411x:810x:811x:830x:700x:710x:711x:730x:780x:785x:777x:543x:760x:762x:765x:767x:770x:772x:775x:786x:787x", :seperator => nil)
+to_field "issn",                extract_marc("022a:022l:022y:773x:774x:776x", :separator => nil)
+to_field "issn_related",        extract_marc("490x:440x:800x:400x:410x:411x:810x:811x:830x:700x:710x:711x:730x:780x:785x:777x:543x:760x:762x:765x:767x:770x:772x:775x:786x:787x", :separator => nil)
 
 to_field "oclcnum_t",           oclcnum
 

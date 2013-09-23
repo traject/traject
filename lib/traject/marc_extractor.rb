@@ -7,7 +7,7 @@ module Traject
   # Examples:
   #
   #    array_of_stuff = MarcExtractor.new("001:245abc:700a").extract(marc_record)
-  #    values         = MarcExtractor.new("040a", :seperator => nil).extract(marc_record)
+  #    values         = MarcExtractor.new("040a", :separator => nil).extract(marc_record)
   #
   #
   # == Note on Performance and MarcExtractor creation and reuse
@@ -46,7 +46,7 @@ module Traject
     #
     # options:
     #
-    # [:seperator]  default ' ' (space), what to use to seperate
+    # [:separator]  default ' ' (space), what to use to separate
     #               subfield values when joining strings
     #
     # [:alternate_script] default :include, include linked 880s for tags
@@ -55,7 +55,7 @@ module Traject
     #                     * :only => only include linked 880s, not original
     def initialize(spec, options = {})
       self.options = {
-        :seperator => ' ',
+        :separator => ' ',
         :alternate_script => :include
       }.merge(options)
 
@@ -93,7 +93,7 @@ module Traject
     # although if you try hard enough you can surely find a way to do something
     # you shouldn't.
     #
-    #    extractor = MarcExtractor.cached("245abc:700a", :seperator => nil)
+    #    extractor = MarcExtractor.cached("245abc:700a", :separator => nil)
     def self.cached(*args)
       cache = (Thread.current[:marc_extractor_cached] ||= Hash.new)
       extractor = (cache[args] ||= begin
@@ -118,7 +118,7 @@ module Traject
     # to represent the specification.
     #
     # a String specification is a string (or array of strings) of form:
-    #  {tag}{|indicators|}{subfields} seperated by colons
+    #  {tag}{|indicators|}{subfields} separated by colons
     # tag is three chars (usually but not neccesarily numeric),
     # indicators are optional two chars prefixed by hyphen,
     # subfields are optional list of chars (alphanumeric)
@@ -239,7 +239,7 @@ module Traject
     # Pass in a marc data field and a hash spec, returns
     # an ARRAY of one or more strings, subfields extracted
     # and processed per spec. Takes account of options such
-    # as :seperator
+    # as :separator
     #
     # Always returns array, sometimes empty array.
     def collect_subfields(field, spec)
@@ -249,7 +249,7 @@ module Traject
 
       return subfields if subfields.empty? # empty array, just return it.
 
-      return options[:seperator] ? [ subfields.join( options[:seperator]) ] : subfields
+      return options[:separator] ? [ subfields.join( options[:separator]) ] : subfields
     end
 
 
