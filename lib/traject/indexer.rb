@@ -191,12 +191,16 @@ class Traject::Indexer
   # to mapping routines.
   #
   # Returns the context passed in as second arg, as a convenience for chaining etc.
-  
+
   def map_to_context!(context)
     @index_steps.each do |index_step|
       # Don't bother if we're skipping this record
       break if context.skip?
-      accumulator = index_step.call_procs(context) # will always be [] for an each_record step
+
+      accumulator = log_mapping_errors(context, index_step) do
+        index_step.call_procs(context) # will always return [] for an each_record step
+      end
+
       accumulator.compact!
       if accumulator.size > 0
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
@@ -206,6 +210,39 @@ class Traject::Indexer
     return context
   end
 
+  # just a wrapper that captures and records any unexpected
+  # errors raised in mapping, along with contextual information
+  # on record and location in source file of mapping rule.
+  #
+  # Re-raises error at the moment.
+  #
+  # log_mapping_errors(context, index_step) do
+  #    all_sorts_of_stuff # that will have errors logged
+  # end
+  def log_mapping_errors(context, index_step)
+    begin
+      yield
+    rescue Exception => e
+      msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
+      msg += "    while executing #{index_step.context_for_logging} defined at #{index_step.source_location}\n"
+      msg += Traject::Util.exception_to_log_message(e)
+
+      logger.error msg
+      begin
+        logger.debug "Record: " + context.source_record.to_s
+      rescue Exception => marc_to_s_exception
+        logger.debug "(Could not log record, #{marc_to_s_exception})"
+      end
+
+      raise e
+    end
+  end
+
+  # get a printable id from record for error logging.
+  # Maybe override this for a future XML version.
+  def id_string(record)
+    record && record['001'] && record['001'].value.to_s
+  end
 
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
@@ -457,15 +494,21 @@ class Traject::Indexer
     def call_procs(context)
       [@lambda, @block].each do |aProc|
         next unless aProc
-        log_mapping_errors(context, aProc) do
-          if aProc.arity == 1
-            aProc.call(context.source_record)
-          else
-            aProc.call(context.source_record, context)
-          end
+
+        if aProc.arity == 1
+          aProc.call(context.source_record)
+        else
+          aProc.call(context.source_record, context)
         end
+
       end
       return [] # empty -- no accumulator for each_record
+    end
+
+    # How to identify the context in which this step was defined for 
+    # logging purposes?
+    def context_for_logging
+      "each_record"
     end
 
     
@@ -476,52 +519,7 @@ class Traject::Indexer
     
     def each_record?
       true
-    end
-    
-    # get a printable id from record for error logging. 
-    # Maybe override this for a future XML version. 
-    def id_string(record)
-      record && record['001'] && record['001'].value.to_s
-    end
-    
-    # How to identify the context in which this step was defined for 
-    # logging purposes?
-    def context_for_logging
-      "each_record"
-    end
-    
-    
-    # just a wrapper that captures and records any unexpected
-    # errors raised in mapping, along with contextual information
-    # on record and location in source file of mapping rule. 
-    #
-    # Re-raises error at the moment. 
-    #
-    # log_errors(context, some_lambda) do
-    #    all_sorts_of_stuff that will have errors logged
-    # end
-    def log_mapping_errors(context, aProc)
-      begin
-        yield
-      rescue Exception => e
-        msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
-
-        conf = self.context_for_logging
-
-        msg += "    while executing #{conf} defined at #{self.source_location}\n"
-        msg += Traject::Util.exception_to_log_message(e)
-
-        context.logger.error msg
-        begin
-          context.logger.debug "Record: " + context.source_record.to_s
-        rescue Exception => marc_to_s_exception
-          context.logger.debug "(Could not log record, #{marc_to_s_exception})"
-        end
-
-        raise e
-      end
-    end
-    
+    end    
     
   end
   
@@ -554,13 +552,13 @@ class Traject::Indexer
       accumulator = []
       [@lambda, @block].each do |aProc|
         next unless aProc
-        log_mapping_errors(context, aProc) do
-          if aProc.arity == 2
-            aProc.call(context.source_record, accumulator)
-          else
-            aProc.call(context.source_record, accumulator, context)
-          end
+
+        if aProc.arity == 2
+          aProc.call(context.source_record, accumulator)
+        else
+          aProc.call(context.source_record, accumulator, context)
         end
+
       end
       return accumulator
     end
