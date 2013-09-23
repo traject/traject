@@ -50,13 +50,13 @@ require 'traject/macros/basic'
 #  with a String name of class meeting the Writer contract.
 #
 class Traject::Indexer
-  
+
   # Arity error on a passed block
   class ArityError < ArgumentError; end
   class NamingError < ArgumentError; end
 
-  
-  
+
+
   include Traject::QualifiedConstGet
 
   attr_writer :reader_class, :writer_class
@@ -299,7 +299,7 @@ class Traject::Indexer
         else
           writer.put context
         end
-          
+
       end
 
     end
@@ -311,7 +311,7 @@ class Traject::Indexer
 
     thread_pool.raise_collected_exception!
 
-    
+
     writer.close if writer.respond_to?(:close)
 
     elapsed        = Time.now - start_time
@@ -325,7 +325,7 @@ class Traject::Indexer
 
     return true
   end
-  
+
   # Log that the current record is being skipped, using
   # data in context.position and context.skipmessage
   def log_skip(context)
@@ -370,7 +370,7 @@ class Traject::Indexer
       hash_init.each_pair do |key, value|
         self.send("#{key}=", value)
       end
-      
+
       @skip = false
     end
 
@@ -378,22 +378,22 @@ class Traject::Indexer
     attr_accessor :field_name, :source_record, :settings
     # 1-based position in stream of processed records.
     attr_accessor :position
-    
+
     # Should we be skipping this record?
     attr_accessor :skipmessage
-    
+
     # Set the fact that this record should be skipped, with an
     # optional message
     def skip!(msg = '(no message given)')
       @skipmessage = msg
       @skip = true
     end
-    
+
     # Should we skip this record?
     def skip?
       @skip
     end
-    
+
   end
 
 
@@ -405,10 +405,10 @@ class Traject::Indexer
   # for "to_field"
   #
   # source_location is just a string with filename and line number for
-  # showing to devs in debugging. 
+  # showing to devs in debugging.
   class Traject::Indexer::EachRecordStep
     attr_accessor :source_location, :lambda, :block
-    
+
     def initialize(lambda, block, source_location)
       self.lambda = lambda
       self.block = block
@@ -458,10 +458,10 @@ class Traject::Indexer
       "<each_record at #{source_location}>"
     end
   end
-  
-  
+
+
   # An indexing step definition for a "to_field" step to specific
-  # field. 
+  # field.
   class Traject::Indexer::ToFieldStep
     attr_accessor :field_name, :lambda, :block, :source_location
     def initialize(fieldname, lambda, block, source_location)
@@ -492,7 +492,7 @@ class Traject::Indexer
     def inspect
       "<to_field #{self.field_name} at #{self.source_location}>"
     end
-    
+
     def execute(context)
       accumulator = []
       [@lambda, @block].each do |aProc|
@@ -507,10 +507,10 @@ class Traject::Indexer
       end
       return accumulator
     end
-    
-  end
-  
 
-  
-  
+  end
+
+
+
+
 end
