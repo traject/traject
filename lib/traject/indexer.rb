@@ -492,14 +492,17 @@ class Traject::Indexer
   end
   
   
-  # Subclass of EachRecordStep for a "to_field" step to specific
-  # field, with differnet args in yield. 
-  class Traject::Indexer::ToFieldStep < Traject::Indexer::EachRecordStep
-    
-    attr_accessor :field_name
+  # An indexing step definition for a "to_field" step to specific
+  # field. 
+  class Traject::Indexer::ToFieldStep
+    attr_accessor :field_name, :lambda, :block, :source_location
     def initialize(fieldname, lambda, block, source_location)
       self.field_name = fieldname
-      super(lambda, block, source_location)
+      self.lambda = lambda
+      self.block = block
+      self.source_location = source_location
+
+      validate!
     end
 
     def validate!
