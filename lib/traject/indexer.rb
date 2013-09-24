@@ -432,10 +432,10 @@ class Traject::Indexer
         # but for positive arrity, we need 1 or 2 args
         if proc
           unless proc.is_a?(Proc)
-            raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} (#{self.inspect})")
+            raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} #{self.inspect}")
           end
           if (proc.arity == 0 || proc.arity > 2)
-            raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: (#{self.inspect})")
+            raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: #{self.inspect}")
           end
         end
       end
@@ -459,7 +459,7 @@ class Traject::Indexer
 
     # Over-ride inspect for outputting error messages etc.
     def inspect
-      "<each_record at #{source_location}>"
+      "(each_record at #{source_location})"
     end
   end
 
@@ -494,7 +494,7 @@ class Traject::Indexer
 
     # Override inspect for developer debug messages
     def inspect
-      "<to_field #{self.field_name} at #{self.source_location}>"
+      "(to_field #{self.field_name} at #{self.source_location})"
     end
 
     def execute(context)
