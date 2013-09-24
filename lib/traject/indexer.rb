@@ -198,14 +198,13 @@ class Traject::Indexer
       accumulator = log_mapping_errors(context, index_step) do
         index_step.execute(context) # will always return [] for an each_record step
       end
-      context.index_step =
 
       accumulator.compact!
       if accumulator.size > 0
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
 
-      context.index_step = index_step
+      context.index_step = nil
     end
 
     return context
