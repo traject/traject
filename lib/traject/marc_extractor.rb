@@ -120,7 +120,7 @@ module Traject
     # a String specification is a string (or array of strings) of form:
     #  {tag}{|indicators|}{subfields} separated by colons
     # tag is three chars (usually but not neccesarily numeric),
-    # indicators are optional two chars prefixed by hyphen,
+    # indicators are optional two chars enclosed in pipe ('|') characters,
     # subfields are optional list of chars (alphanumeric)
     #
     # indicator spec must be two chars, but one can be * meaning "don't care".

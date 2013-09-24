@@ -22,7 +22,7 @@ require 'traject/macros/basic'
 #   2) Responds to the usual ruby #each, returning a source record from each #each.
 #      (Including Enumerable is prob a good idea too)
 #
-#  The default reader is the Traject::MarcReader, who's behavior is
+#  The default reader is the Traject::Marc4JReader, who's behavior is
 #  further customized by several settings in the Settings hash.
 #
 #  Alternate readers can be set directly with the #reader_class= method, or
@@ -198,14 +198,13 @@ class Traject::Indexer
       accumulator = log_mapping_errors(context, index_step) do
         index_step.execute(context) # will always return [] for an each_record step
       end
-      context.index_step =
 
-      accumulator.compact!
       if accumulator.size > 0
+        accumulator.compact!
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
 
-      context.index_step = index_step
+      context.index_step = nil
     end
 
     return context
@@ -432,10 +431,10 @@ class Traject::Indexer
         # but for positive arrity, we need 1 or 2 args
         if proc
           unless proc.is_a?(Proc)
-            raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} (#{self.inspect})")
+            raise NamingError.new("argument to each_record must be a block/lambda, not a #{proc.class} #{self.inspect}")
           end
           if (proc.arity == 0 || proc.arity > 2)
-            raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: (#{self.inspect})")
+            raise ArityError.new("block/proc given to each_record needs 1 or 2 arguments: #{self.inspect}")
           end
         end
       end
@@ -459,7 +458,7 @@ class Traject::Indexer
 
     # Over-ride inspect for outputting error messages etc.
     def inspect
-      "<each_record at #{source_location}>"
+      "(each_record at #{source_location})"
     end
   end
 
@@ -494,7 +493,7 @@ class Traject::Indexer
 
     # Override inspect for developer debug messages
     def inspect
-      "<to_field #{self.field_name} at #{self.source_location}>"
+      "(to_field #{self.field_name} at #{self.source_location})"
     end
 
     def execute(context)

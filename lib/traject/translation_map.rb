@@ -194,7 +194,7 @@ module Traject
 
     class NotFound < Exception
       def initialize(path)
-        super("No translation map definition file found at '#{path}[.rb|.yaml]' in load path: #{$LOAD_PATH}")
+        super("No translation map definition file found at 'translation_maps/#{path}.[rb|yaml|properties]' in load path: #{$LOAD_PATH}")
       end
     end
 
