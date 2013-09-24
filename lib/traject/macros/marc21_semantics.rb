@@ -121,7 +121,7 @@ module Traject::Macros
     
       extractor = Traject::MarcExtractor.cached(spec, opts)
       lambda do |record, accumulator, context|
-        accumulator.concat HTMacros.get_with_and_without_filing(extractor, record)
+        accumulator.concat Marc21Semantics.get_with_and_without_filing(extractor, record)
         if only_first
           Traject::Macros::Marc21.first! accumulator
         end
@@ -139,6 +139,30 @@ module Traject::Macros
       end
     
     end
+    
+    # Takes a MARC::Extractor and a record and returns that string 
+    # with and without filing characters as specified by the 
+    # indicator 2. 
+    #
+    # Should probably test to make sure the passed in extractor
+    # actually asks for the first subfield, but that seems like
+    # more work than just telling people to make sure to do that.
+    
+    def self.get_with_and_without_filing(extractor, record)
+      rv = []
+      extractor.collect_matching_lines(record) do |field, spec, ext| 
+        str = ext.collect_subfields(field, spec).first
+        next unless str
+        non_filing = field.indicator2.to_i
+        non_filing_string = str[non_filing..-1]
+        rv << str
+        rv << non_filing_string unless str == non_filing_string
+      end
+      rv.uniq!
+      rv.compact!
+      rv
+    end
+  
     
     
 

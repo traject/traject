@@ -220,5 +220,18 @@ describe "Traject::Macros::Marc21Semantics" do
     end
 
   end
+  
+  describe "extract_with_and_without_filing_characters" do
+    it "works as expected" do
+      @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
+      @indexer.instance_eval do
+        to_field 'title_phrase', extract_with_and_without_filing_characters('245ab')
+      end
+      output = @indexer.map_record(@record)
+      assert_equal ['The Business renaissance quarterly', 'Business renaissance quarterly'], output['title_phrase']
+    end
+  end
+      
+      
 
 end
