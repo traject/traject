@@ -199,8 +199,8 @@ class Traject::Indexer
         index_step.execute(context) # will always return [] for an each_record step
       end
 
-      accumulator.compact!
       if accumulator.size > 0
+        accumulator.compact!
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
 
