@@ -105,6 +105,42 @@ module Traject::Macros
         str
       end.first
     end
+    
+    
+    # A more generic use of non-filing characters that differs in that
+    #   * you can pass in the spec you want, and
+    #   * it returns the values both with and without the filing characters
+    #
+    # Useful for when you want to really boost exact title searches, but 
+    # don't care whether or not the filing characters were used
+    
+    def extract_with_and_without_filing_characters(spec='245abdefghknp', opts={})
+      only_first              = opts.delete(:first)
+      trim_punctuation        = opts.delete(:trim_punctuation)
+      default_value           = opts.delete(:default)
+    
+      extractor = Traject::MarcExtractor.cached(spec, opts)
+      lambda do |record, accumulator, context|
+        accumulator.concat HTMacros.get_with_and_without_filing(extractor, record)
+        if only_first
+          Traject::Macros::Marc21.first! accumulator
+        end
+
+        if trim_punctuation
+          accumulator.map! {|s| Traject::Macros::Marc21.trim_punctuation(s)}
+        end
+
+        if default_value && accumulator.empty?
+          accumulator << default_value
+        end
+      
+        accumulator.uniq!
+      
+      end
+    
+    end
+    
+    
 
     # maps languages, by default out of 008[35-37] and 041a and 041d
     #
