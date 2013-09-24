@@ -31,13 +31,6 @@ module Traject::Macros
     # to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
     # to_field("id"),    extract_marc("001", :first => true)
     # to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
-    
-
-    #  A list of symbols that are valid keys in the options hash
-    EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default, 
-                                  :deduplicate, :uniq, :separator, :translation_map, 
-                                  :alternate_script]
-    
     def extract_marc(spec, options = {})
       
       # Raise an error if there are any invalid options, indicating a
@@ -91,7 +84,11 @@ module Traject::Macros
         
       end
     end
-
+    #  A list of symbols that are valid keys in the options hash
+    EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default, 
+                                  :deduplicate, :uniq, :separator, :translation_map, 
+                                  :alternate_script]
+                                  
     # Serializes complete marc record to a serialization format.
     # required param :format,
     # serialize_marc(:format => :binary)
@@ -110,9 +107,6 @@ module Traject::Macros
     #          serialized, with certain header bytes filled with ascii 0's
     #          -- technically illegal MARC, but can still be read by
     #          ruby MARC::Reader in permissive mode.
-    
-    SERIALZED_MARC_VALID_OPTIONS = [:format, :binary_escape, :allow_oversized, :format]
-    
     def serialized_marc(options)
       unless (options.keys - SERIALZED_MARC_VALID_OPTIONS).empty?
         raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - SERIALZED_MARC_VALID_OPTIONS).join(', ')}' in seralized_marc at #{Traject::Util.extract_caller_location(caller.first)}")
@@ -139,6 +133,7 @@ module Traject::Macros
         end
       end
     end
+    SERIALZED_MARC_VALID_OPTIONS = [:format, :binary_escape, :allow_oversized, :format]
 
     # Takes the whole record, by default from tags 100 to 899 inclusive,
     # all subfields, and adds them to output. Subfields in a record are all
@@ -153,9 +148,6 @@ module Traject::Macros
     #
     # Can always run this thing multiple times on the same field if you need
     # non-contiguous ranges of fields.
-    
-    EXTRACT_ALL_MARC_VALID_OPTIONS = [:separator, :from, :to]
-    
     def extract_all_marc_values(options = {})
       unless (options.keys - EXTRACT_ALL_MARC_VALID_OPTIONS).empty?
         raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - EXTRACT_ALL_MARC_VALID_OPTIONS).join(', ')}' in extract_all_marc at #{Traject::Util.extract_caller_location(caller.first)}")
@@ -177,6 +169,7 @@ module Traject::Macros
       end
 
     end
+    EXTRACT_ALL_MARC_VALID_OPTIONS = [:separator, :from, :to]
 
 
     # Trims punctuation mostly from end, and occasionally from beginning
