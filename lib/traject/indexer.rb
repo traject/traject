@@ -22,7 +22,7 @@ require 'traject/macros/basic'
 #   2) Responds to the usual ruby #each, returning a source record from each #each.
 #      (Including Enumerable is prob a good idea too)
 #
-#  The default reader is the Traject::MarcReader, who's behavior is
+#  The default reader is the Traject::Marc4JReader, who's behavior is
 #  further customized by several settings in the Settings hash.
 #
 #  Alternate readers can be set directly with the #reader_class= method, or
