@@ -60,21 +60,21 @@ module Traject::Macros
     end
 
     def self.get_sortable_author(record)
-      onexx = MarcExtractor.cached("100:110:111", :first => true).extract(record).first
+      onexx = MarcExtractor.cached("100:110:111", :first => true, :trim_punctuation => true).extract(record).first
       onexx = onexx.strip if onexx
-
+      
       titles = []
       MarcExtractor.cached("240:245", :first => true).each_matching_line(record) do |field, spec|
-        non_filing = field.indicator2.to_i
+        non_filing = field.indicator2.to_i        
 
-        str = field.subfields.collect {|sf| sf.value}.join(" ")
+        str = field.subfields.collect {|sf| Marc21.trim_punctuation(sf.value.strip).strip}.join(" ")
         str = str.slice(non_filing, str.length)
         titles << str
       end.first
       title = titles.first
       title = title.strip if title
-
-      return "#{onexx}#{title}"
+      
+      return [onexx, title].compact.join("   ")
     end
 
 

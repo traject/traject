@@ -50,7 +50,7 @@ describe "Traject::Macros::Marc21Semantics" do
     it "collates author and title" do
       output = @indexer.map_record(@record)
 
-      assert_equal ["Herman, Edward S.Manufacturing consent : the political economy of the mass media / Edward S. Herman and Noam Chomsky ; with a new introduction by the authors."], output["author_sort"]
+      assert_equal ["Herman, Edward S.   Manufacturing consent the political economy of the mass media Edward S. Herman and Noam Chomsky ; with a new introduction by the authors"], output["author_sort"]
     end
     it "respects non-filing" do
       @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
