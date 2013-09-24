@@ -180,6 +180,13 @@ describe "Traject::Macros::Marc21Semantics" do
 
       assert_nil output["discipline_no_default"]
     end
+
+    describe "LCC_REGEX" do
+      it "rejects a non-LCC" do
+        refute_match Traject::Macros::Marc21Semantics::LCC_REGEX, "Film no. A .N285"
+      end
+    end
+
   end
 
   describe "marc_geo_facet" do

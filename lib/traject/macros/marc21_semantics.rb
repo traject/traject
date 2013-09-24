@@ -312,7 +312,7 @@ module Traject::Macros
     # or nil.
     #
     # The categories output aren't great, but they're something.
-    LCC_REGEX = / *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
+    LCC_REGEX = /\A *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
     def marc_lcc_to_broad_category( options = {}, spec="050a:060a:090a:096a")
       # Trying to match things that look like LCC, and not match things
       # that don't. Is tricky.
