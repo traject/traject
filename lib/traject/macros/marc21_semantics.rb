@@ -391,6 +391,7 @@ module Traject::Macros
             accumulator.concat z_fields
           end
         end
+        accumulator.uniq!
       end
     end
 
@@ -429,6 +430,7 @@ module Traject::Macros
             end
           end
         end
+        accumulator.uniq!
       end
     end
 
