@@ -56,6 +56,9 @@ describe "MarcFormatClassifier" do
        assert ! classifier_for("manufacturing_consent.marc").microform?
        assert ! classifier_for("online_only.marc").microform?
     end
+    it "catches microform in an 007" do
+      assert classifier_for("nature.marc").microform?
+    end
   end
 
   describe "conference?" do

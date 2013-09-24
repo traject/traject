@@ -146,11 +146,11 @@ module Traject
 
       # if field 007 byte 0 is 'h', that's microform. But many of our microform
       # don't have that. If leader byte 6 is 'h', that's an obsolete way of saying
-      # microform. And finally, if GMD is 
+      # microform. And finally, if GMD is
       def microform?
         normalized_gmd.start_with?("[microform]") ||
-        record.leader['6'] == "h" ||
-        record.find {|f| (f.tag == "007") && (f.value['0'] == "h")}
+        record.leader[6] == "h" ||
+        record.find {|f| (f.tag == "007") && (f.value[0] == "h")}
       end
 
       # Marked as manuscript OR archive. 
@@ -159,7 +159,7 @@ module Traject
         leader08 = record.leader.slice(8)
 
         # leader 6 t=Manuscript Language Material, d=Manuscript Music,
-        # f=Manuscript Cartograhpic 
+        # f=Manuscript Cartographic
         #
         # leader 06 = 'b' is obsolete, but if it exists it means archival countrl
         #
