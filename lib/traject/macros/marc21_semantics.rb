@@ -107,64 +107,64 @@ module Traject::Macros
     end
     
     
-    # A more generic use of non-filing characters that differs in that
-    #   * you can pass in the spec you want, and
-    #   * it returns the values both with and without the filing characters
+    
+    # A generic way to strip a filing version (i.e., a string with the non-filing
+    # characters stripped off)
     #
-    # Useful for when you want to really boost exact title searches, but 
-    # don't care whether or not the filing characters were used
+    # Always returns an array. If :include_original=>true is passed in,
+    # that array will include the original string with the non-filing
+    # characters still in it.
     
-    def extract_with_and_without_filing_characters(spec='245abdefghknp', opts={})
-      only_first              = opts.delete(:first)
-      trim_punctuation        = opts.delete(:trim_punctuation)
-      default_value           = opts.delete(:default)
-    
+    def extract_marc_filing_version(spec='245abdefghknp', opts={})
+      include_original = opts.delete(:include_original)
+      if opts.size > 0
+        raise RuntimeError.new("extract_marc_filing_version can take only :include_original as an argument, not #{opts.keys.join(', ')}")
+      end
+      
       extractor = Traject::MarcExtractor.cached(spec, opts)
+      
       lambda do |record, accumulator, context|
-        accumulator.concat Marc21Semantics.get_with_and_without_filing(extractor, record)
-        if only_first
-          Traject::Macros::Marc21.first! accumulator
+        extractor.collect_matching_lines(record) do |field, spec| 
+          str = extractor.collect_subfields(field, spec).first
+          next unless str and !str.empty?
+          vals = [Marc21Semantics.filing_version(field, str, spec)]
+          if include_original
+            vals.unshift str
+            vals.uniq!
+          end
+          accumulator.concat vals
         end
-
-        if trim_punctuation
-          accumulator.map! {|s| Traject::Macros::Marc21.trim_punctuation(s)}
-        end
-
-        if default_value && accumulator.empty?
-          accumulator << default_value
-        end
-      
-        accumulator.uniq!
-      
       end
-    
     end
+            
+      
     
-    # Takes a MARC::Extractor and a record and returns that string 
-    # with and without filing characters as specified by the 
-    # indicator 2. 
-    #
-    # Should probably test to make sure the passed in extractor
-    # actually asks for the first subfield, but that seems like
-    # more work than just telling people to make sure to do that.
     
-    def self.get_with_and_without_filing(extractor, record)
-      rv = []
-      extractor.collect_matching_lines(record) do |field, spec, ext| 
-        str = ext.collect_subfields(field, spec).first
-        next unless str
-        non_filing = field.indicator2.to_i
-        non_filing_string = str[non_filing..-1]
-        rv << str
-        rv << non_filing_string unless str == non_filing_string
-      end
-      rv.uniq!
-      rv.compact!
-      rv
+    # Take in a field, a string extracted from that field, and a spec and
+    # return the filing version (i.e., the string without the 
+    # non-filing characters)
+    
+    def self.filing_version(field, str, spechash)
+      # Control fields don't have non-filing characters
+      return str if field.kind_of? MARC::ControlField
+      
+      # 2nd indicator must be > 0
+      ind2 = field.indicator2.to_i
+      return str unless ind2 > 0
+      
+      # The spechash must either (a) have no subfields specified, or
+      # (b) include the first subfield in the record
+      
+      subs = spechash[:subfields]
+      return str unless subs && subs.include?(field.subfields[0].code)
+      
+      # OK. If we got this far we actually need to strip characters off the string
+      
+      return str[ind2..-1]
     end
-  
+      
     
-    
+
 
     # maps languages, by default out of 008[35-37] and 041a and 041d
     #
