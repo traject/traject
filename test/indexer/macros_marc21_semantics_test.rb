@@ -242,6 +242,15 @@ describe "Traject::Macros::Marc21Semantics" do
       assert_equal ['The Business renaissance quarterly', 'Business renaissance quarterly'], output['title_phrase']
     end
     
+    it "doesn't do anything if you don't include the first subfield" do
+      @indexer.instance_eval do
+        to_field 'title_phrase', extract_marc_filing_version('245h')
+      end
+      output = @indexer.map_record(@record)
+      assert_equal ['[electronic resource].'], output['title_phrase']
+    end
+      
+    
     it "dies if you pass it something else" do
       assert_raises(RuntimeError) do
         @indexer.instance_eval do
