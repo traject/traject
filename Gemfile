@@ -8,5 +8,5 @@ group :development do
 end
 
 group :debug do
-  gem "pry"
+  gem "ruby-debug"
 end
