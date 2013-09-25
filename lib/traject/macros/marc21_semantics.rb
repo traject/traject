@@ -212,9 +212,16 @@ module Traject::Macros
       extractor = MarcExtractor.new(spec)
 
       lambda do |record, accumulator|
-        accumulator.concat( extractor.collect_matching_lines(record) do |field, spec, extractor|
+        values = extractor.collect_matching_lines(record) do |field, spec, extractor|
           extractor.collect_subfields(field, spec) unless (field.tag == "490" && field.indicator1 == "1")
-        end.compact)
+        end.compact
+
+        # trim punctuation
+        values.collect! do |s|
+          Marc21.trim_punctuation(s)
+        end
+
+        accumulator.concat( values )
       end
     end
 

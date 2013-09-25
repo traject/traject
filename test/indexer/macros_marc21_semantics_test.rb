@@ -36,7 +36,8 @@ describe "Traject::Macros::Marc21Semantics" do
     end
     output = @indexer.map_record(@record)
 
-    assert_equal ["Big bands."], output["series_facet"]
+    # trims punctuation too
+    assert_equal ["Big bands"], output["series_facet"]
   end
 
   describe "marc_sortable_author" do
