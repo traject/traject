@@ -136,7 +136,7 @@ module Traject::Macros
         end
       end
     end
-    SERIALZED_MARC_VALID_OPTIONS = [:format, :binary_escape, :allow_oversized, :format]
+    SERIALZED_MARC_VALID_OPTIONS = [:format, :binary_escape, :allow_oversized]
 
     # Takes the whole record, by default from tags 100 to 899 inclusive,
     # all subfields, and adds them to output. Subfields in a record are all
