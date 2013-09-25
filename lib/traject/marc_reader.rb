@@ -1,4 +1,5 @@
 require 'marc'
+require 'traject/ndj_reader' 
 
 # A Reader class that can be used with Traject::Indexer.reader, to read
 # MARC records.
@@ -16,7 +17,7 @@ require 'marc'
 #   ["marc_source.type"]  serialization type. default 'binary'
 #                 * "binary". Actual marc.
 #                 * "xml", MarcXML
-#                 * "json". (NOT YET IMPLEMENTED) The "marc-in-json" format, encoded as newline-separated
+#                 * "json" The "marc-in-json" format, encoded as newline-separated
 #                   json. A simplistic newline-separated json, with no comments
 #                   allowed, and no unescpaed internal newlines allowed in the json
 #                   objects -- we just read line by line, and assume each line is a
@@ -50,6 +51,8 @@ class Traject::MarcReader
         when "xml"
           parser = settings["marc_reader.xml_parser"] || @@best_xml_parser
           MARC::XMLReader.new(self.input_stream, :parser=> parser)
+        when 'json'
+          Traject::NDJReader.new(self.input_stream, settings)
         else
           MARC::Reader.new(self.input_stream)
         end
