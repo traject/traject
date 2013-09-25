@@ -118,7 +118,7 @@ module Traject::Macros
     def extract_marc_filing_version(spec='245abdefghknp', opts={})
       include_original = opts.delete(:include_original)
       if opts.size > 0
-        raise RuntimeError.new("extract_marc_filing_version can take only :include_original as an argument, not #{opts.keys.join(', ')}")
+        raise RuntimeError.new("extract_marc_filing_version can take only :include_original as an argument, not #{opts.keys.map{|x| "'#{x}'"}.join(' or ')}")
       end
       
       extractor = Traject::MarcExtractor.cached(spec, opts)
