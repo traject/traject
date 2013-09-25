@@ -17,7 +17,7 @@ module Traject::Macros
     # MarcExtractor::parse_string_spec.
     #
     # Second arg is optional options, including options valid on MarcExtractor.new,
-    # and others. (TODO)
+    # and others. By default, will de-duplicate results, but see :allow_duplicates
     #
     # * :first => true: take only first value
     # * :translation_map => String: translate with named translation map looked up in load
@@ -25,6 +25,9 @@ module Traject::Macros
     # * :trim_punctuation => true; trims leading/trailing punctuation using standard algorithms that
     #     have shown themselves useful with Marc, using Marc21.trim_punctuation
     # * :default => String: if otherwise empty, add default value
+    # * :allow_duplicates => boolean, default false, if set to true then will avoid
+    #       de-duplicating the result array (array.uniq!)
+    #
     #
     # Examples:
     #
@@ -43,7 +46,7 @@ module Traject::Macros
       only_first              = options.delete(:first)
       trim_punctuation        = options.delete(:trim_punctuation)
       default_value           = options.delete(:default)
-      deduplicate             = options.delete(:deduplicate) ||  options.delete(:uniq)
+      allow_duplicates        = options.delete(:allow_duplicates)
 
       # We create the TranslationMap and the MarcExtractor here
       # on load, so the lambda can just refer to already created
@@ -74,7 +77,7 @@ module Traject::Macros
           accumulator.collect! {|s| Marc21.trim_punctuation(s)}
         end
         
-        if deduplicate
+        unless allow_duplicates
           accumulator.uniq!
         end
 
@@ -86,7 +89,7 @@ module Traject::Macros
     end
     #  A list of symbols that are valid keys in the options hash
     EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default, 
-                                  :deduplicate, :uniq, :separator, :translation_map, 
+                                  :allow_duplicates, :separator, :translation_map, 
                                   :alternate_script]
                                   
     # Serializes complete marc record to a serialization format.
