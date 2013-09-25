@@ -105,6 +105,66 @@ module Traject::Macros
         str
       end.first
     end
+    
+    
+    
+    # A generic way to strip a filing version (i.e., a string with the non-filing
+    # characters stripped off)
+    #
+    # Always returns an array. If :include_original=>true is passed in,
+    # that array will include the original string with the non-filing
+    # characters still in it.
+    
+    def extract_marc_filing_version(spec='245abdefghknp', opts={})
+      include_original = opts.delete(:include_original)
+      if opts.size > 0
+        raise RuntimeError.new("extract_marc_filing_version can take only :include_original as an argument, not #{opts.keys.map{|x| "'#{x}'"}.join(' or ')}")
+      end
+      
+      extractor = Traject::MarcExtractor.cached(spec, opts)
+      
+      lambda do |record, accumulator, context|
+        extractor.collect_matching_lines(record) do |field, spec| 
+          str = extractor.collect_subfields(field, spec).first
+          next unless str and !str.empty?
+          vals = [Marc21Semantics.filing_version(field, str, spec)]
+          if include_original
+            vals.unshift str
+            vals.uniq!
+          end
+          accumulator.concat vals
+        end
+      end
+    end
+            
+      
+    
+    
+    # Take in a field, a string extracted from that field, and a spec and
+    # return the filing version (i.e., the string without the 
+    # non-filing characters)
+    
+    def self.filing_version(field, str, spechash)
+      # Control fields don't have non-filing characters
+      return str if field.kind_of? MARC::ControlField
+      
+      # 2nd indicator must be > 0
+      ind2 = field.indicator2.to_i
+      return str unless ind2 > 0
+      
+      # The spechash must either (a) have no subfields specified, or
+      # (b) include the first subfield in the record
+      
+      subs = spechash[:subfields]
+      return str unless subs && subs.include?(field.subfields[0].code)
+      
+      # OK. If we got this far we actually need to strip characters off the string
+      
+      return str[ind2..-1]
+    end
+      
+    
+
 
     # maps languages, by default out of 008[35-37] and 041a and 041d
     #
