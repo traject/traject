@@ -171,11 +171,6 @@ Other examples of the specification string, which can include multiple tag menti
   
   # Same thing, but more explicit
   to_field "isbn", extract_marc("020a:020z")
-  
-  
-  # Make sure that you don't get any duplicates
-  # by passing in ":deduplicate => true"
-  to_field 'language008', extract_marc('008[35-37]', :deduplicate=>true)
 ~~~
 
 The `extract_marc` function *by default* includes any linked
