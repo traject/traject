@@ -181,7 +181,9 @@ to use the `:first` option if you really only want one.
 For MARC control (aka 'fixed') fields, you can use square
 brackets to take a slice by byte offset.
 
+~~~ruby
     to_field "langauge_code", extract_marc("008[35-37]")
+~~~
 
 `extract_marc` also supports `translation maps` similar
 to SolrMarc's. There are some translation maps provided by traject,
@@ -189,9 +191,11 @@ and you can also define your own. translation maps can be supplied
 in yaml or ruby.  Translation maps are especially useful
 for mapping form MARC codes to user-displayable strings. See Traject::TranslationMap for more info:
 
+~~~ruby
     # "translation_map" will be passed to Traject::TranslationMap.new
     # and the created map used to translate all values
     to_field "language", extract_marc("008[35-37]:041a:041d", :translation_map => "marc_language_code")
+~~~
 
 #### Direct indexing logic vs. Macros
 
