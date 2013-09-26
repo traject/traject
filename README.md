@@ -49,8 +49,9 @@ The traject command-line utility requires you to supply it with a configuration 
 
 Configuration files are actually just ruby -- so by convention they end in `.rb`.
 
-Don't worry, you don't neccesarily need to know ruby well to write them, they give you a subset of ruby to work with. But the full power
-of ruby is available to you.
+We hope you can write basic useful configuration files without being a ruby expert,
+they give you a subset of ruby to work with. But the full power
+of ruby is available to you if needed. 
 
 **rubyist tip**: Technically, config files are executed with `instance_eval` in a Traject::Indexer instance, so the special commands you see are just methods on Traject::Indexer (or mixed into it). But you can
 call ordinary ruby `require` in config files, etc., too, to load
@@ -83,9 +84,6 @@ settings do
   # default source type is binary, traject can't guess
   # you have to tell it.
   provide "marc_source.type", "xml"
-
-  # settings can be set on command line instead of
-  # config file too.
 
   # various others...
   provide "solrj_writer.commit_on_close", "true"
@@ -169,13 +167,9 @@ Other examples of the specification string, which can include multiple tag menti
   # each in separate strings:
   to_field "isbn", extract_marc("020az", :separator => nil)
   
-  # Same thing, but more explicit
-  to_field "isbn", extract_marc("020a:020z")
-  
-  
-  # Make sure that you don't get any duplicates
-  # by passing in ":deduplicate => true"
-  to_field 'language008', extract_marc('008[35-37]', :deduplicate=>true)
+  # Can list tag twice with different field combinations
+  # to extract seperately
+  to_field "isbn", extract_marc("245a:245abcde")
 ~~~
 
 The `extract_marc` function *by default* includes any linked
@@ -185,17 +179,21 @@ to use the `:first` option if you really only want one.
 For MARC control (aka 'fixed') fields, you can use square
 brackets to take a slice by byte offset.
 
+~~~ruby
     to_field "langauge_code", extract_marc("008[35-37]")
+~~~
 
 `extract_marc` also supports `translation maps` similar
-to SolrMarc's. There will be some translation maps built in,
-and you can provide your own. translation maps can be supplied
+to SolrMarc's. There are some translation maps provided by traject,
+and you can also define your own. translation maps can be supplied
 in yaml or ruby.  Translation maps are especially useful
-for mapping form MARC codes to user-displayable strings. See Traject::TranslationMap for more info:
+for mapping form MARC codes to user-displayable strings. See [Traject::TranslationMap](./lib/traject/translation_map.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/TranslationMap)) for more info:
 
+~~~ruby
     # "translation_map" will be passed to Traject::TranslationMap.new
     # and the created map used to translate all values
     to_field "language", extract_marc("008[35-37]:041a:041d", :translation_map => "marc_language_code")
+~~~
 
 #### Direct indexing logic vs. Macros
 

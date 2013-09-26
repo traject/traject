@@ -7,7 +7,7 @@ module Traject
   # A TranslationMap is basically just something that has a hash-like #[]
   # method to map from input strings to output strings:
   #
-  #   translation_map["some_input"] #=> some_output
+  #    translation_map["some_input"] #=> some_output
   #
   # Input is assumed to always be string, output is either string
   # or array of strings.
@@ -17,10 +17,10 @@ module Traject
   # yaml, or java .properties.  (Limited basic .properties, don't try any fancy escaping please,
   # no = or : in key names, no split lines.)
   #
-  # TranslationMap.new("dir/some_file")
+  #     TranslationMap.new("dir/some_file")
   #
-  # Will look through the entire ruby $LOAD_PATH, for a translation_maps subdir
-  # that contains either some_file.rb OR  some_file.yaml OR some_file.properties. 
+  # Will look for a file named `some_file.rb` or `some_file.yaml` or `some_file.properties`, 
+  # somewhere in the ruby $LOAD_PATH in a `/translation_maps` subdir. 
   # * Looks for "/translation_maps" subdir in load paths, so
   #   for instance you can have a gem that keeps translation maps
   #   in ./lib/translation_maps, and it Just Works. 
@@ -47,12 +47,12 @@ module Traject
   # Or, when calling TranslationMap.new(), you can pass in options over-riding special
   # key too:
   #
-  #  TranslationMap.new("something", :default => "foo")
-  #  TranslationMap.new("something", :default => :passthrough)
+  #    TranslationMap.new("something", :default => "foo")
+  #    TranslationMap.new("something", :default => :passthrough)
   #
   # == Output: String or array of strings
   #
-  # The output can be a string or an array of strings, or nil.  It should not be anything
+  # The output can be a string or an array of strings, or nil.  It should not be anything else.
   # When used with the #translate_array! method, one string can be replaced by multiple values
   # (array of strings) or removed (nil)
   #

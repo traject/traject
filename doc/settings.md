@@ -4,7 +4,8 @@ Traject settings are a flat list of key/value pairs -- a single
 Hash, not nested. Keys are always strings, and dots (".") can be
 used for grouping and namespacing.
 
-Values are usually strings, but occasionally something else.
+Values are usually strings, but occasionally something else. String values can be easily
+set via the command line. 
 
 Settings can be set in configuration files, usually like:
 
@@ -16,6 +17,11 @@ end
 
 or on the command line: `-s key=value`.  There are also some command line shortcuts
 for commonly used settings, see `traject -h`. 
+
+`provide` will only set the key if it was previously unset, so first time to set 'wins'. And command-line 
+settings are applied first of all. It's recommended you use `provide`. 
+
+`store` is also available, and forces setting of the new value overriding any previous value set. 
 
 ## Known settings
 
