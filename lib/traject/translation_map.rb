@@ -19,8 +19,8 @@ module Traject
   #
   # TranslationMap.new("dir/some_file")
   #
-  # Will look through the entire ruby $LOAD_PATH, for a translation_maps subdir
-  # that contains either some_file.rb OR  some_file.yaml OR some_file.properties. 
+  # Will look for a file named `some_file.rb` or `some_file.yaml` or `some_file.properties`, 
+  # somewhere in the ruby $LOAD_PATH in a `/translation_maps` subdir. 
   # * Looks for "/translation_maps" subdir in load paths, so
   #   for instance you can have a gem that keeps translation maps
   #   in ./lib/translation_maps, and it Just Works. 
@@ -47,8 +47,8 @@ module Traject
   # Or, when calling TranslationMap.new(), you can pass in options over-riding special
   # key too:
   #
-  #  TranslationMap.new("something", :default => "foo")
-  #  TranslationMap.new("something", :default => :passthrough)
+  #    TranslationMap.new("something", :default => "foo")
+  #    TranslationMap.new("something", :default => :passthrough)
   #
   # == Output: String or array of strings
   #
