@@ -4,7 +4,8 @@ Traject settings are a flat list of key/value pairs -- a single
 Hash, not nested. Keys are always strings, and dots (".") can be
 used for grouping and namespacing.
 
-Values are usually strings, but occasionally something else.
+Values are usually strings, but occasionally something else. String values can be easily
+set via the command line. 
 
 Settings can be set in configuration files, usually like:
 
