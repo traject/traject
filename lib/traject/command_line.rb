@@ -268,10 +268,6 @@ module Traject
       if options[:solr]
         settings["solr.url"] = options[:solr]
       end
-      if options[:j]
-        settings["writer_class_name"] = "JsonWriter"
-        settings["json_writer.pretty_print"] = "true"
-      end
       if options[:marc_type]
         settings["marc_source.type"] = options[:marc_type]
       end
@@ -296,12 +292,11 @@ module Traject
         on :o, "output_file", "output file for Writer classes that write to files", :argument => true
         on :w, :writer, "Set writer class, shortcut for -s writer_class_name=", :argument => true
         on :u, :solr, "Set solr url, shortcut for -s solr.url=", :argument => true
-        on :j, "output as pretty printed json, shortcut for -s writer_class_name=JsonWriter -s json_writer.pretty_print=true"
         on :t, :marc_type, "xml, json or binary. shortcut for -s marc_source.type=", :argument => true
         on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
         on :G, "Gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => nil
 
-        on :x, "command", "alternate traject command: process (default); marcout", :argument => true, :default => "process"
+        on :x, "command", "alternate traject command: process (default); marcout; commit", :argument => true, :default => "process"
 
         on "stdin", "read input from stdin"
         on "debug-mode", "debug logging, single threaded, output human readable hashes"
