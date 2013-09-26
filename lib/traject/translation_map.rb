@@ -52,7 +52,7 @@ module Traject
   #
   # == Output: String or array of strings
   #
-  # The output can be a string or an array of strings, or nil.  It should not be anything
+  # The output can be a string or an array of strings, or nil.  It should not be anything else.
   # When used with the #translate_array! method, one string can be replaced by multiple values
   # (array of strings) or removed (nil)
   #
