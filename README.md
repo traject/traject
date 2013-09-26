@@ -184,8 +184,8 @@ brackets to take a slice by byte offset.
     to_field "langauge_code", extract_marc("008[35-37]")
 
 `extract_marc` also supports `translation maps` similar
-to SolrMarc's. There will be some translation maps built in,
-and you can provide your own. translation maps can be supplied
+to SolrMarc's. There are some translation maps provided by traject,
+and you can also define your own. translation maps can be supplied
 in yaml or ruby.  Translation maps are especially useful
 for mapping form MARC codes to user-displayable strings. See Traject::TranslationMap for more info:
 
