@@ -348,11 +348,11 @@ This will over-ride any settings set with `provide` in conf files.
 There are some built-in command-line option shortcuts for useful
 settings:
 
-Use `-j` to output as pretty-printed JSON
-hashes, instead of sending to solr. Useful for debugging or sanity
-checking.
+Use `--debug-mode` to output in a human-readable format, instead of sending to solr.
+Also turns on debug logging and restricts processing to single-threaded. Useful for
+debugging or sanity checking.
 
-    traject -j -c conf_file.rb marc_file
+    traject --debug-mode -c conf_file.rb marc_file
 
 Use `-u` as a shortcut for `s solr.url=X`
 
