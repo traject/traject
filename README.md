@@ -169,8 +169,9 @@ Other examples of the specification string, which can include multiple tag menti
   # each in separate strings:
   to_field "isbn", extract_marc("020az", :separator => nil)
   
-  # Same thing, but more explicit
-  to_field "isbn", extract_marc("020a:020z")
+  # Can list tag twice with different field combinations
+  # to extract seperately
+  to_field "isbn", extract_marc("245a:245abcde")
 ~~~
 
 The `extract_marc` function *by default* includes any linked
