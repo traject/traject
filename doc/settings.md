@@ -17,6 +17,11 @@ end
 or on the command line: `-s key=value`.  There are also some command line shortcuts
 for commonly used settings, see `traject -h`. 
 
+`provide` will only set the key if it was previously unset, so first time to set 'wins'. And command-line 
+settings are applied first of all. It's recommended you use `provide`. 
+
+`store` is also available, and forces setting of the new value overriding any previous value set. 
+
 ## Known settings
 
 * `debug_ascii_progress`: true/'true' to print ascii characters to STDERR indicating progress. Note,
