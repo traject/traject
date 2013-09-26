@@ -267,7 +267,19 @@ module Traject
 
       return subfields if subfields.empty? # empty array, just return it.
 
-      return options[:separator] ? [ subfields.join( options[:separator]) ] : subfields
+      # If we have a separator AND more than one subfield explicitly 
+      # specified, join the values  with the separator
+      #
+      # Weird logic because we want, e.g., '041a' to provide a value 
+      # for each repeated 'a' subfield, not concatentate them all 
+      # together
+      if options[:separator]
+        if spec[:subfields].nil? or spec[:subfields].size >  1
+          subfields = [subfields.join(options[:separator])]
+        end
+      end
+      
+      return subfields
     end
 
 

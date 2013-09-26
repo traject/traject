@@ -51,6 +51,27 @@ describe "Traject::Indexer.to_field" do
       flunk("Should only fail with a NamingError")
     end
   end
-
+  
+  # Just verifying this is how it works
+  it "doesn't allow you to just wholesale assignment to the accumulator" do
+    @indexer.to_field('foo') do |rec, acc|
+      acc = ['hello']
+    end
+    output = @indexer.map_record('never looked at')
+    assert_equal nil, output['foo']
+  end
+  
+  it "allows use of accumulator.replace" do
+    @indexer.to_field('foo') do |rec, acc|
+      acc.replace ['hello']
+    end
+    output = @indexer.map_record('never looked at')
+    assert_equal ['hello'], output['foo']
+  end
+  
   
 end
+
+
+
+
