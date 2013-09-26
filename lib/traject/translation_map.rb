@@ -7,7 +7,7 @@ module Traject
   # A TranslationMap is basically just something that has a hash-like #[]
   # method to map from input strings to output strings:
   #
-  #   translation_map["some_input"] #=> some_output
+  #    translation_map["some_input"] #=> some_output
   #
   # Input is assumed to always be string, output is either string
   # or array of strings.
@@ -17,7 +17,7 @@ module Traject
   # yaml, or java .properties.  (Limited basic .properties, don't try any fancy escaping please,
   # no = or : in key names, no split lines.)
   #
-  # TranslationMap.new("dir/some_file")
+  #     TranslationMap.new("dir/some_file")
   #
   # Will look for a file named `some_file.rb` or `some_file.yaml` or `some_file.properties`, 
   # somewhere in the ruby $LOAD_PATH in a `/translation_maps` subdir. 
