@@ -267,19 +267,42 @@ module Traject
 
       return subfields if subfields.empty? # empty array, just return it.
 
-      # If we have a separator AND more than one subfield explicitly 
-      # specified, join the values  with the separator
-      #
-      # Weird logic because we want, e.g., '041a' to provide a value 
-      # for each repeated 'a' subfield, not concatentate them all 
-      # together
-      if options[:separator]
-        if spec[:subfields].nil? or spec[:subfields].size >  1
-          subfields = [subfields.join(options[:separator])]
-        end
+
+      if join_subfields?(spec)
+        subfields = [subfields.join(options[:separator])]
       end
       
       return subfields
+    end
+
+
+    # Figure out if we should be calling #join on the results
+    # from various subfields, or if we should be just leaving them
+    # alone
+    #
+    # * If :separator == nil, we don't join
+    # * If there's only one subfield in the spec, we don't join (even if that subfield is repeated in the field)
+    #
+    # Note that as a special case, if you repeat a subfield (e.g., '633aa'), that
+    # is interpreted as having more than one subfield, so we'll go ahead and join.
+    # This gives rise to the special syntax for forcing a join of repeated subfields, e.g.
+    #
+    #  * '633a' will return one value for each $a in the field
+    #  * '633aa' will return a single string joining all the values of all the $a's.
+
+    def join_subfields?(spec)
+      # If the :separator is undefined, we can't join.
+      return false unless options[:separator]
+
+      # If no subfields are specified, go ahead and join
+      return true unless spec.has_key?(:subfields)
+
+      # Don't join if exactly one subfield is specified
+      return false if spec[:subfields].size == 1
+
+      # Otherwise, go ahead and join
+
+      return true
     end
 
 

@@ -340,7 +340,7 @@ describe "Traject::MarcExtractor" do
       f = @record.fields('245').first
       title_a = f['a']
       f.append(MARC::Subfield.new('a', title_a))
-
+      results = ex.extract(@record)
       assert_equal ["#{title_a} #{title_a}"], results
     end
     

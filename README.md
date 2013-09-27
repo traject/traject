@@ -176,6 +176,17 @@ The `extract_marc` function *by default* includes any linked
 MARC `880` fields with alternate-script versions. Another reason
 to use the `:first` option if you really only want one.
 
+Finally, `extract_marc` has special logic to deal with repeated subfields.
+The rules are:
+
+* If you specify `:separator=>nil`, values are never joined no matter what
+* If you don't specify any subfields (e.g., '245'), all the values are joined and returned
+* If you specify _exactly one subfield_ (e.g., '633a'), multiple values (due to repeated subfields)
+will _not be joined_ no matter what the value of the :separator is.
+* If you _want_ repeated subfields to be joined by the `:separator`, you can cheat by specifying the subfield twice
+(e.g., '633aa').
+
+
 For MARC control (aka 'fixed') fields, you can use square
 brackets to take a slice by byte offset.
 
