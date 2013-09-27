@@ -176,15 +176,42 @@ The `extract_marc` function *by default* includes any linked
 MARC `880` fields with alternate-script versions. Another reason
 to use the `:first` option if you really only want one.
 
-Finally, `extract_marc` has special logic to deal with repeated subfields.
+Finally, `extract_marc` has special logic to deal with the case when subfields
+are repeated within a single field.
 The rules are:
 
-* If you specify `:separator=>nil`, values are never joined no matter what
-* If you don't specify any subfields (e.g., '245'), all the values are joined and returned
-* If you specify _exactly one subfield_ (e.g., '633a'), multiple values (due to repeated subfields)
-will _not be joined_ no matter what the value of the :separator is.
-* If you _want_ repeated subfields to be joined by the `:separator`, you can cheat by specifying the subfield twice
-(e.g., '633aa').
+1. *SPECIAL CASE*: If you specify `:separator=>nil`, values are never joined no matter what, and you'll get one value for each matching subfield.
+2. If you don't specify any subfields (e.g., '245'), it's treated as if you specified _all_ the subfields and all the
+subfield values are joined and returned as a single string (except see #1)
+3. If you explicitly specify multiple subfields (e.g., '245ab'), the values of all matching subfields will be joined and
+returned as a single string (except see #1)
+4. *SPECIAL CASE*: If you specify _exactly one subfield_ (e.g., '633a'), you'll get one value for each matching subfield
+(i.e. usually a single value, but if the one subfield you're looking for is repeated, you'll get multiple values)
+5. If you actually _want_ the values of a repeated subfield to be joined by the `:separator` in the case where you're
+only specifying a single subfield, you can force the matter by specifying the subfield twice, e.g.,
+'633aa', but again see #1, above.
+
+So, given a record with exactly one field
+
+     999 $a one $b two $a three
+
+ ...we'd get the following:
+
+~~~ruby
+# record has a single field:
+#     999 $a one $b two $a three
+
+extract_marc('999')                    #=> ["one two three"]       (rule #2, one value)
+extract_marc('999', :separator=>nil)   #=> ['one', 'two', 'three'] (rule #1, multiple values)
+extract_marc('999ab')                  #=> ["one two three"]       (rule #3, one value)
+extract_marc('999a')                   #=> ['one', 'three']        (rule #4, multiple values)
+extract_marc('999b')                   #=> ['two']                 (rule #4, but there's one matching subfield)
+extract_marc('999aa')                  #=> ["one three"]           (rule #5, one value)
+extract_marc('999aa', :separator=>nil) #=> ['one', 'three']        (rule #1, multiple values)
+~~~
+
+
+
 
 
 For MARC control (aka 'fixed') fields, you can use square

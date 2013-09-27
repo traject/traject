@@ -291,12 +291,9 @@ module Traject
     #  * '633aa' will return a single string joining all the values of all the $a's.
 
     def join_subfields?(spec)
-      if options[:separator] && (spec[:subfields].nil? || spec[:subfields].size != 1)
-        return true
-      else
-        return false
-      end
-    end
+      return options[:separator] &&
+             (spec[:subfields].nil? || spec[:subfields].size != 1)
+     end
 
 
     # Find a spec, if any, covering extraction from this field
