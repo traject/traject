@@ -334,6 +334,15 @@ describe "Traject::MarcExtractor" do
       results = ex.extract(@record)
       assert_equal [title_a, title_a], results
     end
+
+    it "concats single subfield spec when given as eg 245aa" do
+      ex = Traject::MarcExtractor.new("245aa")
+      f = @record.fields('245').first
+      title_a = f['a']
+      f.append(MARC::Subfield.new('a', title_a))
+
+      assert_equal ["#{title_a} #{title_a}"], results
+    end
     
     it "provides single value for repeated subfields with multiple specified subfields" do
       ex = Traject::MarcExtractor.new("245ab")
