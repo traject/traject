@@ -197,7 +197,9 @@ module Traject
     #
     # See tests for more examples.
     def self.parse_string_spec(spec_string)
-      hash = {}
+      # hash defaults to []
+      hash = Hash.new {|hash,key| hash[key] = []}
+
       spec_strings = spec_string.is_a?(Array) ? spec_string.map{|s| s.split(/\s*:\s*/)}.flatten : spec_string.split(/s*:\s*/)
 
       spec_strings.each do |part|
@@ -205,7 +207,6 @@ module Traject
           # variable field
           tag, indicators, subfields = $1, $3, $4
 
-          hash[tag] ||= []
           spec = Spec.new
 
           if subfields and !subfields.empty?
@@ -222,7 +223,7 @@ module Traject
           
         elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
-          hash[tag] ||= []
+
           spec = Spec.new
 
           if byte1 && byte2
@@ -266,19 +267,14 @@ module Traject
     def each_matching_line(marc_record)
       marc_record.fields(@interesting_tags_hash.keys).each do |field|
 
-        specs = specs_covering_field(field)
-
-        # Don't have a spec that addresses this field? Move on.
-        next unless specs
-
         # Make sure it matches indicators too, specs_covering_field
-        # doens't check that.
-        
-        specs.each do |spec|
+        # doesn't check that.
+        specs_covering_field(field).each do |spec|
           if spec.matches_indicators?(field)
             yield(field, spec, self)
           end
         end
+
       end
     end
 

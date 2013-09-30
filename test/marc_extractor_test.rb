@@ -103,7 +103,7 @@ describe "Traject::MarcExtractor" do
       end
       it "finds spec for relevant 880" do
         assert_equal( [Traject::MarcExtractor::Spec.new], @extractor.specs_covering_field(@a880_245) )
-        assert_nil        @extractor.specs_covering_field(@a880_100)
+        assert_equal [],   @extractor.specs_covering_field(@a880_100)
       end
       it "does not find spec for 880 if disabled" do
         @extractor = Traject::MarcExtractor.new("245", :alternate_script => false)
