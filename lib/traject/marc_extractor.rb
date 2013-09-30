@@ -6,9 +6,48 @@ module Traject
   #
   # Examples:
   #
-  #    array_of_stuff = MarcExtractor.new("001:245abc:700a").extract(marc_record)
-  #    values         = MarcExtractor.new("040a", :separator => nil).extract(marc_record)
+  #    array_of_stuff   = MarcExtractor.new("001:245abc:700a").extract(marc_record)
+  #    values           = MarcExtractor.new("245a:245abc").extract_marc(marc_record)
+  #    seperated_values = MarcExtractor.new("020a:020z").extract(marc_record)
   #
+  # == Subfield concatenation
+  #
+  # Normally, for a spec including multiple subfield codes, multiple subfields
+  # from the same MARC field will be concatenated into one string separated by spaces:
+  #
+  #    600 a| Chomsky, Noam x| Philosophy.
+  #    600 a| Chomsky, Noam x| Political and social views.
+  #    MarcExtractor.new("600ax").extract(record)
+  #    # results in two values sent to Solr: 
+  #    "Chomsky, Noam Philosophy."
+  #    "Chomsky, Noam Political and social views."
+  #
+  # You can turn off this concatenation and leave individual subfields in seperate
+  # strings by setting the `separator` option to nil:
+  #
+  #    MarcExtractor.new("600ax", :separator => nil).extract(record)
+  #    # Results in four values being sent to Solr (or 3 if you de-dup):
+  #    "Chomksy, Noam"
+  #    "Philosophy."
+  #    "Chomsky, Noam"
+  #    "Political and social views."
+  #
+  # However, **the default is different for specifications with only a single
+  # subfield**, these are by default kept seperated:
+  #
+  #    020 a| 285197145X a| 9782851971456
+  #    MarcExtractor.new("020a:020z").extract(record)
+  #    # two seperate strings sent to Solr:
+  #    "285197145X"
+  #    "9782851971456"
+  #
+  # For single subfield specifications, you force concatenation by
+  # repeating the subfield specification:
+  #
+  #    MarcExtractor.new("020aa:020zz").extract(record)
+  #    # would result in a single string sent to solr for
+  #    # the single field, by default space-separated:
+  #    "285197145X 9782851971456"
   #
   # == Note on Performance and MarcExtractor creation and reuse
   #
