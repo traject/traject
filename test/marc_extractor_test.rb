@@ -15,11 +15,9 @@ describe "Traject::MarcExtractor" do
       spec = parsed['245'].first
       assert_kind_of Traject::MarcExtractor::Spec, spec
 
-      assert_kind_of Array, spec.indicators
-      assert_equal 2, spec.indicators.length
-      assert_equal "1", spec.indicators[0]
-      assert_nil spec.indicators[1]
-
+      assert_equal "1", spec.indicator1
+      assert_nil spec.indicator2
+      
       assert_kind_of Array, spec.subfields
     end
 
@@ -33,17 +31,20 @@ describe "Traject::MarcExtractor" do
 
       #245abcde
       assert spec245
-      assert_nil spec245.indicators
+      assert_nil spec245.indicator1
+      assert_nil spec245.indicator2
       assert_equal %w{a b c d e}, spec245.subfields
 
       #810
       assert spec810
-      assert_nil spec810.indicators
+      assert_nil spec810.indicator1
+      assert_nil spec810.indicator2
       assert_nil spec810.subfields, "No subfields"
 
       #700-*4bcd
       assert spec700
-      assert_equal [nil, "4"], spec700.indicators
+      assert_nil spec700.indicator1
+      assert_equal "4", spec700.indicator2      
       assert_equal %w{b c d}, spec700.subfields
     end
 
@@ -394,7 +395,7 @@ describe "Traject::MarcExtractor" do
         assert_equal Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}), Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}) 
       end
       it "does not equal when not" do
-        refute_equal Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}), Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}, :indicators => [nil, '1']) 
+        refute_equal Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}), Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}, :indicator2 => '1') 
       end
     end
   end

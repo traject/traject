@@ -213,7 +213,9 @@ module Traject
           end
 
           if indicators
-           spec.indicators = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
+           # if specified as '*', leave nil
+           spec.indicator1 = indicators[0] if indicators[0] != "*"
+           spec.indicator2 = indicators[1] if indicators[1] != "*"
           end
 
           hash[tag] << spec
@@ -273,7 +275,7 @@ module Traject
         # doens't check that.
         
         specs.each do |spec|
-          if matches_indicators(field, spec)
+          if spec.matches_indicators?(field)
             yield(field, spec, self)
           end
         end
@@ -347,14 +349,7 @@ module Traject
       # define #control_field? on both ControlField and DataField?
       return field.kind_of? MARC::ControlField
     end
-
-    # a marc field, and an individual spec hash, {:subfields => array, :indicators => array}
-    def matches_indicators(field, spec)
-      return true if spec.indicators.nil?
-
-      return (spec.indicators[0].nil? || spec.indicators[0] == field.indicator1) &&
-        (spec.indicators[1].nil? || spec.indicators[1] == field.indicator2)
-    end
+    
 
     # Represents a single specification for extracting certain things
     # from a marc field, like "600abc" or "600|1*|x". 
@@ -363,7 +358,7 @@ module Traject
     # to do the extraction -- tag is implicit in the overall spec_hash 
     # with tag => [spec1, spec2]
     class Spec
-      attr_accessor :subfields, :indicators, :bytes
+      attr_accessor :subfields, :indicator1, :indicator2, :bytes
 
       def initialize(hash = {})
         hash.each_pair do |key, value|
@@ -383,11 +378,20 @@ module Traject
         (self.subfields.nil? || self.subfields.size != 1)
       end
 
+      # Pass in a MARC field, do it's indicators match indicators
+      # in this spec? nil indicators in spec mean we don't care, everything
+      # matches. 
+      def matches_indicators?(field)      
+        return (self.indicator1.nil? || self.indicator1 == field.indicator1) &&
+          (self.indicator2.nil? || self.indicator2 == field.indicator2)
+      end
+
       def ==(spec)
         return false unless spec.kind_of?(Spec)
 
         return (self.subfields == spec.subfields) && 
-          (self.indicators == spec.indicators) &&
+          (self.indicator1 == spec.indicator1) &&
+          (self.indicator1 == spec.indicator2) &&
           (self.bytes == spec.bytes)
       end
     end
