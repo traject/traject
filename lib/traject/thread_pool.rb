@@ -3,45 +3,45 @@ module Traject
   # and other apparatus. 
   #
   # 1) Initialize with chosen pool size -- we create fixed size pools, where 
-  #    core and max sizes are the same. 
-
+  # core and max sizes are the same. 
+  #
   # 2) If initialized with nil for threadcount,  no thread pool will actually
-  #    be created, and all threadpool-related methods become no-ops. We call this 
-  #    the nil/null threadpool.  A non-nil threadpool requires jruby, but you can
-  #    create a null Traject::ThreadPool.new(nil) under MRI without anything
-  #    complaining. 
+  # be created, and all threadpool-related methods become no-ops. We call this 
+  # the nil/null threadpool.  A non-nil threadpool requires jruby, but you can
+  # create a null Traject::ThreadPool.new(nil) under MRI without anything
+  # complaining. 
   #
   # 3) Use the #maybe_in_threadpool method to send blocks to thread pool for
-  #    execution -- if no threadpool configured your block will just be
-  #    executed in calling thread. Be careful to not refer to any non-local
-  #    variables in the block, unless the variable has an object you can
-  #    use thread-safely! 
+  # execution -- if no threadpool configured your block will just be
+  # executed in calling thread. Be careful to not refer to any non-local
+  # variables in the block, unless the variable has an object you can
+  # use thread-safely! 
   #
   # 4) Thread pools are java.util.concurrent.ThreadPoolExecutor, manually created
-  #    with a work queue that will buffer up to (pool_size*3) tasks. If queue is full,
-  #    the ThreadPoolExecutor is set up to use the ThreadPoolExecutor.CallerRunsPolicy,
-  #    meaning the block will end up executing in caller's own thread. With the kind
-  #    of work we're doing, where each unit of work is small and there are many of them--
-  #    the CallerRunsPolicy serves as an effective 'back pressure' mechanism to keep
-  #    the work queue from getting too large and exhausting memory, when producers are
-  #    faster than consumers. 
+  # with a work queue that will buffer up to (pool_size*3) tasks. If queue is full,
+  # the ThreadPoolExecutor is set up to use the ThreadPoolExecutor.CallerRunsPolicy,
+  # meaning the block will end up executing in caller's own thread. With the kind
+  # of work we're doing, where each unit of work is small and there are many of them--
+  # the CallerRunsPolicy serves as an effective 'back pressure' mechanism to keep
+  # the work queue from getting too large and exhausting memory, when producers are
+  # faster than consumers. 
   #
-  #  5) Any exceptions raised by pool-executed work are captured accumulated in a thread-safe
-  #     manner, and can be re-raised in the thread of your choice by calling
-  #     #raise_collected_exception!
+  # 5) Any exceptions raised by pool-executed work are captured accumulated in a thread-safe
+  #  manner, and can be re-raised in the thread of your choice by calling
+  #  #raise_collected_exception!
   #
-  #  6) When you are done with the threadpool, you can and must call
-  #     #shutdown_and_wait, which will wait for all current queued work
-  #     to complete, then return.  You can not give any more work to the pool
-  #     after you do this. By default it'll wait pretty much forever, which should
-  #     be fine. If you never call shutdown, the pool will keep running forever
-  #     and not allow your program to exit! 
+  # 6) When you are done with the threadpool, you can and must call
+  #  #shutdown_and_wait, which will wait for all current queued work
+  #  to complete, then return.  You can not give any more work to the pool
+  #  after you do this. By default it'll wait pretty much forever, which should
+  #  be fine. If you never call shutdown, the pool will keep running forever
+  #  and not allow your program to exit! 
   #
-  #  7) We will keep track of total times a block is run in thread pool, and
-  #     total elapsed (wall) time of running all blocks, so an average_execution_ms
-  #     time can be given.  #average_execution_ms may be inaccurate if called when
-  #     threads are still executing, as it's not entirely thread safe (may get
-  #     an off by one as to total iterations)
+  # 7) We will keep track of total times a block is run in thread pool, and
+  #  total elapsed (wall) time of running all blocks, so an average_execution_ms
+  #  time can be given.  #average_execution_ms may be inaccurate if called when
+  #  threads are still executing, as it's not entirely thread safe (may get
+  #  an off by one as to total iterations)
   class ThreadPool
     attr_reader :pool_size, :label, :queue_capacity
 
