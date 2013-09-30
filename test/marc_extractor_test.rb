@@ -326,11 +326,45 @@ describe "Traject::MarcExtractor" do
       
       
     
-    it "works the same as ::separator=>nil" do
-      ex1 = Traject::MarcExtractor.new("245a:245b")
-      ex2 = Traject::MarcExtractor.new("245ab", :separator=>nil)
-      assert_equal ex1.extract(@record), ex2.extract(@record)
+    it "provides multiple values for repeated subfields with single specified subfield" do
+      ex = Traject::MarcExtractor.new("245a")
+      f = @record.fields('245').first
+      title_a = f['a']
+      f.append(MARC::Subfield.new('a', title_a))
+      results = ex.extract(@record)
+      assert_equal [title_a, title_a], results
     end
+
+    it "concats single subfield spec when given as eg 245aa" do
+      ex = Traject::MarcExtractor.new("245aa")
+      f = @record.fields('245').first
+      title_a = f['a']
+      f.append(MARC::Subfield.new('a', title_a))
+      results = ex.extract(@record)
+      assert_equal ["#{title_a} #{title_a}"], results
+    end
+    
+    it "provides single value for repeated subfields with multiple specified subfields" do
+      ex = Traject::MarcExtractor.new("245ab")
+      f = @record.fields('245').first
+      title_a = f['a']
+      title_b = f['b']
+      f.append(MARC::Subfield.new('a', title_a))
+      results = ex.extract(@record)
+      assert_equal ["#{title_a} #{title_b} #{title_a}"], results
+      
+    end
+    
+    it "provides single value for repeated subfields with no specified subfield" do
+      ex = Traject::MarcExtractor.new("245")
+      f = @record.fields('245').first
+      title_a = f['a']
+      f.append(MARC::Subfield.new('a', title_a))
+      results = ex.extract(@record)
+      assert_equal 1, results.size
+    end
+    
+    
       
   
     it "allows repeated tags for a control field" do

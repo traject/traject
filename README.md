@@ -161,20 +161,20 @@ Other examples of the specification string, which can include multiple tag menti
   # "*" is a wildcard in indicator spec.  So
   # 856 with first indicator '0', subfield u.
   to_field "email_addresses", extract_marc("856|0*|u")
-
-  # Instead of joining subfields from the same field
-  # into one string, joined by spaces, leave them
-  # each in separate strings:
-  to_field "isbn", extract_marc("020az", :separator => nil)
   
   # Can list tag twice with different field combinations
-  # to extract seperately
+  # to extract separately
   to_field "isbn", extract_marc("245a:245abcde")
 ~~~
 
 The `extract_marc` function *by default* includes any linked
 MARC `880` fields with alternate-script versions. Another reason
 to use the `:first` option if you really only want one.
+
+By default, specifications with multiple subfields (like "240abc") will produce
+one single string of output for each matching field. Specifications
+with single subfields (like "020a") will split subfields and produce
+an output string for each matching subfield. 
 
 For MARC control (aka 'fixed') fields, you can use square
 brackets to take a slice by byte offset.
@@ -183,17 +183,22 @@ brackets to take a slice by byte offset.
     to_field "langauge_code", extract_marc("008[35-37]")
 ~~~
 
+For more information on extraction specifications, see
+the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/github/jrochkind/traject/master/Traject/MarcExtractor)).
+
 `extract_marc` also supports `translation maps` similar
 to SolrMarc's. There are some translation maps provided by traject,
 and you can also define your own. translation maps can be supplied
 in yaml or ruby.  Translation maps are especially useful
-for mapping form MARC codes to user-displayable strings. See [Traject::TranslationMap](./lib/traject/translation_map.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/TranslationMap)) for more info:
+for mapping form MARC codes to user-displayable strings:
 
 ~~~ruby
     # "translation_map" will be passed to Traject::TranslationMap.new
     # and the created map used to translate all values
     to_field "language", extract_marc("008[35-37]:041a:041d", :translation_map => "marc_language_code")
 ~~~
+
+See [Traject::TranslationMap](./lib/traject/translation_map.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/TranslationMap)) for more info on translation mapping. 
 
 #### Direct indexing logic vs. Macros
 
