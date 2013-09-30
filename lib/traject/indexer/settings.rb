@@ -1,22 +1,23 @@
 require 'hashie'
 
-# A Hash of settings for a Traject::Indexer, which also ends up passed along
-# to other objects Traject::Indexer interacts with.
-#
-# Enhanced with a few features from Hashie, to make it for
-# instance string/symbol indifferent
-#
-# #provide(key, value) is added, to do like settings[key] ||= value,
-# set only if not already set (but unlike ||=, nil or false can count as already set)
-#
-# Also has an interesting 'defaults' system, meant to play along
-# with configuration file 'provide' statements. There is a built-in hash of
-# defaults, which will be lazily filled in if accessed and not yet
-# set. (nil can count as set, though!).  If they haven't been lazily
-# set yet, then #provide will still fill them in. But you can also call
-# fill_in_defaults! to fill all defaults in, if you know configuration
-# files have all been loaded, and want to fill them in for inspection.
 class Traject::Indexer
+
+  # A Hash of settings for a Traject::Indexer, which also ends up passed along
+  # to other objects Traject::Indexer interacts with.
+  #
+  # Enhanced with a few features from Hashie, to make it for
+  # instance string/symbol indifferent
+  #
+  # #provide(key, value) is added, to do like settings[key] ||= value,
+  # set only if not already set (but unlike ||=, nil or false can count as already set)
+  #
+  # Also has an interesting 'defaults' system, meant to play along
+  # with configuration file 'provide' statements. There is a built-in hash of
+  # defaults, which will be lazily filled in if accessed and not yet
+  # set. (nil can count as set, though!).  If they haven't been lazily
+  # set yet, then #provide will still fill them in. But you can also call
+  # fill_in_defaults! to fill all defaults in, if you know configuration
+  # files have all been loaded, and want to fill them in for inspection.
   class Settings < Hash
     include Hashie::Extensions::MergeInitializer # can init with hash
     include Hashie::Extensions::IndifferentAccess

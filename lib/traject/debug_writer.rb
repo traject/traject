@@ -6,12 +6,10 @@ require 'traject/line_writer'
 #
 # Applicable settings:
 #
-#  - 'output_file' -- the name of the file to output to
-#  - 'output_stream' -- alternately, the IO stream
-#  - 'debug_writer.idfield' -- the solr field from which to pull the record ID (default: 'id')
-#  - 'debug_writer.format'  -- How to format the id/solr field/values (default: '%-12s %-25s %s')
-
-
+#  * 'output_file' -- the name of the file to output to
+#  * 'output_stream' -- alternately, the IO stream
+#  * 'debug_writer.idfield' -- the solr field from which to pull the record ID (default: 'id')
+#  * 'debug_writer.format'  -- How to format the id/solr field/values (default: '%-12s %-25s %s')
 class Traject::DebugWriter < Traject::LineWriter
   DEFAULT_FORMAT = '%-12s %-25s %s'
   DEFAULT_IDFIELD = 'id'
