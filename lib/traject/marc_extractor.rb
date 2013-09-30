@@ -9,6 +9,36 @@ module Traject
   #    array_of_stuff   = MarcExtractor.new("001:245abc:700a").extract(marc_record)
   #    values           = MarcExtractor.new("245a:245abc").extract_marc(marc_record)
   #    seperated_values = MarcExtractor.new("020a:020z").extract(marc_record)
+  #    bytes            = MarcExtractor.new("008[35-37]")
+  #
+  # == String extraction specifications
+  #
+  # Extraction directions are supplied in strings, usually as the first
+  # parameter to MarcExtractor.new or MarcExtractor.cached. These specifications
+  # are also the first parameter to the #marc_extract macro. 
+  #
+  # A String specification is a string (or array of strings) which consists
+  # of one or more Data and Control Field Specifications seperated by colons. 
+  #
+  # A Data Field Specification is of the form:
+  #  `{tag}{|indicators|}{subfields}`
+  # * {tag} is three chars (usually but not neccesarily numeric)
+  # * {indicators} are optional two chars enclosed in pipe ('|') characters,
+  # * {subfields} are optional list of chars (alphanumeric)
+  #
+  # indicator spec must be two chars, but one can be * meaning "don't care".
+  # space to mean 'blank'
+  #
+  # "245|01|abc65:345abc:700|*5|:800"
+  #
+  # A Control Field Specification is used with tags for control (fixed) fields (ordinarily fields 001-010)
+  # and includes a tag and a a byte slice specification. 
+  #
+  #  "008[35-37]:LDR[5]"
+  #  => bytes 35-37 inclusive of field 008, and byte 5 of the marc leader.
+  #
+  # * subfields and indicators can only be provided for marc data/variable fields
+  # * byte slice can only be provided for marc control fields (generally tags less than 010)
   #
   # == Subfield concatenation
   #
@@ -76,14 +106,15 @@ module Traject
   class MarcExtractor
     attr_accessor :options, :spec_hash
 
-    # Take a hash that's the output of #parse_string_spec, return
-    # an array of strings extracted from a marc record accordingly
+    # First arg is a specification for extraction of data from a MARC record. 
+    # Specification can be given in two forms:
     #
-    # Second arg can either be a string specification that will be passed
-    # to MarcExtractor.parse_string_spec, or a Hash that's
-    # already been created by it.
+    #  * a string specification like "008[35]:020a:245abc", see top of class
+    #    for examples. A string specification is most typical argument. 
+    #  * The output of a previous call to MarcExtractor.parse_string_spec(string_spec),
+    #    a 'pre-parsed' specification. 
     #
-    # options:
+    # Second arg is options:
     #
     # [:separator]  default ' ' (space), what to use to separate
     #               subfield values when joining strings
@@ -147,53 +178,24 @@ module Traject
 
     # Check to see if a tag is interesting (meaning it may be covered by a spec
     # and the passed-in options about alternate scripts)
-
     def interesting_tag?(tag)
       return @interesting_tags_hash.include?(tag)
     end
 
 
-    # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
-    # to represent the specification.
+    # Converts from a string marc spec like "245abc:700a" to a hash used internally
+    # to represent the specification. See comments at head of class for
+    # documentation of string specification format. 
     #
-    # a String specification is a string (or array of strings) of form:
-    #  {tag}{|indicators|}{subfields} separated by colons
-    # tag is three chars (usually but not neccesarily numeric),
-    # indicators are optional two chars enclosed in pipe ('|') characters,
-    # subfields are optional list of chars (alphanumeric)
     #
-    # indicator spec must be two chars, but one can be * meaning "don't care".
-    # space to mean 'blank'
+    # == Return value
     #
-    # "245|01|abc65:345abc:700|*5|:800"
+    # The hash returned is keyed by tag, and has as values an array of 0 or
+    # or more MarcExtractor::Spec objects representing the specified extraction
+    # operations for that tag. 
     #
-    # Or, for control (fixed) fields (ordinarily fields 001-010), you can include a byte slice specification,
-    # but can NOT include subfield or indicator specifications. Plus can use special tag "LDR" for
-    # the marc leader. (TODO)
-    #
-    #  "008[35-37]:LDR[5]"
-    #  => bytes 35-37 inclusive of field 008, and byte 5 of the marc leader.
-    #
-    # Returns a nested hash whose keys are tags and whose value is an array
-    # of hash structures indicating what indicators and subfields (or
-    # byte-offsets for control fields) are needed, e.g.
-    #
-    # '245|1*|a:245ab:110:008[15-17]:008[17]' would give us
-    #
-    # {
-    #   '245' => [
-    #     {:indicators => ['1', nil], :subfields=>['a']},
-    #     {:subfields => ['a', 'b']}
-    #    ]
-    #    '110' => [{}] # all subfields, indicators don't matter
-    #    '008' => [
-    #      {:bytes => (15..17)}
-    #      {:bytes => 17}
-    #    ]
-    # }
-    #
-    # * subfields and indicators can only be provided for marc data/variable fields
-    # * byte slice can only be provided for marc control fields (generally tags less than 010)
+    # It's an array of possibly more than one, because you can specify
+    # multiple extractions on the same tag: for instance "245a:245abc"
     #
     # See tests for more examples.
     def self.parse_string_spec(spec_string)
@@ -316,13 +318,12 @@ module Traject
 
 
     # Find Spec objects, if any, covering extraction from this field.
-    # Returns nil, or an array of MarcExtractor::Spec objects
+    # Returns an array of 0 or more MarcExtractor::Spec objects
     #
     # When given an 880, will return the spec (if any) for the linked tag iff
     # we have a $6 and we want the alternate script.
     #
-    # Returns nil if no matching spec is found
-
+    # Returns an empty array in case of no matching extraction specs. 
     def specs_covering_field(field)
       tag = field.tag
 
