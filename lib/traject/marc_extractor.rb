@@ -296,8 +296,8 @@ module Traject
     end
 
 
-    # Pass in a marc data field and a hash spec, returns
-    # an ARRAY of one or more strings, subfields extracted
+    # Pass in a marc data field and a Spec object with extraction
+    # instructions, returns an ARRAY of one or more strings, subfields extracted
     # and processed per spec. Takes account of options such
     # as :separator
     #
@@ -350,7 +350,7 @@ module Traject
     end
     
 
-    # Represents a single specification for extracting certain things
+    # Represents a single specification for extracting data
     # from a marc field, like "600abc" or "600|1*|x". 
     #
     # Includes the tag for reference, although this is redundant and not actually used
