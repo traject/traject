@@ -206,14 +206,14 @@ module Traject
           tag, indicators, subfields = $1, $3, $4
 
           hash[tag] ||= []
-          spec = {}
+          spec = Spec.new
 
           if subfields and !subfields.empty?
-            spec[:subfields] = subfields.split('')
+            spec.subfields = subfields.split('')
           end
 
           if indicators
-           spec[:indicators] = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
+           spec.indicators = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
           end
 
           hash[tag] << spec
@@ -221,12 +221,12 @@ module Traject
         elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
           hash[tag] ||= []
-          spec = {}
+          spec = Spec.new
 
           if byte1 && byte2
-            spec[:bytes] = ((byte1.to_i)..(byte2.to_i))
+            spec.bytes = ((byte1.to_i)..(byte2.to_i))
           elsif byte1
-           spec[:bytes] = byte1.to_i
+           spec.bytes = byte1.to_i
           end
           
           hash[tag] << spec
@@ -245,7 +245,7 @@ module Traject
 
       self.each_matching_line(marc_record) do |field, spec|
         if control_field?(field)
-          results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
+          results << (spec.bytes ? field.value.byteslice(spec.bytes) : field.value)
         else
           results.concat collect_subfields(field, spec)
         end
@@ -256,7 +256,7 @@ module Traject
 
     # Yields a block for every line in source record that matches
     # spec. First arg to block is MARC::DataField or ControlField, second
-    # is the hash specification that it matched on. May take account
+    # is the MarcExtractor::Spec that it matched on. May take account
     # of options such as :alternate_script
     #
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
@@ -284,6 +284,8 @@ module Traject
     # but collects results of block into an array -- flattens any subarrays for you!
     #
     # Useful for re-use of this class for custom processing
+    #
+    # yields the MARC Field, the MarcExtractor::Spec object, the MarcExtractor object. 
     def collect_matching_lines(marc_record)
       results = []
       self.each_matching_line(marc_record) do |field, spec, extractor|
@@ -301,38 +303,18 @@ module Traject
     # Always returns array, sometimes empty array.
     def collect_subfields(field, spec)
       subfields = field.subfields.collect do |subfield|
-        subfield.value if spec[:subfields].nil? || spec[:subfields].include?(subfield.code)
+        subfield.value if spec.subfields.nil? || spec.subfields.include?(subfield.code)
       end.compact
 
       return subfields if subfields.empty? # empty array, just return it.
 
-
-      if join_subfields?(spec)
+      if options[:separator] && spec.joinable?
         subfields = [subfields.join(options[:separator])]
       end
       
       return subfields
     end
 
-
-    # Figure out if we should be calling #join on the results
-    # from various subfields, or if we should be just leaving them
-    # alone
-    #
-    # * If :separator == nil, we don't join
-    # * If there's exactly one subfield in the spec, we don't join (even if that subfield is repeated in the field)
-    #
-    # Note that as a special case, if you repeat a subfield (e.g., '633aa'), we
-    # interpret that as an indication to go ahead and join.
-    # This gives rise to the special syntax for forcing a join of repeated subfields, e.g.
-    #
-    #  * '633a' will return one value for each $a in the field
-    #  * '633aa' will return a single string joining all the values of all the $a's.
-
-    def join_subfields?(spec)
-      return options[:separator] &&
-             (spec[:subfields].nil? || spec[:subfields].size != 1)
-     end
 
 
     # Find a spec, if any, covering extraction from this field
@@ -368,10 +350,47 @@ module Traject
 
     # a marc field, and an individual spec hash, {:subfields => array, :indicators => array}
     def matches_indicators(field, spec)
-      return true if spec[:indicators].nil?
+      return true if spec.indicators.nil?
 
-      return (spec[:indicators][0].nil? || spec[:indicators][0] == field.indicator1) &&
-        (spec[:indicators][1].nil? || spec[:indicators][1] == field.indicator2)
+      return (spec.indicators[0].nil? || spec.indicators[0] == field.indicator1) &&
+        (spec.indicators[1].nil? || spec.indicators[1] == field.indicator2)
     end
+
+    # Represents a single specification for extracting certain things
+    # from a marc field, like "600abc" or "600|1*|x". 
+    #
+    # Does not actually include the tag at present, becuase not neccesary
+    # to do the extraction -- tag is implicit in the overall spec_hash 
+    # with tag => [spec1, spec2]
+    class Spec
+      attr_accessor :subfields, :indicators, :bytes
+
+      def initialize(hash = {})
+        hash.each_pair do |key, value|
+          self.send("#{key}=", value)
+        end
+      end
+
+    
+      #  Should subfields extracted by joined, if we have a seperator?
+      #  * '630' no subfields specified => join all subfields
+      #  * '630abc' multiple subfields specified = join all subfields
+      #  * '633a' one subfield => do not join, return one value for each $a in the field
+      #  * '633aa' one subfield, doubled => do join after all, will return a single string joining all the values of all the $a's.
+      #
+      # Last case is handled implicitly at the moment when subfields == ['a', 'a']
+      def joinable?
+        (self.subfields.nil? || self.subfields.size != 1)
+      end
+
+      def ==(spec)
+        return false unless spec.kind_of?(Spec)
+
+        return (self.subfields == spec.subfields) && 
+          (self.indicators == spec.indicators) &&
+          (self.bytes == spec.bytes)
+      end
+    end
+
   end
 end

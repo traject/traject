@@ -144,7 +144,7 @@ module Traject::Macros
     # return the filing version (i.e., the string without the 
     # non-filing characters)
     
-    def self.filing_version(field, str, spechash)
+    def self.filing_version(field, str, spec)
       # Control fields don't have non-filing characters
       return str if field.kind_of? MARC::ControlField
       
@@ -155,7 +155,7 @@ module Traject::Macros
       # The spechash must either (a) have no subfields specified, or
       # (b) include the first subfield in the record
       
-      subs = spechash[:subfields]
+      subs = spec.subfields
       return str unless subs && subs.include?(field.subfields[0].code)
       
       # OK. If we got this far we actually need to strip characters off the string
@@ -183,7 +183,7 @@ module Traject::Macros
       lambda do |record, accumulator|
         codes = extractor.collect_matching_lines(record) do |field, spec, extractor|
           if extractor.control_field?(field)
-            (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
+            (spec.bytes ? field.value.byteslice(spec.bytes) : field.value)
           else
             extractor.collect_subfields(field, spec).collect do |value|
               # sometimes multiple language codes are jammed together in one subfield, and
