@@ -184,7 +184,7 @@ brackets to take a slice by byte offset.
 ~~~
 
 For more information on extraction specifications, see
-the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/github/jrochkind/traject/master/Traject/MarcExtractor)).
+the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/MarcExtractor)).
 
 `extract_marc` also supports `translation maps` similar
 to SolrMarc's. There are some translation maps provided by traject,
