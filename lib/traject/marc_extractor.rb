@@ -183,7 +183,7 @@ module Traject
     end
 
 
-    # Converts from a string marc spec like "245abc:700a" to a hash used internally
+    # Converts from a string marc spec like "008[35]:245abc:700a" to a hash used internally
     # to represent the specification. See comments at head of class for
     # documentation of string specification format. 
     #
@@ -209,7 +209,7 @@ module Traject
           # variable field
           tag, indicators, subfields = $1, $3, $4
 
-          spec = Spec.new
+          spec = Spec.new(:tag => tag)
 
           if subfields and !subfields.empty?
             spec.subfields = subfields.split('')
@@ -221,12 +221,12 @@ module Traject
            spec.indicator2 = indicators[1] if indicators[1] != "*"
           end
 
-          hash[tag] << spec
+          hash[spec.tag] << spec
           
-        elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # "005[4-5]"
+        elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # control field, "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
 
-          spec = Spec.new
+          spec = Spec.new(:tag => tag)
 
           if byte1 && byte2
             spec.bytes = ((byte1.to_i)..(byte2.to_i))
@@ -234,7 +234,7 @@ module Traject
            spec.bytes = byte1.to_i
           end
           
-          hash[tag] << spec
+          hash[spec.tag] << spec
         else
           raise ArgumentError.new("Unrecognized marc extract specification: #{part}")
         end
@@ -352,11 +352,11 @@ module Traject
     # Represents a single specification for extracting certain things
     # from a marc field, like "600abc" or "600|1*|x". 
     #
-    # Does not actually include the tag at present, becuase not neccesary
-    # to do the extraction -- tag is implicit in the overall spec_hash 
+    # Includes the tag for reference, although this is redundant and not actually used
+    # in logic, since the tag is also implicit in the overall spec_hash 
     # with tag => [spec1, spec2]
     class Spec
-      attr_accessor :subfields, :indicator1, :indicator2, :bytes
+      attr_accessor :tag, :subfields, :indicator1, :indicator2, :bytes
 
       def initialize(hash = {})
         hash.each_pair do |key, value|
@@ -394,7 +394,8 @@ module Traject
       def ==(spec)
         return false unless spec.kind_of?(Spec)
 
-        return (self.subfields == spec.subfields) && 
+        return (self.tag == spec.tag) &&
+          (self.subfields == spec.subfields) && 
           (self.indicator1 == spec.indicator1) &&
           (self.indicator1 == spec.indicator2) &&
           (self.bytes == spec.bytes)

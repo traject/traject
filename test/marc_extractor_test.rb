@@ -102,7 +102,7 @@ describe "Traject::MarcExtractor" do
         assert ! @a880_100.nil?, "Found an 880-100 to test"
       end
       it "finds spec for relevant 880" do
-        assert_equal( [Traject::MarcExtractor::Spec.new], @extractor.specs_covering_field(@a880_245) )
+        assert_equal( [Traject::MarcExtractor::Spec.new(:tag => "245")], @extractor.specs_covering_field(@a880_245) )
         assert_equal [],   @extractor.specs_covering_field(@a880_100)
       end
       it "does not find spec for 880 if disabled" do
@@ -112,7 +112,7 @@ describe "Traject::MarcExtractor" do
       it "finds only 880 if so configured" do
         @extractor = Traject::MarcExtractor.new("245", :alternate_script => :only)
         assert_nil @extractor.specs_covering_field(@a245) 
-        assert_equal([Traject::MarcExtractor::Spec.new],  @extractor.specs_covering_field(@a880_245))
+        assert_equal([Traject::MarcExtractor::Spec.new(:tag => "245")],  @extractor.specs_covering_field(@a880_245))
       end
     end
   end
@@ -296,7 +296,7 @@ describe "Traject::MarcExtractor" do
       spec_hash = extractor.spec_hash
       
       assert extractor.options[:separator].nil?, "extractor options[:separator] is nil"
-      assert_equal({"245"=>[Traject::MarcExtractor::Spec.new(:subfields=>["a", "b", "c"])]}, spec_hash)
+      assert_equal({"245"=>[Traject::MarcExtractor::Spec.new(:tag => "245", :subfields=>["a", "b", "c"])]}, spec_hash)
     end
     it "caches" do
       ext1 = Traject::MarcExtractor.cached("245abc", :separator => nil)
