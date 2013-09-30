@@ -9,6 +9,37 @@ module Traject
   #    array_of_stuff   = MarcExtractor.new("001:245abc:700a").extract(marc_record)
   #    values           = MarcExtractor.new("245a:245abc").extract_marc(marc_record)
   #    seperated_values = MarcExtractor.new("020a:020z").extract(marc_record)
+  #    bytes            = MarcExtractor.new("008[35-37]")
+  #
+  # == String extraction specifications
+  #
+  # Extraction directions are supplied in strings, usually as the first
+  # parameter to MarcExtractor.new or MarcExtractor.cached. These specifications
+  # are also the first parameter to the #marc_extract macro. 
+  #
+  # A String specification is a string (or array of strings) which consists
+  # of one or more Data and Control Field Specifications seperated by colons. 
+  #
+  # A Data Field Specification is of the form:
+  #  `{tag}{|indicators|}{subfields}`
+  # * {tag} is three chars (usually but not neccesarily numeric)
+  # * {indicators} are optional two chars enclosed in pipe ('|') characters,
+  # * {subfields} are optional list of chars (alphanumeric)
+  #
+  # indicator spec must be two chars, but one can be * meaning "don't care".
+  # space to mean 'blank'
+  #
+  # "245|01|abc65:345abc:700|*5|:800"
+  #
+  # A Control Field Specification is used with tags for control (fixed) fields (ordinarily fields 001-010)
+  # and includes a tag and a a byte slice specification. 
+  #
+  #  "008[35-37]:007[5]""
+  #  => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007 (TODO: Should we support
+  #    "LDR" as a pseudo-tag to take byte slices of leader?)
+  #
+  # * subfields and indicators can only be provided for marc data/variable fields
+  # * byte slice can only be provided for marc control fields (generally tags less than 010)
   #
   # == Subfield concatenation
   #
@@ -76,14 +107,15 @@ module Traject
   class MarcExtractor
     attr_accessor :options, :spec_hash
 
-    # Take a hash that's the output of #parse_string_spec, return
-    # an array of strings extracted from a marc record accordingly
+    # First arg is a specification for extraction of data from a MARC record. 
+    # Specification can be given in two forms:
     #
-    # Second arg can either be a string specification that will be passed
-    # to MarcExtractor.parse_string_spec, or a Hash that's
-    # already been created by it.
+    #  * a string specification like "008[35]:020a:245abc", see top of class
+    #    for examples. A string specification is most typical argument. 
+    #  * The output of a previous call to MarcExtractor.parse_string_spec(string_spec),
+    #    a 'pre-parsed' specification. 
     #
-    # options:
+    # Second arg is options:
     #
     # [:separator]  default ' ' (space), what to use to separate
     #               subfield values when joining strings
@@ -147,57 +179,30 @@ module Traject
 
     # Check to see if a tag is interesting (meaning it may be covered by a spec
     # and the passed-in options about alternate scripts)
-
     def interesting_tag?(tag)
       return @interesting_tags_hash.include?(tag)
     end
 
 
-    # Converts from a string marc spec like "245abc:700a" to a nested hash used internally
-    # to represent the specification.
+    # Converts from a string marc spec like "008[35]:245abc:700a" to a hash used internally
+    # to represent the specification. See comments at head of class for
+    # documentation of string specification format. 
     #
-    # a String specification is a string (or array of strings) of form:
-    #  {tag}{|indicators|}{subfields} separated by colons
-    # tag is three chars (usually but not neccesarily numeric),
-    # indicators are optional two chars enclosed in pipe ('|') characters,
-    # subfields are optional list of chars (alphanumeric)
     #
-    # indicator spec must be two chars, but one can be * meaning "don't care".
-    # space to mean 'blank'
+    # == Return value
     #
-    # "245|01|abc65:345abc:700|*5|:800"
+    # The hash returned is keyed by tag, and has as values an array of 0 or
+    # or more MarcExtractor::Spec objects representing the specified extraction
+    # operations for that tag. 
     #
-    # Or, for control (fixed) fields (ordinarily fields 001-010), you can include a byte slice specification,
-    # but can NOT include subfield or indicator specifications. Plus can use special tag "LDR" for
-    # the marc leader. (TODO)
-    #
-    #  "008[35-37]:LDR[5]"
-    #  => bytes 35-37 inclusive of field 008, and byte 5 of the marc leader.
-    #
-    # Returns a nested hash whose keys are tags and whose value is an array
-    # of hash structures indicating what indicators and subfields (or
-    # byte-offsets for control fields) are needed, e.g.
-    #
-    # '245|1*|a:245ab:110:008[15-17]:008[17]' would give us
-    #
-    # {
-    #   '245' => [
-    #     {:indicators => ['1', nil], :subfields=>['a']},
-    #     {:subfields => ['a', 'b']}
-    #    ]
-    #    '110' => [{}] # all subfields, indicators don't matter
-    #    '008' => [
-    #      {:bytes => (15..17)}
-    #      {:bytes => 17}
-    #    ]
-    # }
-    #
-    # * subfields and indicators can only be provided for marc data/variable fields
-    # * byte slice can only be provided for marc control fields (generally tags less than 010)
+    # It's an array of possibly more than one, because you can specify
+    # multiple extractions on the same tag: for instance "245a:245abc"
     #
     # See tests for more examples.
     def self.parse_string_spec(spec_string)
-      hash = {}
+      # hash defaults to []
+      hash = Hash.new {|hash,key| hash[key] = []}
+
       spec_strings = spec_string.is_a?(Array) ? spec_string.map{|s| s.split(/\s*:\s*/)}.flatten : spec_string.split(/s*:\s*/)
 
       spec_strings.each do |part|
@@ -205,31 +210,32 @@ module Traject
           # variable field
           tag, indicators, subfields = $1, $3, $4
 
-          hash[tag] ||= []
-          spec = {}
+          spec = Spec.new(:tag => tag)
 
           if subfields and !subfields.empty?
-            spec[:subfields] = subfields.split('')
+            spec.subfields = subfields.split('')
           end
 
           if indicators
-           spec[:indicators] = [ (indicators[0] if indicators[0] != "*"), (indicators[1] if indicators[1] != "*") ]
+           # if specified as '*', leave nil
+           spec.indicator1 = indicators[0] if indicators[0] != "*"
+           spec.indicator2 = indicators[1] if indicators[1] != "*"
           end
 
-          hash[tag] << spec
+          hash[spec.tag] << spec
           
-        elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # "005[4-5]"
+        elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # control field, "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
-          hash[tag] ||= []
-          spec = {}
+
+          spec = Spec.new(:tag => tag)
 
           if byte1 && byte2
-            spec[:bytes] = ((byte1.to_i)..(byte2.to_i))
+            spec.bytes = ((byte1.to_i)..(byte2.to_i))
           elsif byte1
-           spec[:bytes] = byte1.to_i
+           spec.bytes = byte1.to_i
           end
           
-          hash[tag] << spec
+          hash[spec.tag] << spec
         else
           raise ArgumentError.new("Unrecognized marc extract specification: #{part}")
         end
@@ -245,7 +251,7 @@ module Traject
 
       self.each_matching_line(marc_record) do |field, spec|
         if control_field?(field)
-          results << (spec[:bytes] ? field.value.byteslice(spec[:bytes]) : field.value)
+          results << (spec.bytes ? field.value.byteslice(spec.bytes) : field.value)
         else
           results.concat collect_subfields(field, spec)
         end
@@ -256,7 +262,7 @@ module Traject
 
     # Yields a block for every line in source record that matches
     # spec. First arg to block is MARC::DataField or ControlField, second
-    # is the hash specification that it matched on. May take account
+    # is the MarcExtractor::Spec that it matched on. May take account
     # of options such as :alternate_script
     #
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
@@ -264,19 +270,14 @@ module Traject
     def each_matching_line(marc_record)
       marc_record.fields(@interesting_tags_hash.keys).each do |field|
 
-        specs = spec_covering_field(field)
-
-        # Don't have a spec that addresses this field? Move on.
-        next unless specs
-
-        # Make sure it matches indicators too, spec_covering_field
-        # doens't check that.
-        
-        specs.each do |spec|
-          if matches_indicators(field, spec)
+        # Make sure it matches indicators too, specs_covering_field
+        # doesn't check that.
+        specs_covering_field(field).each do |spec|
+          if spec.matches_indicators?(field)
             yield(field, spec, self)
           end
         end
+
       end
     end
 
@@ -284,6 +285,8 @@ module Traject
     # but collects results of block into an array -- flattens any subarrays for you!
     #
     # Useful for re-use of this class for custom processing
+    #
+    # yields the MARC Field, the MarcExtractor::Spec object, the MarcExtractor object. 
     def collect_matching_lines(marc_record)
       results = []
       self.each_matching_line(marc_record) do |field, spec, extractor|
@@ -293,21 +296,20 @@ module Traject
     end
 
 
-    # Pass in a marc data field and a hash spec, returns
-    # an ARRAY of one or more strings, subfields extracted
+    # Pass in a marc data field and a Spec object with extraction
+    # instructions, returns an ARRAY of one or more strings, subfields extracted
     # and processed per spec. Takes account of options such
     # as :separator
     #
     # Always returns array, sometimes empty array.
     def collect_subfields(field, spec)
       subfields = field.subfields.collect do |subfield|
-        subfield.value if spec[:subfields].nil? || spec[:subfields].include?(subfield.code)
+        subfield.value if spec.includes_subfield_code?(subfield.code)
       end.compact
 
       return subfields if subfields.empty? # empty array, just return it.
 
-
-      if join_subfields?(spec)
+      if options[:separator] && spec.joinable?
         subfields = [subfields.join(options[:separator])]
       end
       
@@ -315,34 +317,15 @@ module Traject
     end
 
 
-    # Figure out if we should be calling #join on the results
-    # from various subfields, or if we should be just leaving them
-    # alone
-    #
-    # * If :separator == nil, we don't join
-    # * If there's exactly one subfield in the spec, we don't join (even if that subfield is repeated in the field)
-    #
-    # Note that as a special case, if you repeat a subfield (e.g., '633aa'), we
-    # interpret that as an indication to go ahead and join.
-    # This gives rise to the special syntax for forcing a join of repeated subfields, e.g.
-    #
-    #  * '633a' will return one value for each $a in the field
-    #  * '633aa' will return a single string joining all the values of all the $a's.
 
-    def join_subfields?(spec)
-      return options[:separator] &&
-             (spec[:subfields].nil? || spec[:subfields].size != 1)
-     end
-
-
-    # Find a spec, if any, covering extraction from this field
+    # Find Spec objects, if any, covering extraction from this field.
+    # Returns an array of 0 or more MarcExtractor::Spec objects
     #
     # When given an 880, will return the spec (if any) for the linked tag iff
     # we have a $6 and we want the alternate script.
     #
-    # Returns nil if no matching spec is found
-
-    def spec_covering_field(field)
+    # Returns an empty array in case of no matching extraction specs. 
+    def specs_covering_field(field)
       tag = field.tag
 
       # Short-circuit the unintersting stuff
@@ -365,13 +348,60 @@ module Traject
       # define #control_field? on both ControlField and DataField?
       return field.kind_of? MARC::ControlField
     end
+    
 
-    # a marc field, and an individual spec hash, {:subfields => array, :indicators => array}
-    def matches_indicators(field, spec)
-      return true if spec[:indicators].nil?
+    # Represents a single specification for extracting data
+    # from a marc field, like "600abc" or "600|1*|x". 
+    #
+    # Includes the tag for reference, although this is redundant and not actually used
+    # in logic, since the tag is also implicit in the overall spec_hash 
+    # with tag => [spec1, spec2]
+    class Spec
+      attr_accessor :tag, :subfields, :indicator1, :indicator2, :bytes
 
-      return (spec[:indicators][0].nil? || spec[:indicators][0] == field.indicator1) &&
-        (spec[:indicators][1].nil? || spec[:indicators][1] == field.indicator2)
+      def initialize(hash = {})
+        hash.each_pair do |key, value|
+          self.send("#{key}=", value)
+        end
+      end
+
+    
+      #  Should subfields extracted by joined, if we have a seperator?
+      #  * '630' no subfields specified => join all subfields
+      #  * '630abc' multiple subfields specified = join all subfields
+      #  * '633a' one subfield => do not join, return one value for each $a in the field
+      #  * '633aa' one subfield, doubled => do join after all, will return a single string joining all the values of all the $a's.
+      #
+      # Last case is handled implicitly at the moment when subfields == ['a', 'a']
+      def joinable?
+        (self.subfields.nil? || self.subfields.size != 1)
+      end
+
+      # Pass in a MARC field, do it's indicators match indicators
+      # in this spec? nil indicators in spec mean we don't care, everything
+      # matches. 
+      def matches_indicators?(field)      
+        return (self.indicator1.nil? || self.indicator1 == field.indicator1) &&
+          (self.indicator2.nil? || self.indicator2 == field.indicator2)
+      end
+
+      # Pass in a string subfield code like 'a'; does this
+      # spec include it?
+      def includes_subfield_code?(code)
+        # subfields nil means include them all
+        self.subfields.nil? || self.subfields.include?(code)
+      end
+
+      def ==(spec)
+        return false unless spec.kind_of?(Spec)
+
+        return (self.tag == spec.tag) &&
+          (self.subfields == spec.subfields) && 
+          (self.indicator1 == spec.indicator1) &&
+          (self.indicator1 == spec.indicator2) &&
+          (self.bytes == spec.bytes)
+      end
     end
+
   end
 end
