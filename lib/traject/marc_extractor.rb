@@ -266,12 +266,12 @@ module Traject
     def each_matching_line(marc_record)
       marc_record.fields(@interesting_tags_hash.keys).each do |field|
 
-        specs = spec_covering_field(field)
+        specs = specs_covering_field(field)
 
         # Don't have a spec that addresses this field? Move on.
         next unless specs
 
-        # Make sure it matches indicators too, spec_covering_field
+        # Make sure it matches indicators too, specs_covering_field
         # doens't check that.
         
         specs.each do |spec|
@@ -319,14 +319,15 @@ module Traject
 
 
 
-    # Find a spec, if any, covering extraction from this field
+    # Find Spec objects, if any, covering extraction from this field.
+    # Returns nil, or an array of MarcExtractor::Spec objects
     #
     # When given an 880, will return the spec (if any) for the linked tag iff
     # we have a $6 and we want the alternate script.
     #
     # Returns nil if no matching spec is found
 
-    def spec_covering_field(field)
+    def specs_covering_field(field)
       tag = field.tag
 
       # Short-circuit the unintersting stuff

@@ -79,7 +79,7 @@ describe "Traject::MarcExtractor" do
 
   # Mostly an internal method, not neccesarily API, but
   # an important one, so we unit test some parts of it.
-  describe "#spec_covering_field" do
+  describe "#specs_covering_field" do
     describe "for alternate script tags" do
       before do
         @record = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
@@ -102,17 +102,17 @@ describe "Traject::MarcExtractor" do
         assert ! @a880_100.nil?, "Found an 880-100 to test"
       end
       it "finds spec for relevant 880" do
-        assert_equal( [Traject::MarcExtractor::Spec.new], @extractor.spec_covering_field(@a880_245) )
-        assert_nil        @extractor.spec_covering_field(@a880_100)
+        assert_equal( [Traject::MarcExtractor::Spec.new], @extractor.specs_covering_field(@a880_245) )
+        assert_nil        @extractor.specs_covering_field(@a880_100)
       end
       it "does not find spec for 880 if disabled" do
         @extractor = Traject::MarcExtractor.new("245", :alternate_script => false)
-        assert_nil @extractor.spec_covering_field(@a880_245) 
+        assert_nil @extractor.specs_covering_field(@a880_245) 
       end
       it "finds only 880 if so configured" do
         @extractor = Traject::MarcExtractor.new("245", :alternate_script => :only)
-        assert_nil @extractor.spec_covering_field(@a245) 
-        assert_equal([Traject::MarcExtractor::Spec.new],  @extractor.spec_covering_field(@a880_245))
+        assert_nil @extractor.specs_covering_field(@a245) 
+        assert_equal([Traject::MarcExtractor::Spec.new],  @extractor.specs_covering_field(@a880_245))
       end
     end
   end
