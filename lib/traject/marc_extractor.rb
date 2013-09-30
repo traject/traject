@@ -305,7 +305,7 @@ module Traject
     # Always returns array, sometimes empty array.
     def collect_subfields(field, spec)
       subfields = field.subfields.collect do |subfield|
-        subfield.value if spec.subfields.nil? || spec.subfields.include?(subfield.code)
+        subfield.value if spec.includes_subfield_code?(subfield.code)
       end.compact
 
       return subfields if subfields.empty? # empty array, just return it.
@@ -384,6 +384,13 @@ module Traject
       def matches_indicators?(field)      
         return (self.indicator1.nil? || self.indicator1 == field.indicator1) &&
           (self.indicator2.nil? || self.indicator2 == field.indicator2)
+      end
+
+      # Pass in a string subfield code like 'a'; does this
+      # spec include it?
+      def includes_subfield_code?(code)
+        # subfields nil means include them all
+        self.subfields.nil? || self.subfields.include?(code)
       end
 
       def ==(spec)
