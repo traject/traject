@@ -34,8 +34,9 @@ module Traject
   # A Control Field Specification is used with tags for control (fixed) fields (ordinarily fields 001-010)
   # and includes a tag and a a byte slice specification. 
   #
-  #  "008[35-37]:LDR[5]"
-  #  => bytes 35-37 inclusive of field 008, and byte 5 of the marc leader.
+  #  "008[35-37]:007[5]""
+  #  => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007 (TODO: Should we support
+  #    "LDR" as a pseudo-tag to take byte slices of leader?)
   #
   # * subfields and indicators can only be provided for marc data/variable fields
   # * byte slice can only be provided for marc control fields (generally tags less than 010)
