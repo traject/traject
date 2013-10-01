@@ -80,5 +80,28 @@ describe "Traject::Indexer#process" do
     assert ! return_value, "returns false on skipped record errors"
   end
 
+  require 'traject/null_writer'
+  it "calls after_processing after processing" do
+    @indexer = Traject::Indexer.new(
+      "solrj_writer.server_class_name" => "MockSolrServer",
+      "solr.url" => "http://example.org",
+      "writer_class_name" => "Traject::NullWriter"
+    )
+    @file = File.open(support_file_path "manufacturing_consent.marc") 
+
+    called = []
+
+    @indexer.after_processing do 
+      called << :one
+    end
+    @indexer.after_processing do
+      called << :two
+    end
+
+    @indexer.process(@file)
+
+    assert_equal [:one, :two], called, "Both after_processing hooks called, in order"
+  end
+
 
 end

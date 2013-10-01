@@ -12,7 +12,7 @@ require 'traject/solrj_writer'
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
 
-# This class  does indexing for traject: Getting input records from a Reader
+# This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output
 # hash off somewhere (usually Solr) with a Writer class. 
 #
@@ -27,6 +27,7 @@ require 'traject/macros/basic'
 # * #settings
 # * #to_field
 # * #each_record
+# * #after_procesing
 # * #logger (rarely used in config files, but in some cases to set up custom logging config)
 #
 # If accessing a Traject::Indexer programmatically (instead of via command line with
@@ -102,6 +103,7 @@ class Traject::Indexer
   def initialize(arg_settings = {})
     @settings = Settings.new(arg_settings)
     @index_steps = []
+    @after_processing_steps = []
   end
 
   # Part of the config file DSL, for writing settings values. 
@@ -151,6 +153,12 @@ class Traject::Indexer
   # Part of DSL, register logic to be called for each record
   def each_record(aLambda = nil, &block)
     @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
+  end
+
+  # Part of DSL, register logic to be called once at the end
+  # of processing a stream of records. 
+  def after_processing(aLambda = nil, &block)
+    @after_processing_steps << AfterProcessingStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first))
   end
 
   def logger
@@ -353,6 +361,15 @@ class Traject::Indexer
 
     writer.close if writer.respond_to?(:close)
 
+    @after_processing_steps.each do |step|
+      begin
+        step.execute
+      rescue Exception => e
+        logger.fatal("Unexpected exception #{e} when executing #{step}")
+        raise e
+      end
+    end
+
     elapsed        = Time.now - start_time
     avg_rps        = (count / elapsed)
     logger.info "finished Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
@@ -547,6 +564,30 @@ class Traject::Indexer
       return accumulator
     end
 
+  end
+
+  # A class representing a block of logic called after
+  # processing, registered with #after_processing
+  class AfterProcessingStep
+    attr_accessor :lambda, :block, :source_location
+    def initialize(lambda, block, source_location)
+      self.lambda = lambda
+      self.block = block
+      self.source_location = source_location
+    end
+
+    # after_processing steps get no args yielded to
+    # their blocks, they just are what they are. 
+    def execute
+      [lambda, block].each do |aProc|
+        next unless aProc
+        aProc.call
+      end
+    end
+
+    def inspect
+      "(after_processing at #{self.source_location}"
+    end
   end
 
 

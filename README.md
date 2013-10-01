@@ -297,6 +297,19 @@ in order.
   to_field("foo") {...}  # and will be called after each of the preceding for each record
 ~~~
 
+#### after_processing
+
+You can register logic with `after_processing` that will be called when the
+entire stream of records has been processed. You can use it for whatever custom
+ruby code you might want for your app (send an email? Clean up a log file? Trigger
+a Solr replication?)
+
+~~~ruby
+after_processing do 
+  whatever_ruby_code
+end
+~~~
+
 #### Sample config
 
 A fairly complex sample config file can be found at [./test/test_support/demo_config.rb](./test/test_support/demo_config.rb)
