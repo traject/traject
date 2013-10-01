@@ -19,9 +19,9 @@ of a couple traject features meant to make it easier.
   * translation map files found in a
     "./translation_maps" subdir on the load path will be found
     for Traject translation maps.
-* Traject `-G` command line can be used to tell traject to use
-  bundler with a `Gemfile` located at current working dirctory
-  (or give an argument to `-G ./some/myGemfile`)
+* You can use Bundler with traject simply by creating a Gemfile with `bundler init`,
+  and then running command line with `bundle exec traject` or 
+  even `BUNDLE_GEMFILE=path/to/Gemfile bundle exec traject`
 
 ## Custom code local to your project
 
@@ -160,19 +160,21 @@ possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemf
 Run `bundle install` from the directory with the Gemfile, on any system
 at any time, to make sure specified gems are installed.
 
-**Run traject** with the `-G` flag to tell it to use the Gemfile, for instance if
-your working directory is the one that includes your Gemfile:
+**Run traject** with `bundle exec` to have bundler set up the environment
+from your Gemfile. You can `cd` into the directory containing the Gemfile, 
+so bundler can find it: 
 
-    traject -G -c some_traject_config.rb ...
+    $ cd /some/where
+    $ bundle exec traject -c some_traject_config.rb ...
     
-Or explicitly specify a Gemfile somewhere else:
+Or you can use the BUNDLE_GEMFILE environment variable to tell bundler where
+to find the Gemfile, and run from any directory at all:
 
-    traject -G /some/path/Gemfile -c some_config.rb ...
+    $ BUNDLE_GEMFILE=/path/to/Gemfile bundle exec traject /some/path/Gemfile -c some_config.rb ...
 
-Traject will use bundler to setup with the Gemfile, making sure
-the specified versions of all gems are used (and also making sure
-no gems except those specified in the gemfile are available to
-the program).
+Bundler will make sure the specified versions of all gems are used by
+traject, and also make sure no gems except those specified in the gemfile
+are available to the program, for a reliable reproducible environment. 
 
 You should still `require` the gem in your traject config file,
 then just refer to what it provides in your config code as usual. 

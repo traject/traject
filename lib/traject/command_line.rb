@@ -1,7 +1,6 @@
-# Require as little as possible at top, so we can bundle require later
-# if needed, before requiring anything from the bundle. Can't avoid slop
-# though, to get our bundle arg out, sorry. 
 require 'slop'
+require 'traject'
+require 'traject/indexer'
 
 module Traject
   # The class that executes for the Traject command line utility.
@@ -32,22 +31,7 @@ module Traject
 
     # Returns true on success or false on failure; may also raise exceptions;
     # may also exit program directly itself (yeah, could use some normalization)
-    def execute
-      # Do bundler setup FIRST to try and initialize all gems from gemfile
-      # if requested.
-
-      # have to use Slop object to tell diff between
-      # no arg supplied and no option -g given at all
-      if slop.present? :Gemfile
-        require_bundler_setup(options[:Gemfile])
-      end
-
-
-      # We require them here instead of top of file,
-      # so we have done bundler require before we require these.
-      require 'traject'
-      require 'traject/indexer'
-
+    def execute      
       if options[:version]
         self.console.puts "traject version #{Traject::VERSION}"
         return
@@ -116,6 +100,8 @@ module Traject
       else
         $stdout
       end
+
+      indexer.logger.info("   marcout writing type:#{output_type} to file:#{output_arg}")
 
       case output_type
       when "binary"
@@ -215,24 +201,6 @@ module Traject
       end
     end
 
-    # requires bundler/setup, optionally first setting ENV["BUNDLE_GEMFILE"]
-    # to tell bundler to use a specific gemfile. Gemfile arg can be relative
-    # to current working directory.
-    def require_bundler_setup(gemfile=nil)
-      if gemfile
-        # tell bundler what gemfile to use
-        gem_path = File.expand_path( gemfile )
-        # bundler not good at error reporting, we check ourselves
-        unless File.exists? gem_path
-          self.console.puts "Gemfile `#{gemfile}` does not exist, exiting..."
-          self.console.puts
-          self.console.puts slop.help
-          exit 2
-        end
-        ENV["BUNDLE_GEMFILE"] = gem_path
-      end
-      require 'bundler/setup'
-    end
 
     def assemble_settings_hash(options)
       settings = {}
@@ -294,7 +262,6 @@ module Traject
         on :u, :solr, "Set solr url, shortcut for -s solr.url=", :argument => true
         on :t, :marc_type, "xml, json or binary. shortcut for -s marc_source.type=", :argument => true
         on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
-        on :G, "Gemfile", "run with bundler and optionally specified Gemfile", :argument => :optional, :default => nil
 
         on :x, "command", "alternate traject command: process (default); marcout; commit", :argument => true, :default => "process"
 
