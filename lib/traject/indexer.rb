@@ -11,6 +11,35 @@ require 'traject/solrj_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
+
+# This class  does indexing for traject: Getting input records from a Reader
+# class, mapping the input records to an output hash, and then sending the output
+# hash off somewhere (usually Solr) with a Writer class. 
+#
+# Traject config files are `instance_eval`d in an Indexer object, so `self` in
+# a config file is an Indexer, and any Indexer methods can be called. 
+#
+# However, certain Indexer methods exist almost entirely for the purpose of
+# being called in config files; these methods are part of the expected 
+# Domain-Specific Language ("DSL") for config files, and will ordinarily
+# form the bulk or entirety of config files:
+#
+# * #settings
+# * #to_field
+# * #each_record
+# * #logger (rarely used in config files, but in some cases to set up custom logging config)
+#
+# If accessing a Traject::Indexer programmatically (instead of via command line with
+# config files), additional methods of note include:
+#
+#     # to process a stream of input records from configured Reader,
+#     # to configured Writer:
+#     indexer.process(io_stream)  
+#
+#     # To map a single input record manually to an ouput_hash,
+#     # ignoring Readers and Writers
+#     hash = indexer.map_record(record)
+#
 #
 #  == Readers and Writers
 #
@@ -75,32 +104,53 @@ class Traject::Indexer
     @index_steps = []
   end
 
-  # The Indexer's settings are a hash of key/values -- not
-  # nested, just one level -- of configuration settings. Keys
-  # are strings.
+  # Part of the config file DSL, for writing settings values. 
   #
-  # The settings method with no arguments returns that hash.
+  # The Indexer's settings consist of a hash-like Traject::Settings
+  # object. The settings hash is *not*  nested hashes, just one level
+  # of configuration settings. Keys are always strings, and by convention
+  # use "." for namespacing, eg `log.file`
+  #
+  # The settings method with no arguments returns that Settings object. 
   #
   # With a hash and/or block argument, can be used to set
   # new key/values. Each call merges onto the existing settings
-  # hash.
+  # hash.  The block is `instance_eval`d in the context
+  # of the Traject::Settings object. 
   #
   #    indexer.settings("a" => "a", "b" => "b")
   #
   #    indexer.settings do
-  #      store "b", "new b"
+  #      provide "b", "new b"
   #    end
   #
   #    indexer.settings #=> {"a" => "a", "b" => "new b"}
   #
-  # even with arguments, returns settings hash too, so can
-  # be chained.
+  # Note the #provide method is defined on Traject::Settings to 
+  # write to a setting only if previously not set. You can also
+  # use #store to force over-writing even if an existing setting. 
+  #
+  # Even with arguments, Indexer#settings returns the Settings object, 
+  # hash too, so can method calls can be chained.
+  #
   def settings(new_settings = nil, &block)
     @settings.merge!(new_settings) if new_settings
 
     @settings.instance_eval &block if block
 
     return @settings
+  end
+
+  # Part of DSL, used to define an indexing mapping. Register logic
+  # to be called for each record, and generate values for a particular
+  # output field. 
+  def to_field(field_name, aLambda = nil, &block)
+    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
+  end
+
+  # Part of DSL, register logic to be called for each record
+  def each_record(aLambda = nil, &block)
+    @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
   def logger
@@ -148,20 +198,6 @@ class Traject::Indexer
 
     return logger
   end
-
-
-
-
-
-  # Used to define an indexing mapping.
-  def to_field(field_name, aLambda = nil, &block)
-    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
-  end
-
-  def each_record(aLambda = nil, &block)
-    @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
-  end
-
 
   # Processes a single record according to indexing rules set up in
   # this indexer. Returns the output hash (a hash whose keys are
