@@ -99,6 +99,20 @@ Now any account, in a crontab, in an interactive shell, wherever,
 can just execute `jruby-traject {arguments}`, and execute traject
 in a jruby environment.
 
+### Bundler too?
+
+If you're running with bundler too, you could make a wrapper file specific to
+a particular traject project and it's Gemfile, by combining the `bundle exec` into
+your wrapper file.  For instance,  for chruby, this works:
+
+    #!/usr/bin/env bash
+
+    chruby-exec jruby -- BUNDLE_GEMFILE=/path/to/Gemfile bundle exec traject "$@"
+
+Now you can call your wrapper script from anywhere and with any active ruby,
+and execute it in jruby and with the dependencies specified in the Gemfile
+for your project. 
+
 ## Exit codes
 
 Traject tries to always return a well-behaved unix exit code -- 0 for success,
