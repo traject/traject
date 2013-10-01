@@ -87,7 +87,7 @@ describe "Traject::Indexer#process" do
       "solr.url" => "http://example.org",
       "writer_class_name" => "Traject::NullWriter"
     )
-    @file = File.open(support_file_path "manufacturing_consent.marc") 
+    @file = File.open(support_file_path "test_data.utf8.mrc")
 
     called = []
 
