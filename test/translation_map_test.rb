@@ -40,6 +40,14 @@ describe "TranslationMap" do
       assert_equal "DEFAULT LITERAL", map["not in the map"] 
     end
 
+    it "does not trigger default on explicit nil result" do
+      map = Traject::TranslationMap.new({"alpha" => "one", "beta" => nil}, :default => "DEFAULT")
+
+      assert_equal "one", map["alpha"]
+      assert_nil map["beta"]
+      assert_equal "DEFAULT", map["not_found_in_map"]
+    end
+
     it "finds .rb over .yaml" do
       found = @cache.lookup("both_map")
 
@@ -115,6 +123,16 @@ describe "TranslationMap" do
     map.translate_array!(arr)
 
     assert_equal ["hola", "first", "second", "last thing", "buenas noches", "hola", "everything else"], arr
+  end
+
+  it "translate_array does not include nil values" do
+    # TranslationMap can explicitly map to nil, meaning, 
+    # well, map to nothing. Make sure translate_array respects that. 
+    map = Traject::TranslationMap.new("alpha" => "one", "beta" => nil)
+
+    values = map.translate_array(["alpha", "beta"])
+
+    assert_equal ["one"], values
   end
 
   it "#to_hash" do
