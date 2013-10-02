@@ -1,11 +1,12 @@
 # Traject
 
-Tools for indexing MARC records to Solr.
+Tools for reading MARC records, transforming them with indexing rules, and indexing to Solr.
+Might be used to index MARC data for a Solr-based discovery product like [Blacklight](https://github.com/projectblacklight/blacklight) or [VUFind](http://vufind.org/).
 
-Generalizable to tools for configuring mapping records to associative array data structures, and sending
-them somewhere.
+Traject might also be generalized to a set of tools for getting structured data from a source, and sending it to a destination. 
 
-**Currently under development, not production ready**
+
+**Traject is nearing 1.0, it is robust, feature-rich and ready for trial use**
 
 [![Gem Version](https://badge.fury.io/rb/traject.png)](http://badge.fury.io/rb/traject)
 [![Build Status](https://travis-ci.org/jrochkind/traject.png)](https://travis-ci.org/jrochkind/traject)
@@ -13,23 +14,17 @@ them somewhere.
 
 ## Background/Goals
 
-Existing tools for indexing Marc to Solr served us well for many years, and have many features.
-But we were having more and more difficulty with them, including in extending/customizing in maintainable ways.
-We realized that to create a tool with the API (internal and external) we wanted, we could do a better
-job with jruby (ruby on the JVM).
+Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (University of Michigan Libraries). 
 
-* **Easy to use**, getting started with standard use cases should be easy, even for non-rubyists.
-* **Support customization and flexiblity**, common customization use cases, including simple local
-  logic, should be very easy. More sophisticated and even complex customization use cases should still be possible,
-  changing just the parts of traject you want to change.
-* **Maintainable local logic**, supporting sharing of reusable logic via ruby gems.
-* **Comprehensible internal logic**; well-covered by tests, well-factored separation of concerns,
-easy for newcomer developers who know ruby to understand the codebase.
-* **High performance**, using multi-threaded concurrency where appropriate to maximize throughput.
-traject likely will provide higher throughput than other similar solutions.
-* **Well-behaved shell script**, for painless integration in batch processes and cronjobs, with
-exit codes, sufficiently flexible control of logging, proper use of stderr, etc.
+Traject was born out of our experience with similar tools, including the very popular and useful [solrmarc](https://code.google.com/p/solrmarc/) by Bob Haschart; and Bill Dueber's own [marc2solr](http://github.com/billdueber/marc2solr/). 
 
+SolrMarc can provide a powerful system for people who are comfortable editing configuration files but not as comfortable writing code. We're comfortable programming (especially in a dynamic language), and want to be able to experiment with different indexing patterns quickly, easily, and testably; but are admittedly less comfortable in Java.  In order to have a tool with the API's and usage patterns convenient for us, we found we could do it better in JRuby -- Ruby on the JVM. Basic configuration files can be written with a few simple directives traject provides, but since they're 'ruby all the way down', we can make common things easy -- but hard, custom things, hopefully not a whole lot harder. 
+
+* It's all (we hope) just well-crafted and documented ruby code; easy to get started with even if you aren't a rubyist, easy to program, easy to read, easy to modify.  The whole code base is only 6400 lines of code, more than a third of which is tests. 
+* Fast. Traject by default indexes using multiple threads, so you can use all your cores! It is likely faster for your use cases than alternative solutions. 
+* Composed of decoupled components, for flexibility and extensibility. For instance, traject supports a decoupled readers/writer architecture, so you can use ruby-marc or marc4j to read, and write to solr, a debug file, or anywhere else you'd like with a little extra code. 
+* Designed to support local code and configuration that's maintainable and testable. When you've written configuration or code useful beyond just one traject project, it's easy to share it with others by distributing it as a gem. 
+* Designed with batch execution in mind, with flexible logging, good exit codes, and good use of stdin/stdout/stderr. 
 
 
 ## Installation
