@@ -25,12 +25,12 @@ require 'traject/line_writer'
 #
 # ## Example configuration file
 #
-#    require 'traject/debug_writer'
+#     require 'traject/debug_writer'
 #
-#    settings do
-#      provide "writer_class_name", "Traject::DebugWriter"
-#      provide "output_file", "out.txt"
-#    end
+#     settings do
+#       provide "writer_class_name", "Traject::DebugWriter"
+#       provide "output_file", "out.txt"
+#     end
 class Traject::DebugWriter < Traject::LineWriter
   DEFAULT_FORMAT = '%-12s %-25s %s'
   DEFAULT_IDFIELD = 'id'
