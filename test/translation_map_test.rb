@@ -40,6 +40,14 @@ describe "TranslationMap" do
       assert_equal "DEFAULT LITERAL", map["not in the map"] 
     end
 
+    it "does not trigger default on explicit nil result" do
+      map = Traject::TranslationMap.new({"alpha" => "one", "beta" => nil}, :default => "DEFAULT")
+
+      assert_equal "one", map["alpha"]
+      assert_nil map["beta"]
+      assert_equal "DEFAULT", map["not_found_in_map"]
+    end
+
     it "finds .rb over .yaml" do
       found = @cache.lookup("both_map")
 
