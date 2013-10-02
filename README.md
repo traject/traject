@@ -105,86 +105,57 @@ of all standardized settings.
 You can keep your settings and indexing rules in one config file,
 or split them accross multiple config files however you like. (Connection details vs indexing? Common things vs environmental specific things?)
 
-The main tool for indexing rules is the `to_field` command.
-Which can be used with a few standard functions.
+There are a few methods that can be used to create indexing rules, but the
+one you'll most common is called `to_field`, and establishes a rule
+to extract content to a particular named output field. 
+
+The extraction rule can use built-in 'macros', or, as we'll see later, 
+entirely custom logic. 
+
+#### extract_marc
+
+The built-in macro you'll use the most is `extract_marc`, to extract
+data out of a MARC record according to a tag/subfield specification. 
 
 ~~~ruby
-# configuration.rb
+    # Take the value of the first 001 field, and put
+    # it in output field 'id', to be indexed in Solr
+    # field 'id'
+    to_field "id", extract_marc("001", :first => true)
 
-# The first arguent, 'source' in this case, is what Solr field we're
-# sending to. And the 'literal' function supplies a hard-coded
-# constant string literal.
-to_field "source", literal("LIB_CATALOG")
+    # 245 subfields a, p, and s. 130, all subfields.
+    # built-in punctuation trimming routine.
+    to_field "title_t", extract_marc("245nps:130", :trim_punctuation => true)
 
-# you can call 'to_field' multiple times, additional values
-# are concatenated
-to_field "source", literal("ANOTHER ONE")
+    # Can limit to certain indicators with || chars.
+    # "*" is a wildcard in indicator spec.  So
+    # 856 with first indicator '0', subfield u.
+    to_field "email_addresses", extract_marc("856|0*|u")
 
-# Serialize the marc record back out and
-# put it in a solr field.
-to_field "marc_record", serialized_marc(:format => "xml")
+    # Can list tag twice with different field combinations
+    # to extract separately
+    to_field "isbn", extract_marc("245a:245abcde")
 
-# or :format => "json" for marc-in-json
-# or :format => "binary", by default Base64-encoded for Solr
-# 'binary' field, or, for more like what SolrMarc did, without
-# escaping:
-to_field "marc_record_raw", serialized_marc(:format => "binary", :binary_escape => false)
-
-# Take ALL of the text from the marc record, useful for
-# a catch-all field. Actually by default only takes
-# from tags 100 to 899.
-to_field "text", extract_all_marc_values
-
-# Now we have a simple example of the general utility function
-# `extract_marc`
-to_field "id", extract_marc("001", :first => true)
-~~~
-
-`extract_marc` takes a marc tag/subfield specification, and optional
-arguments. `:first => true` means if the specification returned multiple values, ignore all bet the first. It is wise to use this
-*whenever you have a non-multi-valued solr field* even if you think "There should only be one 001 field anyway!", to deal with unexpected
-data properly.
-
-Other examples of the specification string, which can include multiple tag mentions, as well as subfields and indicators:
-
-~~~ruby
-  # 245 subfields a, p, and s. 130, all subfields.
-  # built-in punctuation trimming routine.
-  to_field "title_t", extract_marc("245nps:130", :trim_punctuation => true)
-
-  # Can limit to certain indicators with || chars.
-  # "*" is a wildcard in indicator spec.  So
-  # 856 with first indicator '0', subfield u.
-  to_field "email_addresses", extract_marc("856|0*|u")
-  
-  # Can list tag twice with different field combinations
-  # to extract separately
-  to_field "isbn", extract_marc("245a:245abcde")
-~~~
-
-The `extract_marc` function *by default* includes any linked
-MARC `880` fields with alternate-script versions. Another reason
-to use the `:first` option if you really only want one.
-
-By default, specifications with multiple subfields (like "240abc") will produce
-one single string of output for each matching field. Specifications
-with single subfields (like "020a") will split subfields and produce
-an output string for each matching subfield. 
-
-For MARC control (aka 'fixed') fields, you can use square
-brackets to take a slice by byte offset.
-
-~~~ruby
+    # For MARC Control ('fixed') fields, you can optionally
+    # use square brackets to take a byte offset. 
     to_field "langauge_code", extract_marc("008[35-37]")
 ~~~
 
-For more information on extraction specifications, see
-the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/MarcExtractor)).
+`extract_marc` by default includes all 'alternate script' linked fields correspoinding
+to matched specifications, but you can turn that off, or extract *only* corresponding
+880s. 
+
+    to_field "title", extract_marc("245abc", :alternate_script => false)
+    to_field "title_vernacular", extract_marc("245abc", :alternate_script => :only)
+
+By default, specifications with multiple subfields (like "240abc") will produce one single string of output for each matching field. Specifications with single subfields (like "020a") will split subfields and produce an output string for each matching subfield.    
+
+For the syntax and complete possibilities of the specification
+string argument to extract_marc, see docs at the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/MarcExtractor)).
 
 `extract_marc` also supports `translation maps` similar
 to SolrMarc's. There are some translation maps provided by traject,
-and you can also define your own. translation maps can be supplied
-in yaml or ruby.  Translation maps are especially useful
+and you can also define your own, in yaml or ruby. Translation maps are especially useful
 for mapping form MARC codes to user-displayable strings:
 
 ~~~ruby
@@ -193,109 +164,115 @@ for mapping form MARC codes to user-displayable strings:
     to_field "language", extract_marc("008[35-37]:041a:041d", :translation_map => "marc_language_code")
 ~~~
 
-See [Traject::TranslationMap](./lib/traject/translation_map.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/TranslationMap)) for more info on translation mapping. 
+To see all options for `extract_marc`, see the [method documentation](http://rdoc.info/gems/traject/Traject/Macros/Marc21:extract_marc)
 
-#### Direct indexing logic vs. Macros
+#### other built-in utility macros
 
-It turns out all those functions we saw above used with `to_field` -- `literal`, `serialized_marc`, `extract_all_marc_values`, and `extract_marc` -- are what Traject calls 'macros'.
+Other built-in methods that can be used with `to_field` include a hard-coded
+literal string:
 
-They are all actually built based upon a more basic element of
-indexing functionality, which you can always drop down to, and
-which is used to build the macros. The basic use of `to_field`,
-with directly specified logic instead of using a macro, looks like this:
+    to_field "source", literal("LIB_CATALOG")
+
+The current record serialized back out as MARC, in binary, XML, or json:
+
+    # or :format => "json" for marc-in-json
+    # or :format => "binary", by default Base64-encoded for Solr
+    # 'binary' field, or, for more like what SolrMarc did, without
+    # escaping:
+    to_field "marc_record_raw", serialized_marc(:format => "binary", :binary_escape => false, :allow_oversized => true)
+
+Text of all fields in a range:
+
+    to_field "text", extract_all_marc_values(:from => 100, :to => 899)
+
+
+All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
+
+#### more complex canned MARC semantic logic
+
+Some more complex (and opinionated/subjective) algorithms for deriving semantics
+from Marc are also packaged with Traject, but not available by default. To make
+them available to your indexing, you just need to use ruby `require` and `extend`. 
+
+A number of methods are in [Traject::Macros::Marc21Semantics](./lib/traject/macros/marc21_semantics.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21Semantics))
+
+    require 'traject/macros/marc21_semantics'
+    extend Traject::Macros::Marc21Semantics
+
+    to_field 'title_sort',        marc_sortable_title
+    to_field 'broad_subject',     marc_lcc_to_broad_category
+    to_field "geographic_facet",  marc_geo_facet
+    # And several more
+
+And, there's a routine for classifying MARC to an internal
+format/genre/type vocabulary:
+
+    require 'traject/macros/marc_format_classifier'
+    extend Traject::Macros::MarcFormats
+
+    to_field 'format_facet',    marc_formats
+
+
+#### Custom logic
+
+The built-in routines are there for your convenience, but if you need
+something local or custom, you can write ruby logic directly
+in a configuration file, using a ruby block, which looks like this:
+
+    to_field "id" do |record, accumulator|
+       # take the record's 001, prefix it with "bib_",
+       # and then add it to the 'accumulator' argument,
+       # to send it to the specified output field
+       value = record['001']
+       value = "bib_#{value}"
+       accumulator << value
+    end
+
+`do |record, accumulator|` is the definition of a ruby block taking
+two arguments.  The first one passed in will be a MARC record. The
+second is an array, you add values to the array to send them to
+output. 
+
+You can also add a block onto the end of a built-in 'macro', to 
+further customize the output. The `accumulator` passed to your block
+will already have values in it from the first step, and you can
+use ruby methods like `map!` to modify it:
+
+    to_field "big_title", extract_marc("245abcdefg") do |record, accumulator|
+      # put it all in all uppercase, I don't know why. 
+      accumulator.map! {|v| v.upcase}
+    end
+
+There are many more things you can do with custom logic blocks like this too,
+including additional features we haven't discussed yet. 
+
+If you find yourself repeating boilerplate code in your custom logic, you can
+even create your own 'macros' (like `extract_marc`). `extract_marc` and other
+macros are nothing more than methods that return ruby lambda objects of
+the same format as the blocks you write for custom logic. 
+
+For tips, gotchas, and a more complete explanation of how this works, see
+additional documentation page on [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md)
+
+#### each_record and after_processing
+
+In addition to `to_field`, an `each_record` method is available, which, 
+like `to_field`, is executed for every record, but without being tied
+to a specific field. 
+
+`each_record` can be used for logging or notifiying; computing intermediate
+results; or writing to more than one field at once. 
 
 ~~~ruby
-to_field "source" do |record, accumulator, context|
-   accumulator << "LIB CATALOG"
-end
-~~~~
-
-That's actually equivalent to the macro we used earlier: `to_field("source"), literal("LIB_CATALOG")`.
-
-This direct use of to_field happens to be a ruby "block", which is
-used to define a block of logic that can be stored and executed later. When the block is called, first argument (`record` above) is the marc_record being indexed (a ruby-marc MARC::Record object), and the second argument (`accumulator`) is a ruby array used to accumulate output values.
-
-The third argument is a `Traject::Indexer::Context` object that can
-be used for more advanced functionality, including caching expensive
-per-record calculations, writing out to more than one output field at a time, or taking account of current Traject Settings in your logic. The third argument is optional, you can supply
-a two-argument block too.
-
-You can always drop out to this basic direct use whenever you need
-special purpose logic, directly in the config file, writing in
-ruby:
-
-~~~ruby
-# this is more or less nonsense, just an example
-to_field "weird_title" do |record, accumlator, context|
-   field = record['245']
-   title = field['a']
-   title.upcase! if field.indicator1 = '1'
-   accumulator << title
-end
-
-# To make use of marc extraction by specification, just like
-# marc_extract does, you may want to use the Traject::MarcExtractor
-# class
-to_field "weirdo" do |record, accumulator, context|
-   # use MarcExtractor.cached for performance, globally
-   # caching the MarcExtractor we create. See docs
-   # at MarcExtractor.
-   list = MarcExtractor.cached("700a").extract(record)
-
-   # combine all the 700a's in ONE string, cause we're weird
-   list = list.join(" ")
-
-   accumulator << list
-end
-~~~
-
-You can also *combine* a macro and a direct block for some
-post-processing. In this case, the `accumulator` parameter
-in our block will start out with the values left by
-the `extract_marc`:
-
-~~~ruby
-to_field "subjects", extract_marc("600:650:610") do |record, accumulator, context|
-  # for some reason we want to uppercase all our subjects
-  accumulator.collect! {|s| s.upcase }
-end
-~~~
-
-If you find yourself repeating code a lot in direct blocks, you
-can supply your _own_ macros, for local use, or even to share
-with others in a ruby gem. See docs [Macros](./doc/macros.md)
-
-#### each_record
-
-There is also a method `each_record`, which is like `to_field`, but without
-a specific field. It can be used for other side-effects of your choice, or
-even for writing to multiple fields.
-
-~~~ruby
-  each_record do |record, context|
-    # example of writing to two fields at once.
-    (x, y) = Something.do_stuff
-    (context["one_field"] ||= [])     << x
-    (context["another_field"] ||= []) << y
+  each_record do |record|
+    some_custom_logging(record)
   end
 ~~~
 
-You could write or use macros for `each_record` too. It's suggested that
-such a macro take the field names it will effect as arguments (example?)
+For more on `each_record`, see documentation page on [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md).
 
-`each_record` and `to_field` calls will be processed in one big order, guaranteed
-in order.
-
-~~~ruby
-  to_field("foo") {...}  # will be called first on each record
-  each_record {...}      # will always be called AFTER above has potentially added values
-  to_field("foo") {...}  # and will be called after each of the preceding for each record
-~~~
-
-#### after_processing
-
-You can register logic with `after_processing` that will be called when the
-entire stream of records has been processed. You can use it for whatever custom
+There is also an `after_processing` method that can be used to register
+logic that will be called after the entire has been processed. You can use it for whatever custom
 ruby code you might want for your app (send an email? Clean up a log file? Trigger
 a Solr replication?)
 

@@ -20,20 +20,24 @@ module Traject::Macros
     # and others. By default, will de-duplicate results, but see :allow_duplicates
     #
     # * :first => true: take only first value
+    #
     # * :translation_map => String: translate with named translation map looked up in load
     #       path, uses Tranject::TranslationMap.new(translation_map_arg)
+    #
     # * :trim_punctuation => true; trims leading/trailing punctuation using standard algorithms that
     #     have shown themselves useful with Marc, using Marc21.trim_punctuation
+    #
     # * :default => String: if otherwise empty, add default value
+    #
     # * :allow_duplicates => boolean, default false, if set to true then will avoid
     #       de-duplicating the result array (array.uniq!)
     #
     #
     # Examples:
     #
-    # to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
-    # to_field("id"),    extract_marc("001", :first => true)
-    # to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
+    #     to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
+    #     to_field("id"),    extract_marc("001", :first => true)
+    #     to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
     def extract_marc(spec, options = {})
       
       # Raise an error if there are any invalid options, indicating a
