@@ -10,14 +10,14 @@ module Traject
   #
   # Specify in a config files as follows:
   #
-  #    require 'traject/mock_writer'
-  #    require 'traject/mock_reader'
+  #     require 'traject/mock_writer'
+  #     require 'traject/mock_reader'
   #
-  #    settings do
-  #      store "reader_class_name", "Traject::MockReader"
-  #      store "writer_class_name", "Traject::MockWriter"
-  #      store "mock_reader.limit", 4_000 # default is 10_000
-  #    end
+  #     settings do
+  #       store "reader_class_name", "Traject::MockReader"
+  #       store "writer_class_name", "Traject::MockWriter"
+  #       store "mock_reader.limit", 4_000 # default is 10_000
+  #     end
   class MockReader
 
     attr_accessor :limit

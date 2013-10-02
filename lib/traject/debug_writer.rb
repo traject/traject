@@ -7,11 +7,11 @@ require 'traject/line_writer'
 # Output format is three columns: id, output field, values (multiple
 # values seperated by '|'), and looks something like:
 #
-#    000001580    edition                   [1st ed.]
-#    000001580    format                    Book | Online | Print
-#    000001580    geo                       Great Britain
-#    000001580    id                        000001580
-#    000001580    isbn                      0631126902
+#     000001580    edition                   [1st ed.]
+#     000001580    format                    Book | Online | Print
+#     000001580    geo                       Great Britain
+#     000001580    id                        000001580
+#     000001580    isbn                      0631126902
 #
 # ## Settings
 #

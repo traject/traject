@@ -6,10 +6,10 @@ module Traject
   #
   # Examples:
   #
-  #    array_of_stuff   = MarcExtractor.new("001:245abc:700a").extract(marc_record)
-  #    values           = MarcExtractor.new("245a:245abc").extract_marc(marc_record)
-  #    seperated_values = MarcExtractor.new("020a:020z").extract(marc_record)
-  #    bytes            = MarcExtractor.new("008[35-37]")
+  #     array_of_stuff   = MarcExtractor.new("001:245abc:700a").extract(marc_record)
+  #     values           = MarcExtractor.new("245a:245abc").extract_marc(marc_record)
+  #     seperated_values = MarcExtractor.new("020a:020z").extract(marc_record)
+  #     bytes            = MarcExtractor.new("008[35-37]")
   #
   # ## String extraction specifications
   #
@@ -21,7 +21,8 @@ module Traject
   # of one or more Data and Control Field Specifications seperated by colons. 
   #
   # A Data Field Specification is of the form:
-  #  `{tag}{|indicators|}{subfields}`
+  #
+  # * `{tag}{|indicators|}{subfields}`
   # * {tag} is three chars (usually but not neccesarily numeric)
   # * {indicators} are optional two chars enclosed in pipe ('|') characters,
   # * {subfields} are optional list of chars (alphanumeric)
@@ -29,14 +30,14 @@ module Traject
   # indicator spec must be two chars, but one can be * meaning "don't care".
   # space to mean 'blank'
   #
-  # "245|01|abc65:345abc:700|*5|:800"
+  #     "245|01|abc65:345abc:700|*5|:800"
   #
   # A Control Field Specification is used with tags for control (fixed) fields (ordinarily fields 001-010)
   # and includes a tag and a a byte slice specification. 
   #
-  #  "008[35-37]:007[5]""
-  #  => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007 (TODO: Should we support
-  #    "LDR" as a pseudo-tag to take byte slices of leader?)
+  #      "008[35-37]:007[5]""
+  #      => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007 (TODO: Should we support
+  #      "LDR" as a pseudo-tag to take byte slices of leader?)
   #
   # * subfields and indicators can only be provided for marc data/variable fields
   # * byte slice can only be provided for marc control fields (generally tags less than 010)
@@ -46,39 +47,39 @@ module Traject
   # Normally, for a spec including multiple subfield codes, multiple subfields
   # from the same MARC field will be concatenated into one string separated by spaces:
   #
-  #    600 a| Chomsky, Noam x| Philosophy.
-  #    600 a| Chomsky, Noam x| Political and social views.
-  #    MarcExtractor.new("600ax").extract(record)
-  #    # results in two values sent to Solr: 
-  #    "Chomsky, Noam Philosophy."
-  #    "Chomsky, Noam Political and social views."
+  #     600 a| Chomsky, Noam x| Philosophy.
+  #     600 a| Chomsky, Noam x| Political and social views.
+  #     MarcExtractor.new("600ax").extract(record)
+  #     # results in two values sent to Solr: 
+  #     "Chomsky, Noam Philosophy."
+  #     "Chomsky, Noam Political and social views."
   #
   # You can turn off this concatenation and leave individual subfields in seperate
   # strings by setting the `separator` option to nil:
   #
-  #    MarcExtractor.new("600ax", :separator => nil).extract(record)
-  #    # Results in four values being sent to Solr (or 3 if you de-dup):
-  #    "Chomksy, Noam"
-  #    "Philosophy."
-  #    "Chomsky, Noam"
-  #    "Political and social views."
+  #     MarcExtractor.new("600ax", :separator => nil).extract(record)
+  #     # Results in four values being sent to Solr (or 3 if you de-dup):
+  #     "Chomksy, Noam"
+  #     "Philosophy."
+  #     "Chomsky, Noam"
+  #     "Political and social views."
   #
   # However, **the default is different for specifications with only a single
   # subfield**, these are by default kept seperated:
   #
-  #    020 a| 285197145X a| 9782851971456
-  #    MarcExtractor.new("020a:020z").extract(record)
-  #    # two seperate strings sent to Solr:
-  #    "285197145X"
-  #    "9782851971456"
+  #     020 a| 285197145X a| 9782851971456
+  #     MarcExtractor.new("020a:020z").extract(record)
+  #     # two seperate strings sent to Solr:
+  #     "285197145X"
+  #     "9782851971456"
   #
   # For single subfield specifications, you force concatenation by
   # repeating the subfield specification:
   #
-  #    MarcExtractor.new("020aa:020zz").extract(record)
-  #    # would result in a single string sent to solr for
-  #    # the single field, by default space-separated:
-  #    "285197145X 9782851971456"
+  #     MarcExtractor.new("020aa:020zz").extract(record)
+  #     # would result in a single string sent to solr for
+  #     # the single field, by default space-separated:
+  #     "285197145X 9782851971456"
   #
   # ## Note on Performance and MarcExtractor creation and reuse
   #
@@ -90,15 +91,15 @@ module Traject
   # If you are creating a traject 'macro' method, here's one way to do that,
   # capturing the MarcExtractor under closure:
   #
-  #    def some_macro(spec, other_args, whatever)
-  #      extractor = MarcExtractor.new( spec )
-  #      # ...
-  #      return lambda do |record, accumulator, context|
-  #         #...
-  #         accumulator.concat extractor.extract(record)
-  #         #...
-  #      end
-  #    end
+  #     def some_macro(spec, other_args, whatever)
+  #       extractor = MarcExtractor.new( spec )
+  #       # ...
+  #       return lambda do |record, accumulator, context|
+  #          #...
+  #          accumulator.concat extractor.extract(record)
+  #          #...
+  #       end
+  #     end
   #
   # In other cases, you may find it convenient to improve performance by
   # using the MarcExtractor#cached method, instead of MarcExtractor#new, to
@@ -164,7 +165,7 @@ module Traject
     # although if you try hard enough you can surely find a way to do something
     # you shouldn't.
     #
-    #    extractor = MarcExtractor.cached("245abc:700a", :separator => nil)
+    #     extractor = MarcExtractor.cached("245abc:700a", :separator => nil)
     def self.cached(*args)
       cache = (Thread.current[:marc_extractor_cached] ||= Hash.new)
       extractor = (cache[args] ||= begin

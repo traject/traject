@@ -8,8 +8,8 @@ require 'thread'
 # This does not seem to effect performance much, as far as I could tell
 # benchmarking.
 #
-# Output will be sent to settings["output_file"] string path, or else
-# settings["output_stream"] (ruby IO object), or else stdout.
+# Output will be sent to `settings["output_file"]` string path, or else
+# `settings["output_stream"]` (ruby IO object), or else stdout.
 #
 # This class can be sub-classed to write out different serialized
 # reprentations -- subclasses will just override the #serialize

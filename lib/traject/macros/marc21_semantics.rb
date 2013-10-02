@@ -367,6 +367,9 @@ module Traject::Macros
       return found_date
     end
 
+    # REGEX meant to rule out obvious non-LCC's, and only allow things
+    # plausibly LCC's. 
+    LCC_REGEX = /\A *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
     # Looks up Library of Congress Classification (LCC) or NLM Medical Subject Headings (MeSH)
     # from usual parts of the marc record. Maps them to high-level broad categories,
     # basically just using the first part of the LCC. Note it's just looking in bib-level
@@ -379,7 +382,6 @@ module Traject::Macros
     # or nil.
     #
     # The categories output aren't great, but they're something.
-    LCC_REGEX = /\A *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
     def marc_lcc_to_broad_category( options = {}, spec="050a:060a:090a:096a")
       # Trying to match things that look like LCC, and not match things
       # that don't. Is tricky.

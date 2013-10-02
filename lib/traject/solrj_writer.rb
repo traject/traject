@@ -60,23 +60,22 @@ require 'thread' # for Mutex
 #
 # ## Example
 #
-#    settings do
-#      provide "writer_class_name", "Traject::SolrJWriter"
+#     settings do
+#       provide "writer_class_name", "Traject::SolrJWriter"
 #
-#      # This is just regular ruby, so don't be afraid to have conditionals!
-#      # Switch on hostname, for test and production server differences
-#      if Socket.gethostname =~ /devhost/
-#        provide "solr.url", "http://my.dev.machine:9033/catalog"
-#      else
-#        provide "solr.url", "http://my.production.machine:9033/catalog"
-#      end
+#       # This is just regular ruby, so don't be afraid to have conditionals!
+#       # Switch on hostname, for test and production server differences
+#       if Socket.gethostname =~ /devhost/
+#         provide "solr.url", "http://my.dev.machine:9033/catalog"
+#       else
+#         provide "solr.url", "http://my.production.machine:9033/catalog"
+#       end
 #  
-#      provide "solrj_writer.parser_class_name", "BinaryResponseParser" # for Solr 4.x
-#      # provide "solrj_writer.parser_class_name", "XMLResponseParser" # For solr 1.x or 3.x
+#       provide "solrj_writer.parser_class_name", "BinaryResponseParser" # for Solr 4.x
+#       # provide "solrj_writer.parser_class_name", "XMLResponseParser" # For solr 1.x or 3.x
 #  
-#      provide "solrj_writer.commit_on_close", "true"
-#
-#    end
+#       provide "solrj_writer.commit_on_close", "true"
+#     end
 class Traject::SolrJWriter
   # just a tuple of a SolrInputDocument
   # and a Traject::Indexer::Context it came from

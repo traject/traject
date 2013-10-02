@@ -8,7 +8,7 @@ class Traject::Indexer
   # Enhanced with a few features from Hashie, to make it for
   # instance string/symbol indifferent
   #
-  # #provide(key, value) is added, to do like settings[key] ||= value,
+  # method #provide(key, value) is added, to do like settings[key] ||= value,
   # set only if not already set (but unlike ||=, nil or false can count as already set)
   #
   # Also has an interesting 'defaults' system, meant to play along

@@ -42,7 +42,7 @@ require 'traject/macros/basic'
 #     hash = indexer.map_record(record)
 #
 #
-#  == Readers and Writers
+#  ## Readers and Writers
 #
 #  The Indexer has a modularized architecture for readers and writers, for where
 #  source records come from (reader), and where output is sent to (writer).

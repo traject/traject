@@ -3,7 +3,17 @@
 #
 # Method to take a string constant name, including :: qualifications, and
 # look up the actual constant. Looks up relative to current file.
-# REspects leading ::. Etc.
+# Respects leading ::. Etc.
+#
+#     class Something
+#       include Traject::QualifiedConstGet
+#
+#       def foo
+#         #...
+#         klass = qualified_const_get("Foo::Bar")
+#         #...
+#       end
+#     end
 module Traject::QualifiedConstGet
 
 

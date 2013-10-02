@@ -31,12 +31,12 @@ require 'traject/ndj_reader'
 #
 # In a configuration file:
 #
-#    require 'traject/marc_reader'
+#     require 'traject/marc_reader'
 #
-#    settings do
-#      provide "reader_class_name", "Traject::MarcReader"
-#      provide "marc_source.type", "xml"
-#    end
+#     settings do
+#       provide "reader_class_name", "Traject::MarcReader"
+#       provide "marc_source.type", "xml"
+#     end
 #
 class Traject::MarcReader
   include Enumerable
