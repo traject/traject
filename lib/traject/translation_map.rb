@@ -10,22 +10,31 @@ module Traject
   #    translation_map["some_input"] #=> some_output
   #
   # Input is assumed to always be string, output is either string
-  # or array of strings.
+  # or array of strings. 
   #
   # What makes it more useful than a stunted hash is it's ability to load
   # the hash definitions from configuration files, either pure ruby, 
-  # yaml, or java .properties.  (Limited basic .properties, don't try any fancy escaping please,
-  # no = or : in key names, no split lines.)
+  # yaml, or (limited subset of) java .properties file.  
   #
-  #     TranslationMap.new("dir/some_file")
+  # traject's `extract_marc` macro allows you to specify a :translation_map=>filename argument
+  # that will automatically find and use a translation map on the resulting data:
   #
-  # Will look for a file named `some_file.rb` or `some_file.yaml` or `some_file.properties`, 
+  #     extract_marc("040a", :translation_map => "languages")
+  # 
+  # Or you can always create one yourself and use it how you like:
+  #
+  #     map = TranslationMap.new("languages")
+  #
+  # In either case, TranslationMap will look for a file named, in that example,
+  # `languages.rb` or `languages.yaml` or `languages.properties`, 
   # somewhere in the ruby $LOAD_PATH in a `/translation_maps` subdir. 
-  # * Looks for "/translation_maps" subdir in load paths, so
+  #
+  # * Also looks for "/translation_maps" subdir in load paths, so
   #   for instance you can have a gem that keeps translation maps
   #   in ./lib/translation_maps, and it Just Works. 
+  #
   # * Note you do NOT supply the .rb, .yaml, or .properties suffix yourself,
-  # it'll use whichever it finds (allows calling code to not care which is used).
+  #  it'll use whichever it finds (allows calling code to not care which is used).
   #
   # Ruby files just need to have their last line eval to a hash. They file
   # will be run through `eval`, don't do it with untrusted content (naturally)
@@ -59,6 +68,7 @@ module Traject
   # There's no way to specify multiple return values in a .properties, use .yaml or .rb for that. 
   #
   # == Caching
+  #
   # Lookup and loading of configuration files will be cached, for efficiency.
   # You can reset with `TranslationMap.reset_cache!`
   #
@@ -71,6 +81,28 @@ module Traject
   #       - array
   #       - of
   #       - values look like this
+  #
+  # == Alternatives
+  # `Traject::TranslationMap` provides an easy way to deal with the most common translation case: 
+  # simple key-value stores with optional default values.
+  #
+  # If you need more complex translation, you can simply use `#map!` 
+  # or its kin to work on the `accumulator` in a block 
+  # 
+  #
+  #
+  #     # get a lousy language detection of any vernacular title
+  #     require 'whatlanguage'
+  #     wl = WhatLanguage.new(:all)
+  #     to_field 'vernacular_langauge', extract_marc('245', :alternate_script=>:only) do |rec, acc|
+  #       # accumulator is already filled with the values of any 880s that reference a 245 because
+  #       # of the call to #extract_marc
+  #       acc.map! {|x| wl.language(x) }
+  #       acc.uniq!
+  #     end
+  # Within the block, you may also be interested in using:
+  # * a case-insentive hash, perhaps like [this one](https://github.com/junegunn/insensitive_hash)
+  # * a [MatchMap](https://github.com/billdueber/match_map), which implements pattern-matching logic similar to solrmarc's pattern files
   class TranslationMap
     class Cache
       def initialize
