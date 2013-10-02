@@ -37,7 +37,6 @@ require 'traject/line_writer'
 #      provide "writer_class_name", "Traject::JsonWriter"
 #      provide "output_file", "out.json"
 #    end
-end
 class Traject::JsonWriter < Traject::LineWriter
 
   def serialize(context)
