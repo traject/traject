@@ -125,6 +125,16 @@ describe "TranslationMap" do
     assert_equal ["hola", "first", "second", "last thing", "buenas noches", "hola", "everything else"], arr
   end
 
+  it "translate_array does not include nil values" do
+    # TranslationMap can explicitly map to nil, meaning, 
+    # well, map to nothing. Make sure translate_array respects that. 
+    map = Traject::TranslationMap.new("alpha" => "one", "beta" => nil)
+
+    values = map.translate_array(["alpha", "beta"])
+
+    assert_equal ["one"], values
+  end
+
   it "#to_hash" do
     map = Traject::TranslationMap.new("yaml_map")
 
