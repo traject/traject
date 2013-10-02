@@ -10,7 +10,7 @@ require 'traject/ndj_reader'
 # By default assumes binary MARC encoding, please set marc_source.type setting
 # for XML or json. 
 #
-# == Settings
+# ## Settings
 
 # * "marc_source.type":  serialization type. default 'binary'
 #       * "binary". standard ISO 2709 "binary" MARC format. 
@@ -27,7 +27,7 @@ require 'traject/ndj_reader'
 #         it's best guess as to highest performance available
 #         installed option. Probably best to leave as default. 
 #
-# == Example
+# ## Example
 #
 # In a configuration file:
 #

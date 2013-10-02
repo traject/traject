@@ -42,7 +42,7 @@ module Traject
   # You can also pass in a Hash for consistency to TranslationMap.new, although
   # I don't know why you'd want to.
   #
-  # == Special default handling
+  # ## Special default handling
   #
   # The key "__default__" in the hash is treated specially. If set to a string,
   # that string will be returned by the TranslationMap for any input not otherwise
@@ -59,7 +59,7 @@ module Traject
   #    TranslationMap.new("something", :default => "foo")
   #    TranslationMap.new("something", :default => :passthrough)
   #
-  # == Output: String or array of strings
+  # ## Output: String or array of strings
   #
   # The output can be a string or an array of strings, or nil.  It should not be anything else.
   # When used with the #translate_array! method, one string can be replaced by multiple values
@@ -67,12 +67,12 @@ module Traject
   #
   # There's no way to specify multiple return values in a .properties, use .yaml or .rb for that. 
   #
-  # == Caching
+  # ## Caching
   #
   # Lookup and loading of configuration files will be cached, for efficiency.
   # You can reset with `TranslationMap.reset_cache!`
   #
-  # == YAML example:
+  # ## YAML example:
   #
   #     key: value
   #     key2: value2 multiple words fine
@@ -82,7 +82,7 @@ module Traject
   #       - of
   #       - values look like this
   #
-  # == Alternatives
+  # ## Alternatives
   # `Traject::TranslationMap` provides an easy way to deal with the most common translation case: 
   # simple key-value stores with optional default values.
   #

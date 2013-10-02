@@ -13,7 +13,7 @@ require 'traject/line_writer'
 #    000001580    id                        000001580
 #    000001580    isbn                      0631126902
 #
-# == Settings
+# ## Settings
 #
 #  * 'output_file' -- the name of the file to output to (command line -o shortcut). 
 #  * 'output_stream' -- alternately, the IO stream
@@ -23,7 +23,7 @@ require 'traject/line_writer'
 # By default, with neither output_file nor output_stream provided, writes to stdout, which
 # can be useful for debugging diagnosis. 
 #
-# == Example configuration file
+# ## Example configuration file
 #
 #    require 'traject/debug_writer'
 #

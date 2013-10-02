@@ -16,7 +16,7 @@ require 'marc/marc4j'
 # marc-in-json, or if you don't need binary Marc8 support, it may in some cases
 # be faster. 
 #
-# == Settings
+# ## Settings
 #
 # * marc_source.type:     serialization type. default 'binary', also 'xml' (TODO: json/marc-in-json)
 #
@@ -41,7 +41,7 @@ require 'marc/marc4j'
 #   those that have legacy java code for which a marc4j object is needed. .
 #
 #
-# == Example
+# ## Example
 #
 # In a configuration file:
 #

@@ -447,6 +447,9 @@ this with other developers first!)
 Pull requests should come with tests, as well as docs where applicable. Docs can be inline rdoc-style, edits to this README,
 and/or extra files in ./docs -- as appropriate for what needs to be docs.
 
+**Inline api docs** Note that our [`.yardopts` file](./.yardopts) used by rdoc.info to generate
+online api docs has a `--markup markdown` specified -- inline class/method docs are in markdown, not rdoc. 
+
 ## TODO
 
 

@@ -18,7 +18,7 @@ require 'thread' # for Mutex
 # you may not get a raise immediately after calling #put, you may get it on
 # a FUTURE #put or #close. You should get it eventually though.
 #
-# == Settings
+# ## Settings
 #
 # * solr.url: Your solr url (required)
 #
@@ -58,7 +58,7 @@ require 'thread' # for Mutex
 #   make sense to increase this value to throw at Solr as fast as it
 #   can catch. 
 #
-# == Example
+# ## Example
 #
 #    settings do
 #      provide "writer_class_name", "Traject::SolrJWriter"

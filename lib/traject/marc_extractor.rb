@@ -11,7 +11,7 @@ module Traject
   #    seperated_values = MarcExtractor.new("020a:020z").extract(marc_record)
   #    bytes            = MarcExtractor.new("008[35-37]")
   #
-  # == String extraction specifications
+  # ## String extraction specifications
   #
   # Extraction directions are supplied in strings, usually as the first
   # parameter to MarcExtractor.new or MarcExtractor.cached. These specifications
@@ -41,7 +41,7 @@ module Traject
   # * subfields and indicators can only be provided for marc data/variable fields
   # * byte slice can only be provided for marc control fields (generally tags less than 010)
   #
-  # == Subfield concatenation
+  # ## Subfield concatenation
   #
   # Normally, for a spec including multiple subfield codes, multiple subfields
   # from the same MARC field will be concatenated into one string separated by spaces:
@@ -80,7 +80,7 @@ module Traject
   #    # the single field, by default space-separated:
   #    "285197145X 9782851971456"
   #
-  # == Note on Performance and MarcExtractor creation and reuse
+  # ## Note on Performance and MarcExtractor creation and reuse
   #
   # A MarcExtractor is somewhat expensive to create, and has been shown in profiling/
   # benchmarking to be a bottleneck if you end up creating one for each marc record
@@ -189,7 +189,7 @@ module Traject
     # documentation of string specification format. 
     #
     #
-    # == Return value
+    # ## Return value
     #
     # The hash returned is keyed by tag, and has as values an array of 0 or
     # or more MarcExtractor::Spec objects representing the specified extraction
