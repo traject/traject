@@ -2,24 +2,21 @@ require 'traject'
 require 'marc'
 require 'marc/marc4j'
 
-# Uses Marc4J to read the marc records, but then translates them to
-# ruby-marc before delivering them still, Marc4J is just inside the black
-# box.
+# `Traject::Marc4JReader` uses the marc4j java package to parse the MARC records
+# into standard ruby-marc MARC::Record objects. This reader is often faster than 
+# Traject::MarcReader, especially for XML, and offers support for reading Marc8
+# encoded records and transcoding to UTF8. 
 #
-# But one way to get ability to transcode from Marc8. Records it delivers
-# are ALWAYS in UTF8, will be transcoded if needed.
+# Marc4JReader can read MARC ISO 2709 ("binary") or MARCXML. We use the Marc4J MarcPermissiveStreamReader
+# for reading binary, but sometimes in non-permissive mode, according to settings. We use the Marc4j MarcXmlReader
+# for reading xml. The actual code for dealing with Marc4J is in the separate 
+# [marc-marc4j gem](https://github.com/billdueber/ruby-marc-marc4j). 
 #
-# Also hope it gives us some performance benefit.
+# See also the pure ruby Traject::MarcReader as an alternative, if you need to read
+# marc-in-json, or if you don't need binary Marc8 support, it may in some cases
+# be faster. 
 #
-# Uses the Marc4J MarcPermissiveStreamReader for binary, but sometimes
-# in non-permissive mode, according to settings. Uses the Marc4j MarcXmlReader
-# for xml.
-#
-# NOTE: If you aren't reading in binary records encoded in MARC8, you may
-# find the pure-ruby Traject::MarcReader faster; the extra step to read
-# Marc4J but translate to ruby MARC::Record adds some overhead.
-#
-# Settings:
+# == Settings
 #
 # * marc_source.type:     serialization type. default 'binary', also 'xml' (TODO: json/marc-in-json)
 #
@@ -40,8 +37,25 @@ require 'marc/marc4j'
 #                          be loaded. If unset, uses marc4j.jar bundled with traject.
 #
 # * marc4j_reader.keep_marc4j: Keeps the original marc4j record accessible from 
-#                              the eventual ruby-marc record via record#original_marc4j
-
+#   the eventual ruby-marc record via record#original_marc4j. Intended for
+#   those that have legacy java code for which a marc4j object is needed. .
+#
+#
+# == Example
+#
+# In a configuration file:
+#
+#     require 'traject/marc4j_reader
+#     settings do
+#       provide "reader_class_name", "Traject::Marc4JReader"
+#        
+#       #for MarcXML:
+#       # provide "marc_source.type", "xml"
+#
+#       # Or instead for binary:
+#       provide "marc4j_reader.permissive", true
+#       provide "marc4j_reader.source_encoding", "MARC8"
+#     end
 class Traject::Marc4JReader
   include Enumerable
 
