@@ -1,19 +1,3 @@
-# TODO: THREAD POOL
-#
-# 1) Exception handling in threads, what's the right thing to do
-# 2) General count of failed records in a thread safe way, so we can report
-#    it back from 'close', so process can report it back, and non-zero exit
-#    code can be emited from command-line.
-# 3) back pressure on thread pool. give it a bounded blocking queue instead,
-#    to make sure thousands of add tasks don't build up, waiting until the end.
-#    or does that even matter? So what if they build up in the queue and only
-#    get taken care of at the end, is that okay? I do emit a warning right now
-#    if it takes more than 60 seconds to process remaining thread pool task queue
-#    at end.
-# 4) No tests yet that actually test thread pool stuff; additionally, may make
-#    some of the batch tests fail in non-deterministic ways, since batch tests
-#    assume order of add (and our Mock solr server is not thread safe yet!)
-
 require 'yell'
 
 require 'traject'
@@ -26,7 +10,6 @@ require 'thread' # for Mutex
 
 #
 # Writes to a Solr using SolrJ, and the SolrJ HttpSolrServer.
-#  (sub-class later for the ConcurrentUpdate server?)
 #
 # After you call #close, you can check #skipped_record_count if you want
 # for an integer count of skipped records.
@@ -35,38 +18,65 @@ require 'thread' # for Mutex
 # you may not get a raise immediately after calling #put, you may get it on
 # a FUTURE #put or #close. You should get it eventually though.
 #
-# settings:
-#   [solr.url] Your solr url (required)
-#   [solrj_writer.server_class_name]  Defaults to "HttpSolrServer". You can specify
-#                                   another Solr Server sub-class, but it has
-#                                   to take a one-arg url constructor. Maybe
-#                                   subclass this writer class and overwrite
-#                                   instantiate_solr_server! otherwise
-#   [solrj.jar_dir] Custom directory containing all of the SolrJ jars. All
-#                   jars in this dir will be loaded. Otherwise,
-#                   we load our own packaged solrj jars. This setting
-#                   can't really be used differently in the same app instance,
-#                   since jars are loaded globally.
-#   [solrj_writer.parser_class_name] A String name of a class in package
-#                                    org.apache.solr.client.solrj.impl,
-#                                    we'll instantiate one with a zero-arg
-#                                    constructor, and pass it as an arg to setParser on
-#                                    the SolrServer instance, if present.
-#                                    NOTE: For contacting a Solr 1.x server, with the
-#                                    recent version of SolrJ used by default, set to
-#                                    "XMLResponseParser"
-#   [solrj_writer.commit_on_close]  If true (or string 'true'), send a commit to solr
-#                                   at end of #process.
-#   [solrj_writer.batch_size]       If non-nil and more than 1, send documents to
-#                                   solr in batches of solrj_writer.batch_size. If nil/1,
-#                                   however, an http transaction with solr will be done
-#                                   per doc. DEFAULT to 100, which seems to be a sweet spot.
-#   [solrj_writer.thread_pool]      Defaults to 4. A thread pool is used for submitting docs
-#                                   to solr. Set to 0 or nil to disable threading. Set to 1,
-#                                   there will still be a single bg thread doing the adds.
-#                                   May make sense to set higher than number of cores on your
-#                                   indexing machine, as these threads will mostly be waiting
-#                                   on Solr. Speed/capacity of your solr is more relevant.
+# == Settings
+#
+# * solr.url: Your solr url (required)
+#
+# * solrj_writer.server_class_name:  Defaults to "HttpSolrServer". You can specify
+#   another Solr Server sub-class, but it has
+#   to take a one-arg url constructor. Maybe
+#   subclass this writer class and overwrite
+#   instantiate_solr_server! otherwise
+#
+# * solrj.jar_dir: Custom directory containing all of the SolrJ jars. All
+#   jars in this dir will be loaded. Otherwise,
+#   we load our own packaged solrj jars. This setting
+#   can't really be used differently in the same app instance,
+#   since jars are loaded globally.
+#
+# * solrj_writer.parser_class_name: A String name of a class in package
+#   org.apache.solr.client.solrj.impl,
+#   we'll instantiate one with a zero-arg
+#   constructor, and pass it as an arg to setParser on
+#   the SolrServer instance, if present.
+#   NOTE: For contacting a Solr 1.x server, with the
+#   recent version of SolrJ used by default, set to
+#   "XMLResponseParser"
+#   
+# * solrj_writer.commit_on_close:  If true (or string 'true'), send a commit to solr
+#   at end of #process.
+#
+# * solrj_writer.batch_size:      If non-nil and more than 1, send documents to
+#   solr in batches of solrj_writer.batch_size. If nil/1,
+#   however, an http transaction with solr will be done
+#   per doc. DEFAULT to 100, which seems to be a sweet spot.
+#
+# * solrj_writer.thread_pool:      Defaults to 1. A thread pool is used for submitting docs
+#   to solr. Set to 0 or nil to disable threading. Set to 1,
+#   there will still be a single bg thread doing the adds. For
+#   very fast Solr servers and very fast indexing processes, may
+#   make sense to increase this value to throw at Solr as fast as it
+#   can catch. 
+#
+# == Example
+#
+#    settings do
+#      provide "writer_class_name", "Traject::SolrJWriter"
+#
+#      # This is just regular ruby, so don't be afraid to have conditionals!
+#      # Switch on hostname, for test and production server differences
+#      if Socket.gethostname =~ /devhost/
+#        provide "solr.url", "http://my.dev.machine:9033/catalog"
+#      else
+#        provide "solr.url", "http://my.production.machine:9033/catalog"
+#      end
+#  
+#      provide "solrj_writer.parser_class_name", "BinaryResponseParser" # for Solr 4.x
+#      # provide "solrj_writer.parser_class_name", "XMLResponseParser" # For solr 1.x or 3.x
+#  
+#      provide "solrj_writer.commit_on_close", "true"
+#
+#    end
 class Traject::SolrJWriter
   # just a tuple of a SolrInputDocument
   # and a Traject::Indexer::Context it came from

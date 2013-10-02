@@ -328,7 +328,23 @@ to_field "author_sort", marc_sortable_author
 to_field "inst_facet",  marc_instrumentation_humanized
 ~~~
 
-See documented list of macros available in [Marc21Semantics](./lib/traject/macros/marc21_semantics.rb)
+See documented list of macros available in [Marc21Semantics](./lib/traject/macros/marc21_semantics.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21Semantics))
+
+### Writers
+
+Traject uses modular 'Writer' classes to take the output hashes from transformation, and
+send them somewhere or do something useful with them. 
+
+By default traject uses the [Traject::SolrJWriter](lib/traject/solrj_writer.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/SolrJWriter)) to send to Solr for indexing. 
+A couple other writers are available too, mostly for debugging purposes:
+[Traject::DebugWriter](lib/traject/debug_writer.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/DebugWriter)) 
+and [Traject::JsonWriter](lib/traject/json_writer.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/JsonWriter)) 
+
+You set which writer is being used in settings (`provide "writer_class_name", "Traject::DebugWriter"`),
+or on the command-line as a shortcut with `-w Traject::DebugWriter`.
+
+You can write your own Readers and Writers if you'd like, see comments at top
+of [Traject::Indexer](lib/traject/indexer.rb).
 
 ## Command Line
 
