@@ -329,7 +329,7 @@ module Traject
       tag = field.tag
 
       # Short-circuit the unintersting stuff
-      return nil unless interesting_tag?(tag)
+      return [] unless interesting_tag?(tag)
 
       # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
       # to do this weird encode gymnastics, which fixes it for mysterious reasons.
