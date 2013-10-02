@@ -1,9 +1,19 @@
 module Traject
   module Macros
-    # See MarcFormatClassifier class
+    # To use the marc_format macro, in your configuration file:
+    #
+    #     require 'traject/macros/marc_formats
+    #     extend Traject::Macros::MarcFormats
+    #
+    #     to_field("format_s") marc_formats
+    #
+    # See also MarcClassifier which can be used directly for a bit more
+    # control. 
     module MarcFormats
       # very opionated macro that just adds a grab bag of format/genre/types
-      # into one field. You may want ot build your own from MarcFormatClassifier functions instead. 
+      # from our own custom vocabulary, all into one field. 
+      # You may want to build your own from MarcFormatClassifier functions instead. 
+      #
       def marc_formats
         lambda do |record, accumulator|
           accumulator.concat Traject::Macros::MarcFormatClassifier.new(record).formats
@@ -12,10 +22,11 @@ module Traject
     end
 
 
-    # Not actually a macro, but we're keeping it here for now, 
-    # a class for classifying marc according to format/genre/type.
+    # A tool for classifiying MARC records according to format/form/genre/type,
+    # just using our own custom vocabulary for those things. 
     #
-    # VERY opinionated. 
+    # used by the `marc_formats` macro, but you can also use it directly
+    # for a bit more control. 
     class MarcFormatClassifier
       attr_reader :record
 
@@ -26,7 +37,10 @@ module Traject
       # A very opinionated method that just kind of jams together
       # all the possible format/genre/types into one array of 1 to N elements. 
       #
-      # Default "Other" will be used
+      # If no other values are present, the default value "Other" will be used.
+      #
+      # See also individual methods which you can use you seperate into
+      # different facets or do other custom things. 
       def formats(options = {})
         options = {:default => "Other"}.merge(options)
 
