@@ -175,22 +175,6 @@ describe "Traject::MarcExtractor" do
 
         assert_equal ["2002"], values
       end
-
-      it "creates a spec from an LDR string" do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("LDR")['LDR'].first
-        assert_equal 'LDR', parsed_spec.tag
-      end
-
-      it "extracts the whole leader" do
-        values = Traject::MarcExtractor.new('LDR').extract(@record)
-        assert_equal ['02067cam a2200469 a 4500'], values
-      end
-
-      it "extracts bytes from the leader" do
-        values = Traject::MarcExtractor.new('LDR:LDR[3-4]').extract(@record)
-        assert_equal ['02067cam a2200469 a 4500', '67'], values
-      end
-
     end
 
     describe "separator argument" do
