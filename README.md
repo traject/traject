@@ -233,6 +233,16 @@ two arguments.  The first one passed in will be a MARC record. The
 second is an array, you add values to the array to send them to
 output. 
 
+Here's a more realistic example that shows how you'd get the
+record type byte 06 out of a MARC leader, then translate it
+to a human-readable string with a TranslationMap
+
+    to_field "marc_type" do |record, accumulator|
+      leader06 = record.leader.byteslice(6)
+      # this translation map doesn't actually exist, but could
+      accumulator << TranslationMap.new("marc_leader")[ leader06 ]
+    end
+
 You can also add a block onto the end of a built-in 'macro', to 
 further customize the output. The `accumulator` passed to your block
 will already have values in it from the first step, and you can
