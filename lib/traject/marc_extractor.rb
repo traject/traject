@@ -35,9 +35,13 @@ module Traject
   # A Control Field Specification is used with tags for control (fixed) fields (ordinarily fields 001-010)
   # and includes a tag and a a byte slice specification. 
   #
-  #      "008[35-37]:007[5]""
-  #      => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007 (TODO: Should we support
-  #      "LDR" as a pseudo-tag to take byte slices of leader?)
+  # We special case the tag "LDR" to mean to extract from the leader
+  #
+  #      "008[35-37]:007[5]"
+  #      => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007
+  #
+  #      "LDR[6]:008[24]"
+  #      => the 6th byte of the leader and the 24th byte of any 008
   #
   # * subfields and indicators can only be provided for marc data/variable fields
   # * byte slice can only be provided for marc control fields (generally tags less than 010)
@@ -223,7 +227,6 @@ module Traject
            spec.indicator2 = indicators[1] if indicators[1] != "*"
           end
 
-          hash[spec.tag] << spec
           
         elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # control field, "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
@@ -236,13 +239,16 @@ module Traject
            spec.bytes = byte1.to_i
           end
           
-          hash[spec.tag] << spec
         else
           raise ArgumentError.new("Unrecognized marc extract specification: #{part}")
         end
+
+        hash[spec.tag] << spec
+
       end
 
       return hash
+
     end
 
 
@@ -269,8 +275,13 @@ module Traject
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
     def each_matching_line(marc_record)
-      marc_record.fields(@interesting_tags_hash.keys).each do |field|
+      
+      fields = marc_record.fields(@interesting_tags_hash.keys)
+      if @interesting_tags_hash.has_key?('LDR') 
+        fields.unshift LeaderFakeField.new(marc_record)
+      end
 
+      fields.each do |field|
         # Make sure it matches indicators too, specs_covering_field
         # doesn't check that.
         specs_covering_field(field).each do |spec|
@@ -347,9 +358,19 @@ module Traject
     def control_field?(field)
       # should the MARC gem have a more efficient way to do this,
       # define #control_field? on both ControlField and DataField?
-      return field.kind_of? MARC::ControlField
+      return field.kind_of?(MARC::ControlField) || field.kind_of?(LeaderFakeField)
     end
     
+
+    # A fake control field to represent the leader data. 
+    class LeaderFakeField
+      attr_reader :tag, :value
+
+      def initialize(marc_record)
+        @tag = 'LDR'
+        @value = marc_record.leader
+      end
+    end
 
     # Represents a single specification for extracting data
     # from a marc field, like "600abc" or "600|1*|x". 
