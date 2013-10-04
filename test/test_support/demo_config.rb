@@ -36,7 +36,7 @@ end
 # An exact literal string, always this string:
 to_field "source",              literal("traject_test_last")
 
-to_field "marc_display",        serialized_marc(:format => "binary", :binary_escape => false)
+to_field "marc_display",        serialized_marc(:format => "binary", :binary_escape => false, :allow_oversized => true)
 
 to_field "text",                extract_all_marc_values
 
