@@ -37,9 +37,10 @@ Then just `gem install traject`.
 
 ( **Note**: We may later provide an all-in-one .jar distribution, which does not require you to install jruby or use on your system. This is hypothetically possible. Is it a good idea?)
 
-# Usage
+For an oveview of how traject works, you can take a look at our sample non-trivial configuration file, [demo_config.rb](./test/test_support/demo_config.rb), which you'd run like `traject -c path/to/demo_config.rb marc_file.marc`.
 
-## Configuration file format
+
+## Configuration files
 
 The traject command-line utility requires you to supply it with a configuration file. So let's start by describing the configuration file.
 
@@ -55,7 +56,7 @@ external functionality. See more at Extending Logic below.
 
 There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
-### Settings
+## Settings
 
 Settings are a flat list of key/value pairs, where the keys are always strings and the values usually are. They look like this
 in a config file:
@@ -101,7 +102,7 @@ You can also use `store` if you want to force-set, last set wins.
 See, docs page on [Settings](./doc/settings.md) for list
 of all standardized settings.
 
-### Indexing Rules
+## Indexing Rules
 
 You can keep your settings and indexing rules in one config file,
 or split them accross multiple config files however you like. (Connection details vs indexing? Common things vs environmental specific things?)
@@ -113,7 +114,7 @@ to extract content to a particular named output field.
 The extraction rule can use built-in 'macros', or, as we'll see later, 
 entirely custom logic. 
 
-#### extract_marc
+## the extract_marc function
 
 The built-in macro you'll use the most is `extract_marc`, to extract
 data out of a MARC record according to a tag/subfield specification. 
@@ -167,7 +168,7 @@ for mapping form MARC codes to user-displayable strings:
 
 To see all options for `extract_marc`, see the [method documentation](http://rdoc.info/gems/traject/Traject/Macros/Marc21:extract_marc)
 
-#### other built-in utility macros
+## other built-in utility macros
 
 Other built-in methods that can be used with `to_field` include a hard-coded
 literal string:
@@ -189,7 +190,7 @@ Text of all fields in a range:
 
 All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
 
-#### more complex canned MARC semantic logic
+## more complex canned MARC semantic logic
 
 Some more complex (and opinionated/subjective) algorithms for deriving semantics
 from Marc are also packaged with Traject, but not available by default. To make
@@ -214,7 +215,7 @@ format/genre/type vocabulary:
     to_field 'format_facet',    marc_formats
 
 
-#### Custom logic
+## Custom logic
 
 The built-in routines are there for your convenience, but if you need
 something local or custom, you can write ruby logic directly
@@ -265,7 +266,7 @@ the same format as the blocks you write for custom logic.
 For tips, gotchas, and a more complete explanation of how this works, see
 additional documentation page on [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md)
 
-#### each_record and after_processing
+## each_record and after_processing
 
 In addition to `to_field`, an `each_record` method is available, which, 
 like `to_field`, is executed for every record, but without being tied
@@ -293,11 +294,8 @@ after_processing do
 end
 ~~~
 
-#### Sample config
 
-A fairly complex sample config file can be found at [./test/test_support/demo_config.rb](./test/test_support/demo_config.rb)
-
-#### Built-in MARC21 Semantics
+## Built-in MARC21 Semantics
 
 There is another package of 'macros' that comes with Traject for extracting semantics
 from Marc21.  These are sometimes 'opinionated', using heuristics or algorithms
@@ -318,7 +316,7 @@ to_field "inst_facet",  marc_instrumentation_humanized
 
 See documented list of macros available in [Marc21Semantics](./lib/traject/macros/marc21_semantics.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21Semantics))
 
-### Writers
+## Writers
 
 Traject uses modular 'Writer' classes to take the output hashes from transformation, and
 send them somewhere or do something useful with them. 
@@ -334,7 +332,7 @@ or on the command-line as a shortcut with `-w Traject::DebugWriter`.
 You can write your own Readers and Writers if you'd like, see comments at top
 of [Traject::Indexer](lib/traject/indexer.rb).
 
-## Command Line
+## The traject command Line
 
 The simplest invocation is:
 
