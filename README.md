@@ -18,13 +18,14 @@ Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (Univer
 
 Traject was born out of our experience with similar tools, including the very popular and useful [solrmarc](https://code.google.com/p/solrmarc/) by Bob Haschart; and Bill Dueber's own [marc2solr](http://github.com/billdueber/marc2solr/). 
 
-SolrMarc can provide a powerful system for people who are comfortable editing configuration files but not as comfortable writing code. We're comfortable programming (especially in a dynamic language), and want to be able to experiment with different indexing patterns quickly, easily, and testably; but are admittedly less comfortable in Java.  In order to have a tool with the API's and usage patterns convenient for us, we found we could do it better in JRuby -- Ruby on the JVM. Basic configuration files can be written with a few simple directives traject provides, but since they're 'ruby all the way down', we can make common things easy -- but hard, custom things, hopefully not a whole lot harder. 
+We're comfortable programming (especially in a dynamic language), and want to be able to experiment with different indexing patterns quickly, easily, and testably; but are admittedly less comfortable in Java.  In order to have a tool with the API's and usage patterns convenient for us, we found we could do it better in JRuby -- Ruby on the JVM. Basic configuration files can be written with a few simple directives traject provides, but since they're 'ruby all the way down', we can make common things easy -- but hard, custom things, hopefully not a whole lot harder. 
 
-* It's all (we hope) just well-crafted and documented ruby code; easy to get started with even if you aren't a rubyist, easy to program, easy to read, easy to modify.  The whole code base is only 6400 lines of code, more than a third of which is tests. 
-* Fast. Traject by default indexes using multiple threads, so you can use all your cores! It is likely faster for your use cases than alternative solutions. 
-* Composed of decoupled components, for flexibility and extensibility. For instance, traject supports a decoupled readers/writer architecture, so you can use ruby-marc or marc4j to read, and write to solr, a debug file, or anywhere else you'd like with a little extra code. 
-* Designed to support local code and configuration that's maintainable and testable. When you've written configuration or code useful beyond just one traject project, it's easy to share it with others by distributing it as a gem. 
-* Designed with batch execution in mind, with flexible logging, good exit codes, and good use of stdin/stdout/stderr. 
+* Easy to get started with even if you aren't a rubyist, slighty more complicated or custom things should be only slightly harder. 
+* Easy to program, easy to read, easy to modify.  The whole code base is only 6400 lines of code, more than a third of which is tests.
+* Fast. Traject by default indexes using multiple threads, on multiple cpu cores. 
+* Composed of decoupled components, for flexibility and extensibility. 
+* Designed to support local code and configuration that's maintainable and testable, an can be shared between projects as ruby gems. 
+* Designed with batch execution in mind: flexible logging, good exit codes, good use of stdin/stdout/stderr. 
 
 
 ## Installation
