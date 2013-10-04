@@ -295,27 +295,6 @@ end
 ~~~
 
 
-## Built-in MARC21 Semantics
-
-There is another package of 'macros' that comes with Traject for extracting semantics
-from Marc21.  These are sometimes 'opinionated', using heuristics or algorithms
-that are not inherently part of Marc21, but have proven useful in actual practice.
-
-It's not loaded by default, you can use straight ruby `require` and `extend`
-to load the macros into the indexer.
-
-~~~ruby
-# in a traject config file, extend so we can use methods from...
-require 'traject/macros/marc21_semantics'
-extend Traject::Macros::Marc21Semantics
-
-to_field "date",        marc_publication_date
-to_field "author_sort", marc_sortable_author
-to_field "inst_facet",  marc_instrumentation_humanized
-~~~
-
-See documented list of macros available in [Marc21Semantics](./lib/traject/macros/marc21_semantics.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21Semantics))
-
 ## Writers
 
 Traject uses modular 'Writer' classes to take the output hashes from transformation, and
