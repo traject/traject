@@ -37,8 +37,6 @@ Then just `gem install traject`.
 
 ( **Note**: We may later provide an all-in-one .jar distribution, which does not require you to install jruby or use on your system. This is hypothetically possible. Is it a good idea?)
 
-For an oveview of how traject works, you can take a look at our sample non-trivial configuration file, [demo_config.rb](./test/test_support/demo_config.rb), which you'd run like `traject -c path/to/demo_config.rb marc_file.marc`.
-
 
 ## Configuration files
 
@@ -53,6 +51,8 @@ of ruby is available to you if needed.
 **rubyist tip**: Technically, config files are executed with `instance_eval` in a Traject::Indexer instance, so the special commands you see are just methods on Traject::Indexer (or mixed into it). But you can
 call ordinary ruby `require` in config files, etc., too, to load
 external functionality. See more at Extending Logic below.
+
+For an oveview of how traject works, you can take a look at our sample non-trivial configuration file, [demo_config.rb](./test/test_support/demo_config.rb), which you'd run like `traject -c path/to/demo_config.rb marc_file.marc`.
 
 There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
