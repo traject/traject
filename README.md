@@ -18,13 +18,14 @@ Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (Univer
 
 Traject was born out of our experience with similar tools, including the very popular and useful [solrmarc](https://code.google.com/p/solrmarc/) by Bob Haschart; and Bill Dueber's own [marc2solr](http://github.com/billdueber/marc2solr/). 
 
-SolrMarc can provide a powerful system for people who are comfortable editing configuration files but not as comfortable writing code. We're comfortable programming (especially in a dynamic language), and want to be able to experiment with different indexing patterns quickly, easily, and testably; but are admittedly less comfortable in Java.  In order to have a tool with the API's and usage patterns convenient for us, we found we could do it better in JRuby -- Ruby on the JVM. Basic configuration files can be written with a few simple directives traject provides, but since they're 'ruby all the way down', we can make common things easy -- but hard, custom things, hopefully not a whole lot harder. 
+We're comfortable programming (especially in a dynamic language), and want to be able to experiment with different indexing patterns quickly, easily, and testably; but are admittedly less comfortable in Java.  In order to have a tool with the API's and usage patterns convenient for us, we found we could do it better in JRuby -- Ruby on the JVM. 
 
-* It's all (we hope) just well-crafted and documented ruby code; easy to get started with even if you aren't a rubyist, easy to program, easy to read, easy to modify.  The whole code base is only 6400 lines of code, more than a third of which is tests. 
-* Fast. Traject by default indexes using multiple threads, so you can use all your cores! It is likely faster for your use cases than alternative solutions. 
-* Composed of decoupled components, for flexibility and extensibility. For instance, traject supports a decoupled readers/writer architecture, so you can use ruby-marc or marc4j to read, and write to solr, a debug file, or anywhere else you'd like with a little extra code. 
-* Designed to support local code and configuration that's maintainable and testable. When you've written configuration or code useful beyond just one traject project, it's easy to share it with others by distributing it as a gem. 
-* Designed with batch execution in mind, with flexible logging, good exit codes, and good use of stdin/stdout/stderr. 
+* Basic configuration files can be easily written even by non-rubyists,  with a few simple directives traject provides. But config files are 'ruby all the way down', so we can provide a gradual slope to more complex needs, with the full power of ruby. 
+* Easy to program, easy to read, easy to modify.  
+* Fast. Traject by default indexes using multiple threads, on multiple cpu cores. 
+* Composed of decoupled components, for flexibility and extensibility. The whole code base is only 6400 lines of code, more than a third of which is tests.
+* Designed to support local code and configuration that's maintainable and testable, an can be shared between projects as ruby gems. 
+* Designed with batch execution in mind: flexible logging, good exit codes, good use of stdin/stdout/stderr. 
 
 
 ## Installation
@@ -36,9 +37,8 @@ Then just `gem install traject`.
 
 ( **Note**: We may later provide an all-in-one .jar distribution, which does not require you to install jruby or use on your system. This is hypothetically possible. Is it a good idea?)
 
-# Usage
 
-## Configuration file format
+## Configuration files
 
 The traject command-line utility requires you to supply it with a configuration file. So let's start by describing the configuration file.
 
@@ -52,9 +52,11 @@ of ruby is available to you if needed.
 call ordinary ruby `require` in config files, etc., too, to load
 external functionality. See more at Extending Logic below.
 
+For an oveview of how traject works, you can take a look at our sample non-trivial configuration file, [demo_config.rb](./test/test_support/demo_config.rb), which you'd run like `traject -c path/to/demo_config.rb marc_file.marc`.
+
 There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
-### Settings
+## Settings
 
 Settings are a flat list of key/value pairs, where the keys are always strings and the values usually are. They look like this
 in a config file:
@@ -100,7 +102,7 @@ You can also use `store` if you want to force-set, last set wins.
 See, docs page on [Settings](./doc/settings.md) for list
 of all standardized settings.
 
-### Indexing Rules
+## Indexing Rules
 
 You can keep your settings and indexing rules in one config file,
 or split them accross multiple config files however you like. (Connection details vs indexing? Common things vs environmental specific things?)
@@ -112,7 +114,7 @@ to extract content to a particular named output field.
 The extraction rule can use built-in 'macros', or, as we'll see later, 
 entirely custom logic. 
 
-#### extract_marc
+## the extract_marc function
 
 The built-in macro you'll use the most is `extract_marc`, to extract
 data out of a MARC record according to a tag/subfield specification. 
@@ -166,7 +168,7 @@ for mapping form MARC codes to user-displayable strings:
 
 To see all options for `extract_marc`, see the [method documentation](http://rdoc.info/gems/traject/Traject/Macros/Marc21:extract_marc)
 
-#### other built-in utility macros
+## other built-in utility macros
 
 Other built-in methods that can be used with `to_field` include a hard-coded
 literal string:
@@ -188,7 +190,7 @@ Text of all fields in a range:
 
 All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
 
-#### more complex canned MARC semantic logic
+## more complex canned MARC semantic logic
 
 Some more complex (and opinionated/subjective) algorithms for deriving semantics
 from Marc are also packaged with Traject, but not available by default. To make
@@ -213,7 +215,7 @@ format/genre/type vocabulary:
     to_field 'format_facet',    marc_formats
 
 
-#### Custom logic
+## Custom logic
 
 The built-in routines are there for your convenience, but if you need
 something local or custom, you can write ruby logic directly
@@ -264,7 +266,7 @@ the same format as the blocks you write for custom logic.
 For tips, gotchas, and a more complete explanation of how this works, see
 additional documentation page on [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md)
 
-#### each_record and after_processing
+## each_record and after_processing
 
 In addition to `to_field`, an `each_record` method is available, which, 
 like `to_field`, is executed for every record, but without being tied
@@ -292,32 +294,8 @@ after_processing do
 end
 ~~~
 
-#### Sample config
 
-A fairly complex sample config file can be found at [./test/test_support/demo_config.rb](./test/test_support/demo_config.rb)
-
-#### Built-in MARC21 Semantics
-
-There is another package of 'macros' that comes with Traject for extracting semantics
-from Marc21.  These are sometimes 'opinionated', using heuristics or algorithms
-that are not inherently part of Marc21, but have proven useful in actual practice.
-
-It's not loaded by default, you can use straight ruby `require` and `extend`
-to load the macros into the indexer.
-
-~~~ruby
-# in a traject config file, extend so we can use methods from...
-require 'traject/macros/marc21_semantics'
-extend Traject::Macros::Marc21Semantics
-
-to_field "date",        marc_publication_date
-to_field "author_sort", marc_sortable_author
-to_field "inst_facet",  marc_instrumentation_humanized
-~~~
-
-See documented list of macros available in [Marc21Semantics](./lib/traject/macros/marc21_semantics.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21Semantics))
-
-### Writers
+## Writers
 
 Traject uses modular 'Writer' classes to take the output hashes from transformation, and
 send them somewhere or do something useful with them. 
@@ -333,7 +311,7 @@ or on the command-line as a shortcut with `-w Traject::DebugWriter`.
 You can write your own Readers and Writers if you'd like, see comments at top
 of [Traject::Indexer](lib/traject/indexer.rb).
 
-## Command Line
+## The traject command Line
 
 The simplest invocation is:
 

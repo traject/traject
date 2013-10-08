@@ -1,40 +1,42 @@
-#require 'traject/macros/marc21'
-#require 'traject/macros/basic'
-#extend Traject::Macros::Marc21
-#extend Traject::Macros::Basic
+# A sample traject configration, save as say `traject_config.rb`, then
+# run `traject -c traject_config.rb marc_file.marc` to index to
+# solr specified in config file, according to rules specified in
+# config file
 
+
+# To have access to various built-in logic
+# for pulling things out of MARC21, like `marc_languages`
 require 'traject/macros/marc21_semantics'
 extend  Traject::Macros::Marc21Semantics
 
+# To have access to the traject marc format/carrier classifier
 require 'traject/macros/marc_format_classifier'
 extend Traject::Macros::MarcFormats
 
-settings do
-  #provide "solr.url", "http://catsolrmaster.library.jhu.edu:8985/solr/master_prod"
 
+# In this case for simplicity we provide all our settings, including
+# solr connection details, in this one file. But you could choose
+# to separate them into antoher config file; divide things between
+# files however you like, you can call traject with as many
+# config files as you like, `traject -c one.rb -c two.rb -c etc.rb`
+settings do
   provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
+  
+  # Only if you need to connect to a Solr 1.x:
   provide "solrj_writer.parser_class_name", "XMLResponseParser"
 
   provide "solrj_writer.commit_on_close", true
-
-  #require 'traject/marc4j_reader'
-  #store "reader_class_name", "Marc4JReader"
 end
 
+# Extract first 001, then supply code block to add "bib_" prefix to it
 to_field "id", extract_marc("001", :first => true) do |marc_record, accumulator, context|
   accumulator.collect! {|s| "bib_#{s}"}
-
-  # A way to intentionally add errors
-  #if context.position % 10 == 0
-    # intentionally add another one to error
-  #  accumulator << "ANOTHER"
-  #end
-
 end
 
+# An exact literal string, always this string:
 to_field "source",              literal("traject_test_last")
 
-to_field "marc_display",        serialized_marc(:format => "binary", :binary_escape => false)
+to_field "marc_display",        serialized_marc(:format => "binary", :binary_escape => false, :allow_oversized => true)
 
 to_field "text",                extract_all_marc_values
 
@@ -56,9 +58,12 @@ to_field "title_t",             extract_marc("245ak")
 to_field "title1_t",            extract_marc("245abk")
 to_field "title2_t",            extract_marc("245nps:130:240abcdefgklmnopqrs:210ab:222ab:242abcehnp:243abcdefgklmnopqrs:246abcdefgnp:247abcdefgnp")
 to_field "title3_t",            extract_marc("700gklmnoprst:710fgklmnopqrst:711fgklnpst:730abdefgklmnopqrst:740anp:505t:780abcrst:785abcrst:773abrst")
+
+# Note we can mention the same field twice, these
+# ones will be added on to what's already there. Some custom
+# logic for extracting 505$t, but only from 505 field that
+# also has $r -- we consider that more likely to be a titleish string
 to_field "title3_t" do |record, accumulator|
-  # also add in 505$t only if the 505 has an $r -- we consider this likely to be
-  # a titleish string, if there's a 505$r
   record.each_by_tag('505') do |field|
     if field['r']
       accumulator.concat field.subfields.collect {|sf| sf.value if sf.code == 't'}.compact
@@ -103,16 +108,13 @@ to_field "published_display", extract_marc("260a", :trim_punctuation => true)
 
 to_field "pub_date",          marc_publication_date
 
-# LCC to broad class, start with built-in from marc record, but then do our own for local
-# call numbers.
-lcc_map             = Traject::TranslationMap.new("lcc_top_level")
-holdings_extractor  = Traject::MarcExtractor.new("991:937")
-sudoc_extractor     = Traject::MarcExtractor.new("086a", :separator =>nil)
-
+# Use traject's LCC to broad category routine, but then supply
+# custom block to also use our local holdings 9xx info, and
+# also classify sudoc-possessing records as 'Government Publication' discipline
 to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |record, accumulator|
   # add in our local call numbers
   accumulator.concat(
-    holdings_extractor.collect_matching_lines(record) do |field, spec, extractor|
+    Traject::MarcExtractor.cached("991:937").collect_matching_lines(record) do |field, spec, extractor|
         # we output call type 'processor' in subfield 'f' of our holdings
         # fields, that sort of maybe tells us if it's an LCC field.
         # When the data is right, which it often isn't.
@@ -124,7 +126,7 @@ to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |re
         # run it through the map
         s = field['a']
         s = s.slice(0, 1) if s
-        lcc_map[s]
+        Traject::TranslationMap.new("lcc_top_level")[s]
       else
         nil
       end
@@ -133,7 +135,7 @@ to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |re
 
   # If it's got an 086, we'll put it in "Government Publication", to be
   # consistent with when we do that from a local SuDoc call #.
-  if sudoc_extractor.extract(record).length > 0
+  if Traject::MarcExtractor.cached("086a").extract(record).length > 0
     accumulator << "Government Publication"
   end
 
