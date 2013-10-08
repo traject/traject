@@ -168,14 +168,7 @@ module Traject
     #     extractor = MarcExtractor.cached("245abc:700a", :separator => nil)
     def self.cached(*args)
       cache = (Thread.current[:marc_extractor_cached] ||= Hash.new)
-      extractor = (cache[args] ||= begin
-        ex = Traject::MarcExtractor.new(*args).freeze
-        ex.options.freeze
-        ex.spec_hash.freeze
-        ex
-      end)
-
-      return extractor
+      return ( cache[args] ||= Traject::MarcExtractor.new(*args).freeze )
     end
 
     # Check to see if a tag is interesting (meaning it may be covered by a spec
@@ -350,6 +343,12 @@ module Traject
       # should the MARC gem have a more efficient way to do this,
       # define #control_field? on both ControlField and DataField?
       return field.kind_of? MARC::ControlField
+    end
+
+    def freeze
+      self.options.freeze
+      self.spec_hash.freeze
+      super
     end
     
 
