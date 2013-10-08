@@ -202,7 +202,7 @@ module Traject
     # See tests for more examples.
     def self.parse_string_spec(spec_string)
       # hash defaults to []
-      hash = Hash.new {|hash,key| hash[key] = []}
+      hash = Hash.new
 
       spec_strings = spec_string.is_a?(Array) ? spec_string.map{|s| s.split(/\s*:\s*/)}.flatten : spec_string.split(/s*:\s*/)
 
@@ -223,6 +223,7 @@ module Traject
            spec.indicator2 = indicators[1] if indicators[1] != "*"
           end
 
+          hash[spec.tag] ||= []
           hash[spec.tag] << spec
           
         elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # control field, "005[4-5]"
@@ -236,6 +237,7 @@ module Traject
            spec.bytes = byte1.to_i
           end
           
+          hash[spec.tag] ||= []
           hash[spec.tag] << spec
         else
           raise ArgumentError.new("Unrecognized marc extract specification: #{part}")
@@ -340,7 +342,7 @@ module Traject
       end
 
       # Take the resulting tag and get the spec from it (or the default nil if there isn't a spec for this tag)
-      spec = self.spec_hash[tag]
+      spec = self.spec_hash[tag] || []
     end
 
 
