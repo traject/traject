@@ -337,7 +337,7 @@ class Traject::Indexer
       # of having it be bound to the original variable in a non-threadsafe way.
       # This is confusing, I might not be understanding things properly, but that's where i am.
       #thread_pool.maybe_in_thread_pool &make_lambda(count, record, writer)
-      thread_pool.maybe_in_thread_pool do
+      thread_pool.maybe_in_thread_pool(record, settings, position) do |record, settings, position|
         context = Context.new(:source_record => record, :settings => settings, :position => position)
         context.logger = logger
         map_to_context!(context)
