@@ -71,7 +71,7 @@ to_field "title3_t" do |record, accumulator|
   end
 end
 
-to_field "title_display",       extract_marc("245abk", :trim_puncutation => true, :first => true)
+to_field "title_display",       extract_marc("245abk", :trim_punctuation => true, :first => true)
 to_field "title_sort",          marc_sortable_title
 
 to_field "title_series_t",      extract_marc("440a:490a:800abcdt:400abcd:810abcdt:410abcd:811acdeft:411acdef:830adfgklmnoprst:760ast:762ast")
