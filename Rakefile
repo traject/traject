@@ -11,7 +11,12 @@ require 'rake/testtask'
 task :default => [:test]
 
 Rake::TestTask.new do |t|
-  t.pattern = 'test/**/*_test.rb'
+  if defined? JRUBY_VERSION
+    t.pattern = 'test/**/*_{test,test_jruby}.rb'
+  else
+    t.pattern = 'test/**/*_test.rb'
+  end
+    
   t.libs.push 'test', 'test_support'
 end
 

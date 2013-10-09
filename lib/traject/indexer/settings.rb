@@ -61,15 +61,25 @@ class Traject::Indexer
     end
 
     def self.defaults
+      if defined? JRUBY_VERSION
+        rcn = "Traject::Marc4JReader"
+        wcn = "Traject::SolrJWriter"
+        ptp = 3
+      else
+        rcn = "Traject::MarcReader"
+        wcn = "Traject::NullWriter"
+        ptp = 0
+      end
+      
       @@defaults ||= {
-      "reader_class_name"         => "Traject::Marc4JReader",
-      "writer_class_name"         => "Traject::SolrJWriter",
+      "reader_class_name"         => rcn,
+      "writer_class_name"         => wcn,
       "marc_source.type"          => "binary",
       "marc4j_reader.permissive"  => true,
       "marc4j_reader.source_encoding" => "BESTGUESS",
       "solrj_writer.batch_size"   => 200,
       "solrj_writer.thread_pool"  => 1,
-      "processing_thread_pool"    => 3
+      "processing_thread_pool"    => ptp
       }
     end
 
