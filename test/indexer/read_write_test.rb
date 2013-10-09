@@ -5,7 +5,7 @@ require 'test_helper'
 memory_writer_class = Class.new do
     def initialize(settings)
       # store them in a class variable so we can test em later
-      @@last_writer_settings = @settings = settings
+      self.class.class_variable_set(:@@last_writer_settings, (@settings = settings))
       @settings["memory_writer.added"] = []
     end
 
@@ -27,9 +27,9 @@ describe "Traject::Indexer#process" do
   end
 
   it "works" do
-    # oops, this times_called counter isn't thread-safe under multi-threading 
+    # oops, this times_called counter isn't thread-safe under multi-threading
     # is why this fails sometimes.
-    # fixed to be single-threaded for these tests. 
+    # fixed to be single-threaded for these tests.
     times_called = 0
     @indexer.to_field("title") do |record, accumulator, context|
       times_called += 1
@@ -63,12 +63,13 @@ describe "Traject::Indexer#process" do
   end
 
   it "returns false if skipped records" do
+    skip "Skiping SolrJWriter test; not on JRuby" unless defined? JRUBY_VERSION
     @indexer = Traject::Indexer.new(
       "solrj_writer.server_class_name" => "MockSolrServer",
       "solr.url" => "http://example.org",
       "writer_class_name" => "Traject::SolrJWriter"
     )
-    @file = File.open(support_file_path "manufacturing_consent.marc")    
+    @file = File.open(support_file_path "manufacturing_consent.marc")
 
 
     @indexer.to_field("id") do |record, accumulator|
@@ -91,7 +92,7 @@ describe "Traject::Indexer#process" do
 
     called = []
 
-    @indexer.after_processing do 
+    @indexer.after_processing do
       called << :one
     end
     @indexer.after_processing do
