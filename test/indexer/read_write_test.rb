@@ -103,5 +103,21 @@ describe "Traject::Indexer#process" do
     assert_equal [:one, :two], called, "Both after_processing hooks called, in order"
   end
 
+  describe "demo_config.rb" do
+    before do
+      @indexer = Traject::Indexer.new(
+        "solrj_writer.server_class_name" => "MockSolrServer",
+        "solr.url" => "http://example.org",
+        "writer_class_name" => "Traject::NullWriter"
+      )
+    end
+
+    it "parses and loads" do
+      conf_path = support_file_path "demo_config.rb"
+      File.open(conf_path) do |file_io| 
+        @indexer.instance_eval(file_io.read, conf_path)
+      end
+    end
+  end
 
 end
