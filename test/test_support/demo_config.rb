@@ -130,6 +130,7 @@ to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |re
       s = field['a']
       s = s.slice(0, 1) if s
       accumulator << Traject::TranslationMap.new("lcc_top_level")[s]
+    end
   end
   
 
