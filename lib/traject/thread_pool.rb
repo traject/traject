@@ -1,21 +1,21 @@
 module Traject
   # An abstraction wrapping a threadpool executor in some configuration choices
-  # and other apparatus. 
+  # and other apparatus.
   #
-  # 1) Initialize with chosen pool size -- we create fixed size pools, where 
-  # core and max sizes are the same. 
+  # 1) Initialize with chosen pool size -- we create fixed size pools, where
+  # core and max sizes are the same.
   #
   # 2) If initialized with nil for threadcount,  no thread pool will actually
-  # be created, and all threadpool-related methods become no-ops. We call this 
+  # be created, and all threadpool-related methods become no-ops. We call this
   # the nil/null threadpool.  A non-nil threadpool requires jruby, but you can
   # create a null Traject::ThreadPool.new(nil) under MRI without anything
-  # complaining. 
+  # complaining.
   #
   # 3) Use the #maybe_in_threadpool method to send blocks to thread pool for
   # execution -- if no threadpool configured your block will just be
   # executed in calling thread. Be careful to not refer to any non-local
   # variables in the block, unless the variable has an object you can
-  # use thread-safely! 
+  # use thread-safely!
   #
   # 4) Thread pools are java.util.concurrent.ThreadPoolExecutor, manually created
   # with a work queue that will buffer up to (pool_size*3) tasks. If queue is full,
@@ -24,7 +24,7 @@ module Traject
   # of work we're doing, where each unit of work is small and there are many of them--
   # the CallerRunsPolicy serves as an effective 'back pressure' mechanism to keep
   # the work queue from getting too large and exhausting memory, when producers are
-  # faster than consumers. 
+  # faster than consumers.
   #
   # 5) Any exceptions raised by pool-executed work are captured accumulated in a thread-safe
   #  manner, and can be re-raised in the thread of your choice by calling
@@ -35,7 +35,7 @@ module Traject
   #  to complete, then return.  You can not give any more work to the pool
   #  after you do this. By default it'll wait pretty much forever, which should
   #  be fine. If you never call shutdown, the pool will keep running forever
-  #  and not allow your program to exit! 
+  #  and not allow your program to exit!
   #
   # 7) We will keep track of total times a block is run in thread pool, and
   #  total elapsed (wall) time of running all blocks, so an average_execution_ms
@@ -47,6 +47,7 @@ module Traject
 
     # First arg is pool size, 0 or nil and we'll be a null/no-op pool
     def initialize(pool_size)
+      pool_size = nil unless defined? JRUBY_VERSION
       unless pool_size.nil? || pool_size == 0
         require 'java' # trigger an exception now if we're not jruby
 
@@ -60,15 +61,15 @@ module Traject
         rejectedExecutionHandler =  java.util.concurrent.ThreadPoolExecutor::CallerRunsPolicy.new
 
         # keepalive times don't matter, we are setting core and max pool to
-        # same thing, fixed size pool. 
+        # same thing, fixed size pool.
         @thread_pool =  java.util.concurrent.ThreadPoolExecutor.new(
-          @pool_size, @pool_size, 0, java.util.concurrent.TimeUnit::MILLISECONDS, 
+          @pool_size, @pool_size, 0, java.util.concurrent.TimeUnit::MILLISECONDS,
           blockingQueue, rejectedExecutionHandler)
 
-        # A thread-safe queue to collect exceptions cross-threads. 
+        # A thread-safe queue to collect exceptions cross-threads.
         # We make it small, we really only need to store the first
         # exception, we don't care too much about others. But we'll
-        # keep the first 20, why not. 
+        # keep the first 20, why not.
         @async_exception_queue   =  java.util.concurrent.ArrayBlockingQueue.new(20)
       end
     end
@@ -101,7 +102,7 @@ module Traject
     #     # and would be pointing to a different string now!
     #
     #  Note, that just makes block-local variables, it doesn't
-    #  help you with whether a data structure itself is thread safe. 
+    #  help you with whether a data structure itself is thread safe.
     def maybe_in_thread_pool(*args)
       start_t = Time.now
 
@@ -121,7 +122,7 @@ module Traject
 
     # Just for monitoring/debugging purposes, we'll return the work queue
     # used by the threadpool. Don't recommend you do anything with it, as
-    # the original java.util.concurrent docs make the same recommendation. 
+    # the original java.util.concurrent docs make the same recommendation.
     def queue
       @thread_pool && @thread_pool.queue
     end
@@ -129,20 +130,20 @@ module Traject
     # thread-safe way of storing an exception, to raise
     # later in a different thread. We don't guarantee
     # that we can store more than one at a time, only
-    # the first one recorded may be stored. 
+    # the first one recorded may be stored.
     def collect_exception(e)
       # offer will silently do nothing if the queue is full, that's fine
-      # with us. 
+      # with us.
       @async_exception_queue.offer(e)
     end
 
     # If there's a stored collected exception, raise it
     # again now. Call this to re-raise exceptions caught in
-    # other threads in the thread of your choice. 
+    # other threads in the thread of your choice.
     #
     # If you call this method on a ThreadPool initialized with nil
     # as a non-functioning threadpool -- then this method is just
-    # a no-op. 
+    # a no-op.
     def raise_collected_exception!
       if @async_exception_queue && e = @async_exception_queue.poll
         raise e
@@ -151,7 +152,7 @@ module Traject
 
     # shutdown threadpool, and wait for all work to complete.
     # this one is also a no-op if you have a null ThreadPool that
-    # doesn't really have a threadpool at all. 
+    # doesn't really have a threadpool at all.
     #
     # returns elapsed time in seconds it took to shutdown
     def shutdown_and_wait
