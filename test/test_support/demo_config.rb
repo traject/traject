@@ -89,7 +89,7 @@ to_field "author_facet",        extract_marc("100abcdq:110abcdgnu:111acdenqu:700
 to_field "subject_t",           extract_marc("600:610:611:630:650:651avxyz:653aa:654abcvyz:655abcvxyz:690abcdxyz:691abxyz:692abxyz:693abxyz:656akvxyz:657avxyz:652axyz:658abcd")
 
 to_field "subject_topic_facet", extract_marc("600abcdtq:610abt:610x:611abt:611x:630aa:630x:648a:648x:650aa:650x:651a:651x:691a:691x:653aa:654ab:656aa:690a:690x",
-          :trim_puncutation => true, ) do |record, accumulator|
+          :trim_punctuation => true, ) do |record, accumulator|
   #upcase first letter if needed, in MeSH sometimes inconsistently downcased
   accumulator.collect! do |value|
     value.gsub(/\A[a-z]/) do |m|
@@ -108,30 +108,30 @@ to_field "published_display", extract_marc("260a", :trim_punctuation => true)
 
 to_field "pub_date",          marc_publication_date
 
+# An example of more complex ruby logic 'in line' in the config file--
+# too much more complicated than this, and you'd probably want to extract
+# it to an external routine to keep things tidy.
+#
 # Use traject's LCC to broad category routine, but then supply
 # custom block to also use our local holdings 9xx info, and
 # also classify sudoc-possessing records as 'Government Publication' discipline
 to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |record, accumulator|
   # add in our local call numbers
-  accumulator.concat(
-    Traject::MarcExtractor.cached("991:937").collect_matching_lines(record) do |field, spec, extractor|
-        # we output call type 'processor' in subfield 'f' of our holdings
-        # fields, that sort of maybe tells us if it's an LCC field.
-        # When the data is right, which it often isn't.
-      call_type = field['f']
-      if call_type == "sudoc"
-        # we choose to call it:
-        "Government Publication"
-      elsif call_type.nil? || call_type == "lc" || field['a'] =~ Traject::Macros::Marc21Semantics::LCC_REGEX
-        # run it through the map
-        s = field['a']
-        s = s.slice(0, 1) if s
-        Traject::TranslationMap.new("lcc_top_level")[s]
-      else
-        nil
-      end
-    end.compact
-  )
+  Traject::MarcExtractor.cached("991:937").each_matching_line(record) do |field, spec, extractor|
+      # we output call type 'processor' in subfield 'f' of our holdings
+      # fields, that sort of maybe tells us if it's an LCC field.
+      # When the data is right, which it often isn't.
+    call_type = field['f']
+    if call_type == "sudoc"
+      # we choose to call it:
+      accumulator << "Government Publication"
+    elsif call_type.nil? || call_type == "lc" || field['a'] =~ Traject::Macros::Marc21Semantics::LCC_REGEX
+      # run it through the map
+      s = field['a']
+      s = s.slice(0, 1) if s
+      accumulator << Traject::TranslationMap.new("lcc_top_level")[s]
+  end
+  
 
   # If it's got an 086, we'll put it in "Government Publication", to be
   # consistent with when we do that from a local SuDoc call #.
@@ -139,6 +139,7 @@ to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |re
     accumulator << "Government Publication"
   end
 
+  # uniq it in case we added the same thing twice with GovPub
   accumulator.uniq!
 
   if accumulator.empty?
