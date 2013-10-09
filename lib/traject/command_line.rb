@@ -76,6 +76,10 @@ module Traject
         end
 
       return result
+    rescue Exception => e
+      # Try to log unexpected exceptions if possible
+      indexer && indexer.logger && indexer.logger.fatal("Traject::CommandLine: Unexpected exception, terminating execution: #{e.inspect}") rescue nil
+      raise e
     end
 
     def command_commit!
