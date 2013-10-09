@@ -1,7 +1,6 @@
 source 'https://rubygems.org'
 
 # Specify your gem's dependencies in traject.gemspec
-gemspec
 
 platforms :jruby do
  gem "marc-marc4j", ">=0.1.1"
