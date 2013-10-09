@@ -6,6 +6,14 @@ require 'traject/marc_extractor'
 require 'marc'
 
 describe "Traject::MarcExtractor" do
+  it "is frozen read-only" do
+    extractor = Traject::MarcExtractor.new("100abcde", :seperator => ";")
+    assert extractor.frozen?
+    assert extractor.spec_hash.frozen?
+    assert extractor.options.frozen?
+  end
+
+
   describe "#parse_marc_spec" do
     it "parses single spec with all elements" do
       parsed = Traject::MarcExtractor.parse_string_spec("245|1*|abcg")

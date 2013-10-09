@@ -147,6 +147,8 @@ module Traject
       if options[:alternate_script] != false
         @interesting_tags_hash['880'] = true
       end
+
+      self.freeze
     end
 
     # Takes the same arguments as MarcExtractor.new, but will re-use an existing
