@@ -157,6 +157,18 @@ describe "Traject::Macros::Marc21Semantics" do
       @record = MARC::Reader.new(support_file_path  "date_type_r_missing_date2.marc").to_a.first
       assert_equal 1957, Marc21Semantics.publication_date(@record)
     end
+
+    it "works correctly with date type 'q'" do
+      val = @record['008'].value
+      val[6] = 'q'
+      val[7..10] = '191u'
+      val[11..14] = '192u'
+      @record['008'].value = val
+
+      # Date should be date1 + date2 / 2 = (1910 + 1929) / 2 = 1919
+      estimate_tolerance = 30
+      assert_equal 1919, Marc21Semantics.publication_date(@record, estimate_tolerance)
+    end
   end
 
   describe "marc_lcc_to_broad_category" do
