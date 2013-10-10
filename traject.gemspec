@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Jonathan Rochkind", "Bill Dueber"]
   spec.email         = ["none@nowhere.org"]
   spec.summary       = %q{Index MARC to Solr; or generally process source records to hash-like structures}
-  spec.homepage      = "http://github.com/jrochkind/traject"
+  spec.homepage      = "http://github.com/traject-project/traject"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
 
 
   spec.add_dependency "marc", ">= 0.7.1"
-  spec.add_dependency "marc-marc4j", ">=0.1.1"
+  spec.add_dependency "marc-marc4j", ">=0.1.1" # use and convert marc4j
   spec.add_dependency "hashie", ">= 2.0.5", "< 2.1" # used for Indexer#settings
   spec.add_dependency "slop", ">= 3.4.5", "< 4.0"   # command line parsing
   spec.add_dependency "yell" # logging

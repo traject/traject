@@ -9,7 +9,7 @@ Traject might also be generalized to a set of tools for getting structured data 
 **Traject is nearing 1.0, it is robust, feature-rich and ready for trial use**
 
 [![Gem Version](https://badge.fury.io/rb/traject.png)](http://badge.fury.io/rb/traject)
-[![Build Status](https://travis-ci.org/jrochkind/traject.png)](https://travis-ci.org/jrochkind/traject)
+[![Build Status](https://travis-ci.org/traject-project/traject.png)](https://travis-ci.org/traject-project/traject)
 
 
 ## Background/Goals

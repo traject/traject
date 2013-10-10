@@ -56,8 +56,6 @@ module Traject
         Object.const_set("HttpSolrServer", org.apache.solr.client.solrj.impl.HttpSolrServer) unless defined? ::HttpSolrServer
         Object.const_set("SolrInputDocument", org.apache.solr.common.SolrInputDocument) unless defined? ::SolrInputDocument
       rescue NameError  => e
-        # /Users/jrochkind/code/solrj-gem/lib"
-
         included_jar_dir = File.expand_path("../../vendor/solrj/lib", File.dirname(__FILE__))
 
         jardir = settings["solrj.jar_dir"] || included_jar_dir

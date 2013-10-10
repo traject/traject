@@ -58,7 +58,7 @@ you need to modify the array in-place.
 The third optional context argument 
 
 The third optional argument is a 
-[Traject::Indexer::Context](./lib/traject/indexer/context.rb)  ([rdoc](http://rdoc.info/github/jrochkind/traject/Traject/Indexer/Context))
+[Traject::Indexer::Context](./lib/traject/indexer/context.rb)  ([rdoc](http://rdoc.info/github/traject-project/traject/Traject/Indexer/Context))
 object. Most of the time you don't need it, but you can use it for 
 some sophisticated functionality, for example using these Context methods:
 
