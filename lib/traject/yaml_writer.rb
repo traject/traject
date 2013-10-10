@@ -6,4 +6,4 @@ class Traject::YamlWriter < Traject::LineWriter
     context.output_hash.to_yaml(:indentation=>3, :line_width => 78) + "\n\n"
   end
 end
-  
+

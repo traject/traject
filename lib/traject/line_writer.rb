@@ -1,7 +1,7 @@
 require 'thread'
 
 # A writer for Traject::Indexer, that just writes out
-# all the output as serialized text with #puts. 
+# all the output as serialized text with #puts.
 #
 # Should be thread-safe (ie, multiple worker threads can be calling #put
 # concurrently), by wrapping write to actual output file in a mutex synchronize.
@@ -13,7 +13,7 @@ require 'thread'
 #
 # This class can be sub-classed to write out different serialized
 # reprentations -- subclasses will just override the #serialize
-# method. For instance, see JsonWriter. 
+# method. For instance, see JsonWriter.
 class Traject::LineWriter
   attr_reader :settings
   attr_reader :write_mutex
@@ -29,7 +29,7 @@ class Traject::LineWriter
 
   def serialize(context)
     context.output_hash
-  end    
+  end
 
   def put(context)
     serialized = serialize(context)

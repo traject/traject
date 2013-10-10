@@ -48,7 +48,7 @@ describe "Traject::MarcReader" do
 
     assert first['245']['a'].encoding.name, "UTF-8"
     assert_equal "Fikr-i Ayāz /", first['245']['a']
-  end    
+  end
 
 
 

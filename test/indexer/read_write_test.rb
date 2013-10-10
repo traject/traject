@@ -28,9 +28,9 @@ describe "Traject::Indexer#process" do
   end
 
   it "works" do
-    # oops, this times_called counter isn't thread-safe under multi-threading 
+    # oops, this times_called counter isn't thread-safe under multi-threading
     # is why this fails sometimes.
-    # fixed to be single-threaded for these tests. 
+    # fixed to be single-threaded for these tests.
     times_called = 0
     @indexer.to_field("title") do |record, accumulator, context|
       times_called += 1
@@ -70,7 +70,7 @@ describe "Traject::Indexer#process" do
       "solr.url" => "http://example.org",
       "writer_class_name" => "Traject::SolrJWriter"
     )
-    @file = File.open(support_file_path "manufacturing_consent.marc")    
+    @file = File.open(support_file_path "manufacturing_consent.marc")
 
 
     @indexer.to_field("id") do |record, accumulator|
@@ -93,7 +93,7 @@ describe "Traject::Indexer#process" do
 
     called = []
 
-    @indexer.after_processing do 
+    @indexer.after_processing do
       called << :one
     end
     @indexer.after_processing do
@@ -105,5 +105,21 @@ describe "Traject::Indexer#process" do
     assert_equal [:one, :two], called, "Both after_processing hooks called, in order"
   end
 
+  describe "demo_config.rb" do
+    before do
+      @indexer = Traject::Indexer.new(
+        "solrj_writer.server_class_name" => "MockSolrServer",
+        "solr.url" => "http://example.org",
+        "writer_class_name" => "Traject::NullWriter"
+      )
+    end
+
+    it "parses and loads" do
+      conf_path = support_file_path "demo_config.rb"
+      File.open(conf_path) do |file_io|
+        @indexer.instance_eval(file_io.read, conf_path)
+      end
+    end
+  end
 
 end

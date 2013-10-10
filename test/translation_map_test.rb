@@ -37,7 +37,7 @@ describe "TranslationMap" do
       map = Traject::TranslationMap.new("default_literal")
       map = Traject::TranslationMap.new("default_literal")
 
-      assert_equal "DEFAULT LITERAL", map["not in the map"] 
+      assert_equal "DEFAULT LITERAL", map["not in the map"]
     end
 
     it "does not trigger default on explicit nil result" do
@@ -88,12 +88,12 @@ describe "TranslationMap" do
     assert_equal "value1", map["key1"]
   end
 
-  it "finds .properties defn" do 
+  it "finds .properties defn" do
     map =Traject::TranslationMap.new("properties_map")
 
     assert_equal "Value1", map["key1"]
     assert_equal "Value2", map["key2"]
-    assert_equal "Multi word value", map["key3"]   
+    assert_equal "Multi word value", map["key3"]
   end
 
   it "can use a hash instance too" do
@@ -126,8 +126,8 @@ describe "TranslationMap" do
   end
 
   it "translate_array does not include nil values" do
-    # TranslationMap can explicitly map to nil, meaning, 
-    # well, map to nothing. Make sure translate_array respects that. 
+    # TranslationMap can explicitly map to nil, meaning,
+    # well, map to nothing. Make sure translate_array respects that.
     map = Traject::TranslationMap.new("alpha" => "one", "beta" => nil)
 
     values = map.translate_array(["alpha", "beta"])

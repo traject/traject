@@ -16,7 +16,7 @@ require 'traject/line_writer'
 #
 # ## Settings
 #
-# * output_file A filename to send output; default will use stdout. 
+# * output_file A filename to send output; default will use stdout.
 #
 # * json_writer.pretty_print: [default: false]: Pretty-print (e.g., include newlines, indentation, etc.)
 # each JSON record instead of just mashing it all together on one line. The default, no pretty-printing option
@@ -46,6 +46,6 @@ class Traject::JsonWriter < Traject::LineWriter
     else
       JSON.generate(hash)
     end
-  end    
+  end
 
 end

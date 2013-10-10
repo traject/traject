@@ -1,4 +1,4 @@
-# this is not good ruby code at all. 
+# this is not good ruby code at all.
 
 x+y
 

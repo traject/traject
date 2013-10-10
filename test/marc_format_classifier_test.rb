@@ -63,7 +63,7 @@ describe "MarcFormatClassifier" do
 
   describe "conference?" do
     it "says conference when it is" do
-      assert classifier_for("microform_online_conference.marc").proceeding?      
+      assert classifier_for("microform_online_conference.marc").proceeding?
     end
     it "does not say conference when it ain't" do
       assert ! classifier_for("manufacturing_consent.marc").proceeding?
@@ -89,6 +89,6 @@ describe "MarcFormatClassifier" do
       assert ! classifier_for("manufacturing_consent.marc").manuscript_archive?
       assert ! classifier_for("online_only.marc").manuscript_archive?
     end
-  end 
+  end
 
 end

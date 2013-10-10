@@ -11,7 +11,7 @@ require 'marc'
 STDERR.sync = true
 
 # Hacky way to turn off Indexer logging by default, say only
-# log things higher than fatal, which is nothing. 
+# log things higher than fatal, which is nothing.
 require 'traject/indexer/settings'
 Traject::Indexer::Settings.defaults["log.level"] = "gt.fatal"
 
@@ -38,7 +38,7 @@ def assert_start_with(start_with, obj, msg = nil)
 end
 
 # pretends to be a SolrJ HTTPServer-like thing, just kind of mocks it up
-# and records what happens and simulates errors in some cases. 
+# and records what happens and simulates errors in some cases.
 class MockSolrServer
   attr_accessor :things_added, :url, :committed, :parser, :shutted_down
 

@@ -15,10 +15,10 @@ module Traject
   #
   # Extraction directions are supplied in strings, usually as the first
   # parameter to MarcExtractor.new or MarcExtractor.cached. These specifications
-  # are also the first parameter to the #marc_extract macro. 
+  # are also the first parameter to the #marc_extract macro.
   #
   # A String specification is a string (or array of strings) which consists
-  # of one or more Data and Control Field Specifications seperated by colons. 
+  # of one or more Data and Control Field Specifications seperated by colons.
   #
   # A Data Field Specification is of the form:
   #
@@ -33,7 +33,7 @@ module Traject
   #     "245|01|abc65:345abc:700|*5|:800"
   #
   # A Control Field Specification is used with tags for control (fixed) fields (ordinarily fields 001-010)
-  # and includes a tag and a a byte slice specification. 
+  # and includes a tag and a a byte slice specification.
   #
   #      "008[35-37]:007[5]""
   #      => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007 (TODO: Should we support
@@ -50,7 +50,7 @@ module Traject
   #     600 a| Chomsky, Noam x| Philosophy.
   #     600 a| Chomsky, Noam x| Political and social views.
   #     MarcExtractor.new("600ax").extract(record)
-  #     # results in two values sent to Solr: 
+  #     # results in two values sent to Solr:
   #     "Chomsky, Noam Philosophy."
   #     "Chomsky, Noam Political and social views."
   #
@@ -108,13 +108,13 @@ module Traject
   class MarcExtractor
     attr_accessor :options, :spec_hash
 
-    # First arg is a specification for extraction of data from a MARC record. 
+    # First arg is a specification for extraction of data from a MARC record.
     # Specification can be given in two forms:
     #
     #  * a string specification like "008[35]:020a:245abc", see top of class
-    #    for examples. A string specification is most typical argument. 
+    #    for examples. A string specification is most typical argument.
     #  * The output of a previous call to MarcExtractor.parse_string_spec(string_spec),
-    #    a 'pre-parsed' specification. 
+    #    a 'pre-parsed' specification.
     #
     # Second arg is options:
     #
@@ -147,6 +147,8 @@ module Traject
       if options[:alternate_script] != false
         @interesting_tags_hash['880'] = true
       end
+
+      self.freeze
     end
 
     # Takes the same arguments as MarcExtractor.new, but will re-use an existing
@@ -180,14 +182,14 @@ module Traject
 
     # Converts from a string marc spec like "008[35]:245abc:700a" to a hash used internally
     # to represent the specification. See comments at head of class for
-    # documentation of string specification format. 
+    # documentation of string specification format.
     #
     #
     # ## Return value
     #
     # The hash returned is keyed by tag, and has as values an array of 0 or
     # or more MarcExtractor::Spec objects representing the specified extraction
-    # operations for that tag. 
+    # operations for that tag.
     #
     # It's an array of possibly more than one, because you can specify
     # multiple extractions on the same tag: for instance "245a:245abc"
@@ -218,7 +220,7 @@ module Traject
 
           hash[spec.tag] ||= []
           hash[spec.tag] << spec
-          
+
         elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # control field, "005[4-5]"
           tag, byte1, byte2 = $1, $3, $5
 
@@ -229,7 +231,7 @@ module Traject
           elsif byte1
            spec.bytes = byte1.to_i
           end
-          
+
           hash[spec.tag] ||= []
           hash[spec.tag] << spec
         else
@@ -282,7 +284,7 @@ module Traject
     #
     # Useful for re-use of this class for custom processing
     #
-    # yields the MARC Field, the MarcExtractor::Spec object, the MarcExtractor object. 
+    # yields the MARC Field, the MarcExtractor::Spec object, the MarcExtractor object.
     def collect_matching_lines(marc_record)
       results = []
       self.each_matching_line(marc_record) do |field, spec, extractor|
@@ -308,7 +310,7 @@ module Traject
       if options[:separator] && spec.joinable?
         subfields = [subfields.join(options[:separator])]
       end
-      
+
       return subfields
     end
 
@@ -320,7 +322,7 @@ module Traject
     # When given an 880, will return the spec (if any) for the linked tag iff
     # we have a $6 and we want the alternate script.
     #
-    # Returns an empty array in case of no matching extraction specs. 
+    # Returns an empty array in case of no matching extraction specs.
     def specs_covering_field(field)
       tag = field.tag
 
@@ -350,13 +352,13 @@ module Traject
       self.spec_hash.freeze
       super
     end
-    
+
 
     # Represents a single specification for extracting data
-    # from a marc field, like "600abc" or "600|1*|x". 
+    # from a marc field, like "600abc" or "600|1*|x".
     #
     # Includes the tag for reference, although this is redundant and not actually used
-    # in logic, since the tag is also implicit in the overall spec_hash 
+    # in logic, since the tag is also implicit in the overall spec_hash
     # with tag => [spec1, spec2]
     class Spec
       attr_accessor :tag, :subfields, :indicator1, :indicator2, :bytes
@@ -367,7 +369,7 @@ module Traject
         end
       end
 
-    
+
       #  Should subfields extracted by joined, if we have a seperator?
       #  * '630' no subfields specified => join all subfields
       #  * '630abc' multiple subfields specified = join all subfields
@@ -381,8 +383,8 @@ module Traject
 
       # Pass in a MARC field, do it's indicators match indicators
       # in this spec? nil indicators in spec mean we don't care, everything
-      # matches. 
-      def matches_indicators?(field)      
+      # matches.
+      def matches_indicators?(field)
         return (self.indicator1.nil? || self.indicator1 == field.indicator1) &&
           (self.indicator2.nil? || self.indicator2 == field.indicator2)
       end
@@ -398,7 +400,7 @@ module Traject
         return false unless spec.kind_of?(Spec)
 
         return (self.tag == spec.tag) &&
-          (self.subfields == spec.subfields) && 
+          (self.subfields == spec.subfields) &&
           (self.indicator1 == spec.indicator1) &&
           (self.indicator1 == spec.indicator2) &&
           (self.bytes == spec.bytes)
