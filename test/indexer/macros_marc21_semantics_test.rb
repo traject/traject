@@ -198,7 +198,7 @@ describe "Traject::Macros::Marc21Semantics" do
       @record = MARC::Reader.new(support_file_path  "multi_geo.marc").to_a.first
       output = @indexer.map_record(@record)
 
-      assert_equal ["Europe", "Middle East", "Africa, North", "Agora (Athens, Greece)", "Rome (Italy)", "Italy"], 
+      assert_equal ["Europe", "Middle East", "Africa, North", "Agora (Athens, Greece)", "Rome (Italy)", "Italy"],
         output["geo_facet"]
     end
     it "maps nothing on a record with no geo" do
@@ -221,12 +221,12 @@ describe "Traject::Macros::Marc21Semantics" do
     end
 
   end
-  
+
   describe "extract_marc_filing_version" do
     before do
       @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
     end
-    
+
     it "works as expected" do
       @indexer.instance_eval do
         to_field 'title_phrase', extract_marc_filing_version('245ab')
@@ -234,7 +234,7 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
       assert_equal ['Business renaissance quarterly'], output['title_phrase']
     end
-    
+
     it "works with :include_original" do
       @indexer.instance_eval do
         to_field 'title_phrase', extract_marc_filing_version('245ab', :include_original=>true)
@@ -242,7 +242,7 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
       assert_equal ['The Business renaissance quarterly', 'Business renaissance quarterly'], output['title_phrase']
     end
-    
+
     it "doesn't do anything if you don't include the first subfield" do
       @indexer.instance_eval do
         to_field 'title_phrase', extract_marc_filing_version('245h')
@@ -250,8 +250,8 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
       assert_equal ['[electronic resource].'], output['title_phrase']
     end
-      
-    
+
+
     it "dies if you pass it something else" do
       assert_raises(RuntimeError) do
         @indexer.instance_eval do
@@ -259,10 +259,10 @@ describe "Traject::Macros::Marc21Semantics" do
         end
       end
     end
-      
-    
+
+
   end
-      
-      
+
+
 
 end

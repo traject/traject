@@ -31,7 +31,7 @@ module Traject
 
     # Returns true on success or false on failure; may also raise exceptions;
     # may also exit program directly itself (yeah, could use some normalization)
-    def execute      
+    def execute
       if options[:version]
         self.console.puts "traject version #{Traject::VERSION}"
         return
@@ -113,13 +113,13 @@ module Traject
 
         allow_oversized = indexer.settings["marcout.allow_oversized"]
         if allow_oversized
-          allow_oversized = (allow_oversized.to_s == "true") 
+          allow_oversized = (allow_oversized.to_s == "true")
           writer.allow_oversized = allow_oversized
         end
       when "xml"
         writer = MARC::XMLWriter.new(output_arg)
       when "human"
-        writer = output_arg.kind_of?(String) ? File.open(output_arg, "w:binary") : output_arg        
+        writer = output_arg.kind_of?(String) ? File.open(output_arg, "w:binary") : output_arg
       else
         raise ArgumentError.new("traject marcout unrecognized marcout.type: #{output_type}")
       end
@@ -164,7 +164,7 @@ module Traject
         filename = argv.first
         indexer.logger.info "Reading from #{filename}"
       end
-      
+
       return io, filename
     end
 
@@ -228,7 +228,7 @@ module Traject
       if options[:'debug-mode']
         require 'traject/debug_writer'
         settings["writer_class_name"] = "Traject::DebugWriter"
-        settings["log.level"] = "debug"        
+        settings["log.level"] = "debug"
         settings["processing_thread_pool"] = 0
       end
       if options[:writer]

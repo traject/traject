@@ -62,10 +62,10 @@ module Traject::Macros
     def self.get_sortable_author(record)
       onexx = MarcExtractor.cached("100:110:111", :first => true, :trim_punctuation => true).extract(record).first
       onexx = onexx.strip if onexx
-      
+
       titles = []
       MarcExtractor.cached("240:245", :first => true).each_matching_line(record) do |field, spec|
-        non_filing = field.indicator2.to_i        
+        non_filing = field.indicator2.to_i
 
         str = field.subfields.collect {|sf| Marc21.trim_punctuation(sf.value.strip).strip}.join(" ")
         str = str.slice(non_filing, str.length)
@@ -73,7 +73,7 @@ module Traject::Macros
       end.first
       title = titles.first
       title = title.strip if title
-      
+
       return [onexx, title].compact.join("   ")
     end
 
@@ -105,26 +105,26 @@ module Traject::Macros
         str
       end.first
     end
-    
-    
-    
+
+
+
     # A generic way to strip a filing version (i.e., a string with the non-filing
     # characters stripped off)
     #
     # Always returns an array. If :include_original=>true is passed in,
     # that array will include the original string with the non-filing
     # characters still in it.
-    
+
     def extract_marc_filing_version(spec='245abdefghknp', opts={})
       include_original = opts.delete(:include_original)
       if opts.size > 0
         raise RuntimeError.new("extract_marc_filing_version can take only :include_original as an argument, not #{opts.keys.map{|x| "'#{x}'"}.join(' or ')}")
       end
-      
+
       extractor = Traject::MarcExtractor.cached(spec, opts)
-      
+
       lambda do |record, accumulator, context|
-        extractor.collect_matching_lines(record) do |field, spec| 
+        extractor.collect_matching_lines(record) do |field, spec|
           str = extractor.collect_subfields(field, spec).first
           next unless str and !str.empty?
           vals = [Marc21Semantics.filing_version(field, str, spec)]
@@ -136,34 +136,34 @@ module Traject::Macros
         end
       end
     end
-            
-      
-    
-    
+
+
+
+
     # Take in a field, a string extracted from that field, and a spec and
-    # return the filing version (i.e., the string without the 
+    # return the filing version (i.e., the string without the
     # non-filing characters)
-    
+
     def self.filing_version(field, str, spec)
       # Control fields don't have non-filing characters
       return str if field.kind_of? MARC::ControlField
-      
+
       # 2nd indicator must be > 0
       ind2 = field.indicator2.to_i
       return str unless ind2 > 0
-      
+
       # The spechash must either (a) have no subfields specified, or
       # (b) include the first subfield in the record
-      
+
       subs = spec.subfields
       return str unless subs && subs.include?(field.subfields[0].code)
-      
+
       # OK. If we got this far we actually need to strip characters off the string
-      
+
       return str[ind2..-1]
     end
-      
-    
+
+
 
 
     # maps languages, by default out of 008[35-37] and 041a and 041d
@@ -368,7 +368,7 @@ module Traject::Macros
     end
 
     # REGEX meant to rule out obvious non-LCC's, and only allow things
-    # plausibly LCC's. 
+    # plausibly LCC's.
     LCC_REGEX = /\A *[A-Z]{1,3}[ .]*(?:(\d+)(?:\s*?\.\s*?(\d+))?).*/
     # Looks up Library of Congress Classification (LCC) or NLM Medical Subject Headings (MeSH)
     # from usual parts of the marc record. Maps them to high-level broad categories,

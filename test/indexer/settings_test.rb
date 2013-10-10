@@ -116,7 +116,7 @@ describe "Traject::Indexer#settings" do
 
   describe "inspect" do
     it "keeps keys ending in 'password' out of inspect" do
-      settings = Traject::Indexer::Settings.new("a" => "a", 
+      settings = Traject::Indexer::Settings.new("a" => "a",
         "password" => "password", "some_password" => "password",
         "some.password" => "password")
 

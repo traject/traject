@@ -42,7 +42,7 @@ require 'thread' # for Mutex
 #   NOTE: For contacting a Solr 1.x server, with the
 #   recent version of SolrJ used by default, set to
 #   "XMLResponseParser"
-#   
+#
 # * solrj_writer.commit_on_close:  If true (or string 'true'), send a commit to solr
 #   at end of #process.
 #
@@ -56,7 +56,7 @@ require 'thread' # for Mutex
 #   there will still be a single bg thread doing the adds. For
 #   very fast Solr servers and very fast indexing processes, may
 #   make sense to increase this value to throw at Solr as fast as it
-#   can catch. 
+#   can catch.
 #
 # ## Example
 #
@@ -70,10 +70,10 @@ require 'thread' # for Mutex
 #       else
 #         provide "solr.url", "http://my.production.machine:9033/catalog"
 #       end
-#  
+#
 #       provide "solrj_writer.parser_class_name", "BinaryResponseParser" # for Solr 4.x
 #       # provide "solrj_writer.parser_class_name", "XMLResponseParser" # For solr 1.x or 3.x
-#  
+#
 #       provide "solrj_writer.commit_on_close", "true"
 #     end
 class Traject::SolrJWriter
@@ -159,7 +159,7 @@ class Traject::SolrJWriter
 
     if settings["solrj_writer.batch_size"].to_i > 1
       ready_batch = []
-      
+
       batched_queue.add(package)
       if batched_queue.size >= settings["solrj_writer.batch_size"].to_i
         batched_queue.drain_to(ready_batch)
@@ -173,7 +173,7 @@ class Traject::SolrJWriter
           end
         end
 
-        @thread_pool.maybe_in_thread_pool { batch_add_document_packages(ready_batch) }        
+        @thread_pool.maybe_in_thread_pool { batch_add_document_packages(ready_batch) }
       end
     else # non-batched add, add one at a time.
       @thread_pool.maybe_in_thread_pool { add_one_document_package(package) }
@@ -201,7 +201,7 @@ class Traject::SolrJWriter
   # shared state batched_queue in a mutex.
   def batch_add_document_packages(current_batch)
     begin
-      a = current_batch.collect {|package| package.solr_document }    
+      a = current_batch.collect {|package| package.solr_document }
       solr_server.add( a )
 
       $stderr.write "%" if @debug_ascii_progress

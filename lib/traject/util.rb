@@ -73,9 +73,9 @@ module Traject
     end
 
     # just does a `require 'java'` but rescues the exception if we
-    # aren't jruby, and raises a better error message.  
+    # aren't jruby, and raises a better error message.
     # Pass in a developer-presentable name of a feature to include in the error
-    # message if you want. 
+    # message if you want.
     def self.jruby_ensure_init!(feature = nil)
       begin
         require 'java'

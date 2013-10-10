@@ -25,7 +25,7 @@ describe "Traject::MarcExtractor" do
 
       assert_equal "1", spec.indicator1
       assert_nil spec.indicator2
-      
+
       assert_kind_of Array, spec.subfields
     end
 
@@ -52,7 +52,7 @@ describe "Traject::MarcExtractor" do
       #700-*4bcd
       assert spec700
       assert_nil spec700.indicator1
-      assert_equal "4", spec700.indicator2      
+      assert_equal "4", spec700.indicator2
       assert_equal %w{b c d}, spec700.subfields
     end
 
@@ -62,7 +62,7 @@ describe "Traject::MarcExtractor" do
       assert_equal 5, parsed["005"].first.bytes
       assert_equal 7..10, parsed["008"].first.bytes
     end
-    
+
     it "allows arrays of specs" do
       parsed = Traject::MarcExtractor.parse_string_spec %w(
         245abcde
@@ -71,7 +71,7 @@ describe "Traject::MarcExtractor" do
       )
       assert_length 3, parsed
     end
-    
+
     it "allows mixture of array and colon-delimited specs" do
       parsed = Traject::MarcExtractor.parse_string_spec %w(
         245abcde
@@ -81,8 +81,8 @@ describe "Traject::MarcExtractor" do
       )
       assert_length 6, parsed
     end
-      
-    
+
+
   end
 
   # Mostly an internal method, not neccesarily API, but
@@ -302,7 +302,7 @@ describe "Traject::MarcExtractor" do
     it "creates" do
       extractor = Traject::MarcExtractor.cached("245abc", :separator => nil)
       spec_hash = extractor.spec_hash
-      
+
       assert extractor.options[:separator].nil?, "extractor options[:separator] is nil"
       assert_equal({"245"=>[Traject::MarcExtractor::Spec.new(:tag => "245", :subfields=>["a", "b", "c"])]}, spec_hash)
     end
@@ -319,23 +319,23 @@ describe "Traject::MarcExtractor" do
     before do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
     end
-    
+
     it "allows repated tags for a variable field" do
       extractor = Traject::MarcExtractor.new("245a:245b")
       values = extractor.extract(@record)
       assert_equal ['Manufacturing consent :', 'the political economy of the mass media /'], values
     end
-    
+
     it "allows repeated tags with indicators specs" do
       extractor = Traject::MarcExtractor.new("245|1*|a:245|2*|b")
       @record.append(MARC::DataField.new('245', '2', '0', ['a', 'Subfield A Value'], ['b', 'Subfield B Value']))
       results = extractor.extract(@record)
       assert_equal ['Manufacturing consent :', 'Subfield B Value'], results
     end
-      
-      
-      
-    
+
+
+
+
     it "provides multiple values for repeated subfields with single specified subfield" do
       ex = Traject::MarcExtractor.new("245a")
       f = @record.fields('245').first
@@ -353,7 +353,7 @@ describe "Traject::MarcExtractor" do
       results = ex.extract(@record)
       assert_equal ["#{title_a} #{title_a}"], results
     end
-    
+
     it "provides single value for repeated subfields with multiple specified subfields" do
       ex = Traject::MarcExtractor.new("245ab")
       f = @record.fields('245').first
@@ -362,9 +362,9 @@ describe "Traject::MarcExtractor" do
       f.append(MARC::Subfield.new('a', title_a))
       results = ex.extract(@record)
       assert_equal ["#{title_a} #{title_b} #{title_a}"], results
-      
+
     end
-    
+
     it "provides single value for repeated subfields with no specified subfield" do
       ex = Traject::MarcExtractor.new("245")
       f = @record.fields('245').first
@@ -373,10 +373,10 @@ describe "Traject::MarcExtractor" do
       results = ex.extract(@record)
       assert_equal 1, results.size
     end
-    
-    
-      
-  
+
+
+
+
     it "allows repeated tags for a control field" do
       extractor = Traject::MarcExtractor.new("001[0-1]:001[0-3]")
       values = extractor.extract(@record)
@@ -400,13 +400,13 @@ describe "Traject::MarcExtractor" do
   describe "MarcExtractor::Spec" do
     describe "==" do
       it "equals when equal" do
-        assert_equal Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}), Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}) 
+        assert_equal Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}), Traject::MarcExtractor::Spec.new(:subfields => %w{a b c})
       end
       it "does not equal when not" do
-        refute_equal Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}), Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}, :indicator2 => '1') 
+        refute_equal Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}), Traject::MarcExtractor::Spec.new(:subfields => %w{a b c}, :indicator2 => '1')
       end
     end
   end
-      
+
 
 end
