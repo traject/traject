@@ -184,21 +184,21 @@ describe "Traject::Indexer#map_record" do
 
       assert called, "Called mapping routine"
     end
-    
+
     it "skips records" do
-      
+
       @indexer.to_field("beforeSkip") do |rec, acc|
         acc << "Before"
       end
-      
+
       @indexer.to_field('radical') do |rec, acc, context|
         context.skip!("Chomsky!") if rec['245'].to_s =~ /Chomsky/
       end
-      
+
       @indexer.to_field('afterSkip') do |rec, acc|
         acc << "After. Should never happen"
       end
-      
+
       output = @indexer.map_record(@record)
       assert_equal ['Before'], output['beforeSkip']
       assert_nil output['afterSkip']

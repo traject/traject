@@ -56,22 +56,22 @@ describe "Traject::Macros::Marc21" do
 
       assert_equal ["DEFAULT VALUE"], output["only_default"]
     end
-    
+
     it "de-duplicates by default, respects :allow_duplicates" do
       # Add a second 008
       f = @record.fields('008').first
       @record.append(f)
-      
+
       @indexer.instance_eval do
         to_field "lang1", extract_marc('008[35-37]')
-        to_field "lang2", extract_marc('008[35-37]', :allow_duplicates=>true)        
+        to_field "lang2", extract_marc('008[35-37]', :allow_duplicates=>true)
       end
-      
+
       output = @indexer.map_record(@record)
       assert_equal ["eng"], output['lang1']
-      assert_equal ["eng", "eng"], output['lang2']      
+      assert_equal ["eng", "eng"], output['lang2']
     end
-    
+
     it "fails on an extra/misspelled argument to extract_marc" do
       assert_raises(RuntimeError) do
         @indexer.instance_eval do
@@ -79,9 +79,9 @@ describe "Traject::Macros::Marc21" do
         end
       end
     end
-      
-    
-      
+
+
+
 
     it "Marc21::trim_punctuation class method" do
       assert_equal "one two three", Marc21.trim_punctuation("one two three")

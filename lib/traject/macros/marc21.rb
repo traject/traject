@@ -39,14 +39,14 @@ module Traject::Macros
     #     to_field("id"),    extract_marc("001", :first => true)
     #     to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
     def extract_marc(spec, options = {})
-      
+
       # Raise an error if there are any invalid options, indicating a
       # misspelled or illegal option, using a string instead of a symbol, etc.
-      
+
       unless (options.keys - EXTRACT_MARC_VALID_OPTIONS).empty?
         raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - EXTRACT_MARC_VALID_OPTIONS).join(', ')}' in extract_marc at #{Traject::Util.extract_caller_location(caller.first)}")
       end
-      
+
       only_first              = options.delete(:first)
       trim_punctuation        = options.delete(:trim_punctuation)
       default_value           = options.delete(:default)
@@ -57,12 +57,12 @@ module Traject::Macros
       # ones, and not have to create a new one per-execution.
       #
       # Benchmarking shows for MarcExtractor at least, there is
-      # significant performance advantage. 
+      # significant performance advantage.
 
       if translation_map_arg  = options.delete(:translation_map)
         translation_map = Traject::TranslationMap.new(translation_map_arg)
       end
-      
+
 
       extractor = Traject::MarcExtractor.new(spec, options)
 
@@ -80,7 +80,7 @@ module Traject::Macros
         if trim_punctuation
           accumulator.collect! {|s| Marc21.trim_punctuation(s)}
         end
-        
+
         unless allow_duplicates
           accumulator.uniq!
         end
@@ -88,14 +88,14 @@ module Traject::Macros
         if default_value && accumulator.empty?
           accumulator << default_value
         end
-        
+
       end
     end
     #  A list of symbols that are valid keys in the options hash
-    EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default, 
-                                  :allow_duplicates, :separator, :translation_map, 
+    EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default,
+                                  :allow_duplicates, :separator, :translation_map,
                                   :alternate_script]
-                                  
+
     # Serializes complete marc record to a serialization format.
     # required param :format,
     # serialize_marc(:format => :binary)

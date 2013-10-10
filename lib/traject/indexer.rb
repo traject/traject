@@ -14,13 +14,13 @@ require 'traject/macros/basic'
 
 # This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output
-# hash off somewhere (usually Solr) with a Writer class. 
+# hash off somewhere (usually Solr) with a Writer class.
 #
 # Traject config files are `instance_eval`d in an Indexer object, so `self` in
-# a config file is an Indexer, and any Indexer methods can be called. 
+# a config file is an Indexer, and any Indexer methods can be called.
 #
 # However, certain Indexer methods exist almost entirely for the purpose of
-# being called in config files; these methods are part of the expected 
+# being called in config files; these methods are part of the expected
 # Domain-Specific Language ("DSL") for config files, and will ordinarily
 # form the bulk or entirety of config files:
 #
@@ -35,7 +35,7 @@ require 'traject/macros/basic'
 #
 #     # to process a stream of input records from configured Reader,
 #     # to configured Writer:
-#     indexer.process(io_stream)  
+#     indexer.process(io_stream)
 #
 #     # To map a single input record manually to an ouput_hash,
 #     # ignoring Readers and Writers
@@ -106,19 +106,19 @@ class Traject::Indexer
     @after_processing_steps = []
   end
 
-  # Part of the config file DSL, for writing settings values. 
+  # Part of the config file DSL, for writing settings values.
   #
   # The Indexer's settings consist of a hash-like Traject::Settings
   # object. The settings hash is *not*  nested hashes, just one level
   # of configuration settings. Keys are always strings, and by convention
   # use "." for namespacing, eg `log.file`
   #
-  # The settings method with no arguments returns that Settings object. 
+  # The settings method with no arguments returns that Settings object.
   #
   # With a hash and/or block argument, can be used to set
   # new key/values. Each call merges onto the existing settings
   # hash.  The block is `instance_eval`d in the context
-  # of the Traject::Settings object. 
+  # of the Traject::Settings object.
   #
   #    indexer.settings("a" => "a", "b" => "b")
   #
@@ -128,11 +128,11 @@ class Traject::Indexer
   #
   #    indexer.settings #=> {"a" => "a", "b" => "new b"}
   #
-  # Note the #provide method is defined on Traject::Settings to 
+  # Note the #provide method is defined on Traject::Settings to
   # write to a setting only if previously not set. You can also
-  # use #store to force over-writing even if an existing setting. 
+  # use #store to force over-writing even if an existing setting.
   #
-  # Even with arguments, Indexer#settings returns the Settings object, 
+  # Even with arguments, Indexer#settings returns the Settings object,
   # hash too, so can method calls can be chained.
   #
   def settings(new_settings = nil, &block)
@@ -145,7 +145,7 @@ class Traject::Indexer
 
   # Part of DSL, used to define an indexing mapping. Register logic
   # to be called for each record, and generate values for a particular
-  # output field. 
+  # output field.
   def to_field(field_name, aLambda = nil, &block)
     @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
@@ -156,7 +156,7 @@ class Traject::Indexer
   end
 
   # Part of DSL, register logic to be called once at the end
-  # of processing a stream of records. 
+  # of processing a stream of records.
   def after_processing(aLambda = nil, &block)
     @after_processing_steps << AfterProcessingStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first))
   end
@@ -577,7 +577,7 @@ class Traject::Indexer
     end
 
     # after_processing steps get no args yielded to
-    # their blocks, they just are what they are. 
+    # their blocks, they just are what they are.
     def execute
       [lambda, block].each do |aProc|
         next unless aProc

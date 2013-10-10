@@ -10,28 +10,28 @@ module Traject
   #    translation_map["some_input"] #=> some_output
   #
   # Input is assumed to always be string, output is either string
-  # or array of strings. 
+  # or array of strings.
   #
   # What makes it more useful than a stunted hash is it's ability to load
-  # the hash definitions from configuration files, either pure ruby, 
-  # yaml, or (limited subset of) java .properties file.  
+  # the hash definitions from configuration files, either pure ruby,
+  # yaml, or (limited subset of) java .properties file.
   #
   # traject's `extract_marc` macro allows you to specify a :translation_map=>filename argument
   # that will automatically find and use a translation map on the resulting data:
   #
   #     extract_marc("040a", :translation_map => "languages")
-  # 
+  #
   # Or you can always create one yourself and use it how you like:
   #
   #     map = TranslationMap.new("languages")
   #
   # In either case, TranslationMap will look for a file named, in that example,
-  # `languages.rb` or `languages.yaml` or `languages.properties`, 
-  # somewhere in the ruby $LOAD_PATH in a `/translation_maps` subdir. 
+  # `languages.rb` or `languages.yaml` or `languages.properties`,
+  # somewhere in the ruby $LOAD_PATH in a `/translation_maps` subdir.
   #
   # * Also looks for "/translation_maps" subdir in load paths, so
   #   for instance you can have a gem that keeps translation maps
-  #   in ./lib/translation_maps, and it Just Works. 
+  #   in ./lib/translation_maps, and it Just Works.
   #
   # * Note you do NOT supply the .rb, .yaml, or .properties suffix yourself,
   #  it'll use whichever it finds (allows calling code to not care which is used).
@@ -65,7 +65,7 @@ module Traject
   # When used with the #translate_array! method, one string can be replaced by multiple values
   # (array of strings) or removed (nil)
   #
-  # There's no way to specify multiple return values in a .properties, use .yaml or .rb for that. 
+  # There's no way to specify multiple return values in a .properties, use .yaml or .rb for that.
   #
   # ## Caching
   #
@@ -83,12 +83,12 @@ module Traject
   #       - values look like this
   #
   # ## Alternatives
-  # `Traject::TranslationMap` provides an easy way to deal with the most common translation case: 
+  # `Traject::TranslationMap` provides an easy way to deal with the most common translation case:
   # simple key-value stores with optional default values.
   #
-  # If you need more complex translation, you can simply use `#map!` 
-  # or its kin to work on the `accumulator` in a block 
-  # 
+  # If you need more complex translation, you can simply use `#map!`
+  # or its kin to work on the `accumulator` in a block
+  #
   #
   #
   #     # get a lousy language detection of any vernacular title
@@ -106,10 +106,10 @@ module Traject
   class TranslationMap
     class Cache
       def initialize
-        @cached = Hash.new 
+        @cached = Hash.new
       end
 
-      # Returns an actual Hash -- or nil if none found. 
+      # Returns an actual Hash -- or nil if none found.
       def lookup(path)
         unless @cached.has_key?(path)
           @cached[path] = _lookup!(path)
@@ -118,9 +118,9 @@ module Traject
       end
 
       # force lookup, without using cache.
-      # used by cache. Returns the actual hash. 
-      # Returns nil if none found. 
-      # May raise on syntax error in file being loaded. 
+      # used by cache. Returns the actual hash.
+      # Returns nil if none found.
+      # May raise on syntax error in file being loaded.
       def _lookup!(path)
         found = nil
 
@@ -142,7 +142,7 @@ module Traject
         end
 
         # Cached hash can't be mutated without weird consequences, let's
-        # freeze it! 
+        # freeze it!
         found.freeze if found
 
         return found
@@ -195,20 +195,20 @@ module Traject
     alias_method :map, :[]
 
     # Returns a dup of internal hash, dup so you can modify it
-    # if you like. 
+    # if you like.
     def to_hash
       @hash.dup
     end
 
     # Run every element of an array through this translation map,
     # return the resulting array. If translation map returns nil,
-    # original element will be missing from output. 
+    # original element will be missing from output.
     #
     # If an input maps to an array, each element of the array will be flattened
-    # into the output. 
+    # into the output.
     #
     # If an input maps to nil, it will cause the input element to be removed
-    # entirely. 
+    # entirely.
     def translate_array(array)
       array.each_with_object([]) do |input_element, output_array|
         output_element = self.map(input_element)
@@ -232,7 +232,7 @@ module Traject
 
     protected
 
-    # No built-in way to read java-style .properties, we hack it. 
+    # No built-in way to read java-style .properties, we hack it.
     # inspired by various hacky things found google ruby java properties parse
     # .properties spec seems to be:
     # http://docs.oracle.com/javase/6/docs/api/java/util/Properties.html#load%28java.io.Reader%29
@@ -245,10 +245,10 @@ module Traject
       f.each_line do |line|
         i += 1
 
-        line.strip! 
+        line.strip!
 
         # skip blank lines
-        next if line.empty? 
+        next if line.empty?
 
         # skip comment lines
         next if line =~ /^\s*[!\#].*$/

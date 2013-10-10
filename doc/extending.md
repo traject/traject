@@ -170,7 +170,7 @@ so bundler can find it:
 Or you can use the BUNDLE_GEMFILE environment variable to tell bundler where
 to find the Gemfile, and run from any directory at all:
 
-    $ BUNDLE_GEMFILE=/path/to/Gemfile bundle exec traject /some/path/Gemfile -c some_config.rb ...
+    $ BUNDLE_GEMFILE=/path/to/Gemfile bundle exec traject -c /path/to/some_config.rb ...
 
 Bundler will make sure the specified versions of all gems are used by
 traject, and also make sure no gems except those specified in the gemfile

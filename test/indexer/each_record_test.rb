@@ -42,18 +42,18 @@ describe "Traject::Indexer#each_record" do
         flunk("Should only fail with a ArityError")
       end
     end
-    
+
     it "rejects each_record with a name (e.g., using a to_field syntax)" do
       assert_raises(Traject::Indexer::NamingError) do
         @indexer.each_record('bad_name') {|one, two| }
       end
     end
-    
+
     it "reject each_record with no arguments/blocks at all" do
       assert_raises(ArgumentError) do
         @indexer.each_record()
       end
-    end    
+    end
 
   end
 end

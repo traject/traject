@@ -21,7 +21,7 @@ extend Traject::Macros::MarcFormats
 # config files as you like, `traject -c one.rb -c two.rb -c etc.rb`
 settings do
   provide "solr.url", "http://blacklight.mse.jhu.edu:8983/solr/prod"
-  
+
   # Only if you need to connect to a Solr 1.x:
   provide "solrj_writer.parser_class_name", "XMLResponseParser"
 
@@ -101,7 +101,7 @@ end
 to_field "subject_geo_facet",   marc_geo_facet
 to_field "subject_era_facet",   marc_era_facet
 
-# not doing this at present. 
+# not doing this at present.
 #to_field "subject_facet",     extract_marc("600:610:611:630:650:651:655:690")
 
 to_field "published_display", extract_marc("260a", :trim_punctuation => true)
@@ -132,7 +132,7 @@ to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |re
       accumulator << Traject::TranslationMap.new("lcc_top_level")[s]
     end
   end
-  
+
 
   # If it's got an 086, we'll put it in "Government Publication", to be
   # consistent with when we do that from a local SuDoc call #.

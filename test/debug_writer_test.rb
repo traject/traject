@@ -15,11 +15,11 @@ describe 'Simple output' do
     end
     @io = StringIO.new
     @writer = Traject::DebugWriter.new("output_stream" => @io)
-    
+
     @id = "2710183"
     @title = "Manufacturing consent : the political economy of the mass media /"
   end
-  
+
   it "does a simple output" do
     @writer.put Traject::Indexer::Context.new(:output_hash => @indexer.map_record(@record))
     expected = [
@@ -29,10 +29,10 @@ describe 'Simple output' do
     ]
     assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
     @writer.close
-    
+
   end
-  
+
 end
-    
-    
-    
+
+
+

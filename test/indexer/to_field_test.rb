@@ -1,7 +1,7 @@
 require 'test_helper'
 
 describe "Traject::Indexer.to_field" do
-  before do 
+  before do
     @indexer = Traject::Indexer.new
   end
   describe "checks it's arguments" do
@@ -14,7 +14,7 @@ describe "Traject::Indexer.to_field" do
     it "rejects non-string first arg" do
       assert_raises(Traject::Indexer::NamingError) {@indexer.to_field(:symbol)}
     end
-    
+
     it "rejects one-arg lambda" do
       assert_raises(Traject::Indexer::ArityError) do
         @indexer.to_field("foo") do |one_arg|
@@ -22,7 +22,7 @@ describe "Traject::Indexer.to_field" do
       end
     end
     it "rejects four-arg lambda" do
-      assert_raises(Traject::Indexer::ArityError) do 
+      assert_raises(Traject::Indexer::ArityError) do
         @indexer.to_field("foo") do |one_arg, two_arg, three_arg, four_arg|
         end
       end
@@ -39,7 +39,7 @@ describe "Traject::Indexer.to_field" do
       end
     end
   end
-  
+
   it "outputs error with source location" do
     begin
       @indexer.to_field('foo') {|one, two| }
@@ -51,7 +51,7 @@ describe "Traject::Indexer.to_field" do
       flunk("Should only fail with a NamingError")
     end
   end
-  
+
   # Just verifying this is how it works
   it "doesn't allow you to just wholesale assignment to the accumulator" do
     @indexer.to_field('foo') do |rec, acc|
@@ -60,7 +60,7 @@ describe "Traject::Indexer.to_field" do
     output = @indexer.map_record('never looked at')
     assert_equal nil, output['foo']
   end
-  
+
   it "allows use of accumulator.replace" do
     @indexer.to_field('foo') do |rec, acc|
       acc.replace ['hello']
@@ -68,8 +68,8 @@ describe "Traject::Indexer.to_field" do
     output = @indexer.map_record('never looked at')
     assert_equal ['hello'], output['foo']
   end
-  
-  
+
+
 end
 
 
