@@ -2,12 +2,19 @@ require 'yell'
 
 require 'traject'
 require 'traject/qualified_const_get'
-
+require 'traject/thread_pool'
 require 'traject/indexer/settings'
 require 'traject/marc_reader'
-require 'traject/marc4j_reader'
 require 'traject/json_writer'
-require 'traject/solrj_writer'
+
+# Make sure we have the correct defaults
+if defined? JRUBY_VERSION
+  require 'traject/solrj_writer'
+  require 'traject/marc4j_reader'
+else
+  require 'traject/marc_reader'
+  require 'traject/null_writer'
+end
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'

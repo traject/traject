@@ -5,7 +5,8 @@ require 'test_helper'
 memory_writer_class = Class.new do
     def initialize(settings)
       # store them in a class variable so we can test em later
-      @@last_writer_settings = @settings = settings
+      self.class.class_variable_set(:@@last_writer_settings, (@settings = settings))
+     
       @settings["memory_writer.added"] = []
     end
 
@@ -63,6 +64,7 @@ describe "Traject::Indexer#process" do
   end
 
   it "returns false if skipped records" do
+    skip "Only test mock solrj writer under JRuby" unless defined? JRUBY_VERSION
     @indexer = Traject::Indexer.new(
       "solrj_writer.server_class_name" => "MockSolrServer",
       "solr.url" => "http://example.org",
