@@ -40,19 +40,20 @@ Then just `gem install traject`.
 
 ## Configuration files
 
-The traject command-line utility requires you to supply it with a configuration file. So let's start by describing the configuration file.
+traject is configured using configuration files. To get a sense of what they look like, you can
+take a look at our sample non-trivial configuration file, 
+[demo_config.rb](./test/test_support/demo_config.rb), which you'd run like 
+`traject -c path/to/demo_config.rb marc_file.marc`.
 
 Configuration files are actually just ruby -- so by convention they end in `.rb`.
 
 We hope you can write basic useful configuration files without being a ruby expert,
-they give you a subset of ruby to work with. But the full power
+traject gives you some easy functions to use for common diretives. But the full power
 of ruby is available to you if needed. 
 
 **rubyist tip**: Technically, config files are executed with `instance_eval` in a Traject::Indexer instance, so the special commands you see are just methods on Traject::Indexer (or mixed into it). But you can
 call ordinary ruby `require` in config files, etc., too, to load
 external functionality. See more at Extending Logic below.
-
-For an oveview of how traject works, you can take a look at our sample non-trivial configuration file, [demo_config.rb](./test/test_support/demo_config.rb), which you'd run like `traject -c path/to/demo_config.rb marc_file.marc`.
 
 There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
