@@ -55,6 +55,9 @@ of ruby is available to you if needed.
 call ordinary ruby `require` in config files, etc., too, to load
 external functionality. See more at Extending Logic below.
 
+You can keep your settings and indexing rules in one config file,
+or split them accross multiple config files however you like. (Connection details vs indexing? Common things vs environmental specific things?)
+
 There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
 ## Settings
@@ -103,10 +106,8 @@ You can also use `store` if you want to force-set, last set wins.
 See, docs page on [Settings](./doc/settings.md) for list
 of all standardized settings.
 
-## Indexing Rules
 
-You can keep your settings and indexing rules in one config file,
-or split them accross multiple config files however you like. (Connection details vs indexing? Common things vs environmental specific things?)
+## Indexing rules: Let's start with `to_field` and `extract_marc`
 
 There are a few methods that can be used to create indexing rules, but the
 one you'll most common is called `to_field`, and establishes a rule
@@ -114,8 +115,6 @@ to extract content to a particular named output field.
 
 The extraction rule can use built-in 'macros', or, as we'll see later, 
 entirely custom logic. 
-
-## the extract_marc function
 
 The built-in macro you'll use the most is `extract_marc`, to extract
 data out of a MARC record according to a tag/subfield specification. 
