@@ -409,8 +409,9 @@ Own Code](./doc/extending.md)
 
 * [Other traject commands](./doc/other_commands.md) including `marcout`, and `commit`
 * [Hints for batch and cronjob use](./doc/batch_execution.md) of  traject.
-  
-
+* traject plugins:
+  * [traject_alephsequential_reader](https://github.com/traject-project/traject_alephsequential_reader)
+  * [traject_horizon](https://github.com/jrochkind/traject_horizon) Read MARC directly from a Horizon ILS database. 
 
 # Development
 
