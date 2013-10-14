@@ -97,6 +97,9 @@ describe "Traject::Macros::Marc21" do
       assert_equal "one two three", Marc21.trim_punctuation("one two three]")
       assert_equal "one two three", Marc21.trim_punctuation("[one two three")
       assert_equal "one two three", Marc21.trim_punctuation("[one two three]")
+
+      # This one was a bug before
+      assert_equal "Feminism and art", Marc21.trim_punctuation("Feminism and art.")
     end
 
     it "uses :translation_map" do
