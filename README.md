@@ -434,6 +434,8 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
 **Inline api docs** Note that our [`.yardopts` file](./.yardopts) used by rdoc.info to generate
 online api docs has a `--markup markdown` specified -- inline class/method docs are in markdown, not rdoc. 
 
+Bundler rake tasks included for gem releases: `rake release`
+
 ## TODO
 
 
