@@ -147,8 +147,10 @@ data out of a MARC record according to a tag/subfield specification.
 to matched specifications, but you can turn that off, or extract *only* corresponding
 880s. 
 
+~~~ruby
     to_field "title", extract_marc("245abc", :alternate_script => false)
     to_field "title_vernacular", extract_marc("245abc", :alternate_script => :only)
+~~~
 
 By default, specifications with multiple subfields (like "240abc") will produce one single string of output for each matching field. Specifications with single subfields (like "020a") will split subfields and produce an output string for each matching subfield.    
 
@@ -173,20 +175,25 @@ To see all options for `extract_marc`, see the [method documentation](http://rdo
 Other built-in methods that can be used with `to_field` include a hard-coded
 literal string:
 
+~~~ruby
     to_field "source", literal("LIB_CATALOG")
+~~~
 
 The current record serialized back out as MARC, in binary, XML, or json:
 
+~~~ruby
     # or :format => "json" for marc-in-json
     # or :format => "binary", by default Base64-encoded for Solr
     # 'binary' field, or, for more like what SolrMarc did, without
     # escaping:
     to_field "marc_record_raw", serialized_marc(:format => "binary", :binary_escape => false, :allow_oversized => true)
+~~~
 
 Text of all fields in a range:
 
+~~~ruby
     to_field "text", extract_all_marc_values(:from => 100, :to => 899)
-
+~~~
 
 All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
 
@@ -198,6 +205,7 @@ them available to your indexing, you just need to use ruby `require` and `extend
 
 A number of methods are in [Traject::Macros::Marc21Semantics](./lib/traject/macros/marc21_semantics.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21Semantics))
 
+~~~ruby
     require 'traject/macros/marc21_semantics'
     extend Traject::Macros::Marc21Semantics
 
@@ -205,15 +213,17 @@ A number of methods are in [Traject::Macros::Marc21Semantics](./lib/traject/macr
     to_field 'broad_subject',     marc_lcc_to_broad_category
     to_field "geographic_facet",  marc_geo_facet
     # And several more
+~~~
 
 And, there's a routine for classifying MARC to an internal
 format/genre/type vocabulary:
 
+~~~ruby
     require 'traject/macros/marc_format_classifier'
     extend Traject::Macros::MarcFormats
 
     to_field 'format_facet',    marc_formats
-
+~~~
 
 ## Custom logic
 
@@ -221,6 +231,7 @@ The built-in routines are there for your convenience, but if you need
 something local or custom, you can write ruby logic directly
 in a configuration file, using a ruby block, which looks like this:
 
+~~~ruby
     to_field "id" do |record, accumulator|
        # take the record's 001, prefix it with "bib_",
        # and then add it to the 'accumulator' argument,
@@ -229,6 +240,7 @@ in a configuration file, using a ruby block, which looks like this:
        value = "bib_#{value}"
        accumulator << value
     end
+~~~
 
 `do |record, accumulator|` is the definition of a ruby block taking
 two arguments.  The first one passed in will be a MARC record. The
@@ -239,21 +251,25 @@ Here's a more realistic example that shows how you'd get the
 record type byte 06 out of a MARC leader, then translate it
 to a human-readable string with a TranslationMap
 
+~~~ruby
     to_field "marc_type" do |record, accumulator|
       leader06 = record.leader.byteslice(6)
       # this translation map doesn't actually exist, but could
       accumulator << TranslationMap.new("marc_leader")[ leader06 ]
     end
+~~~
 
 You can also add a block onto the end of a built-in 'macro', to 
 further customize the output. The `accumulator` passed to your block
 will already have values in it from the first step, and you can
 use ruby methods like `map!` to modify it:
 
+~~~ruby
     to_field "big_title", extract_marc("245abcdefg") do |record, accumulator|
       # put it all in all uppercase, I don't know why. 
       accumulator.map! {|v| v.upcase}
     end
+~~~
 
 There are many more things you can do with custom logic blocks like this too,
 including additional features we haven't discussed yet. 
@@ -393,6 +409,7 @@ Own Code](./doc/extending.md)
 
 * [Other traject commands](./doc/other_commands.md) including `marcout`, and `commit`
 * [Hints for batch and cronjob use](./doc/batch_execution.md) of  traject.
+  
 
 
 # Development
