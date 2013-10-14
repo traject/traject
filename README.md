@@ -373,22 +373,6 @@ Also see `-I load_path` option and suggestions for Bundler use under Extending W
 See also [Hints for batch and cronjob use](./doc/batch_execution.md) of traject.
 
 
-## Known extensions
-
-### Readers/Writers
-* [traject_alephsequential_reader](https://github.com/traject-project/traject_alephsequential_reader/): read MARC files serialized in the
-AlephSequential format, as output by Ex Libris's Alpeh ILS.
-
-* [traject_horizon](https://github.com/jrochkind/traject_horizon): Export MARC records directly from a Horizon ILS rdbms, as serialized MARC or to  index into Solr.
-
-
-### Macros
-* [traject_umich_format](https://github.com/billdueber/traject_umich_format/): opinionated code and associated macros to extract format
-(book, audio file, etc.) and types (bibliography, conference report, etc.) from a MARC record. Code mirrors that used by the University
-of Michigan, and is an alternate approach to that taken by the `marc_formats` macro in `Traject::Macros::MarcFormatClassifier`.
-
-
-
 ## Extending With Your Own Code
 
 Traject config files are full live ruby files, where you can do anything,
@@ -424,9 +408,11 @@ Own Code](./doc/extending.md)
 
 * [Other traject commands](./doc/other_commands.md) including `marcout`, and `commit`
 * [Hints for batch and cronjob use](./doc/batch_execution.md) of  traject.
-* traject plugins:
-  * [traject_alephsequential_reader](https://github.com/traject-project/traject_alephsequential_reader)
-  * [traject_horizon](https://github.com/jrochkind/traject_horizon) Read MARC directly from a Horizon ILS database. 
+* Plugin extensions: Gems that add functionality to traject
+  * [traject_alephsequential_reader](https://github.com/traject-project/traject_alephsequential_reader/): read MARC files serialized in the AlephSequential format, as output by Ex Libris's Alpeh ILS.
+  * [traject_horizon](https://github.com/jrochkind/traject_horizon): Export MARC records directly from a Horizon ILS rdbms, as serialized MARC or to  index into Solr.
+  * [traject_umich_format](https://github.com/billdueber/traject_umich_format/): opinionated code and associated macros to extract format (book, audio file, etc.) and types (bibliography, conference report, etc.) from a MARC record. Code mirrors that used by the University of Michigan, and is an alternate approach to that taken by the `marc_formats` macro in `Traject::Macros::MarcFormatClassifier`.
+  
 
 # Development
 
