@@ -7,7 +7,6 @@ require 'traject/indexer/settings'
 require 'traject/marc_reader'
 require 'traject/marc4j_reader'
 require 'traject/json_writer'
-require 'traject/solrj_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
@@ -71,9 +70,10 @@ require 'traject/macros/basic'
 #  4) Optionally implements a #skipped_record_count method, returning int count of records
 #     that were skipped due to errors (and presumably logged)
 #
-#  The default writer (will be) the SolrWriter , which is configured
-#  through additional Settings as well. A JsonWriter is also available,
-#  which can be useful for debugging your index mappings.
+#  The default writer is the SolrJWriter, using Java SolrJ to
+#  write to a Solr.  A few other built-in writers are available,
+#  but it's anticipated more will be created as plugins or local
+#  code for special purposes. 
 #
 #  You can set alternate writers by setting a Class object directly
 #  with the #writer_class method, or by the 'writer_class_name' Setting,
