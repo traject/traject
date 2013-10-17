@@ -1,3 +1,5 @@
+# Encoding: UTF-8
+
 require 'traject/marc_extractor'
 
 module Traject::Macros
@@ -501,6 +503,71 @@ module Traject::Macros
         end
         accumulator.uniq!
       end
+    end
+
+    # Extracts LCSH-carrying fields, and formatting them
+    # as a pre-coordinated LCSH string, for instance suitable for including
+    # in a facet. 
+    #
+    # You can supply your own list of fields as a spec, but for significant
+    # customization you probably just want to write your own method in
+    # terms of the Marc21Semantics.assemble_lcsh method. 
+    def marc_lcsh_formatted(options = {})
+      spec            = options[:spec] || "600:610:611:630:648:650:651:654:6662"
+      subd_separator  = options[:subdivison_separator] || " — "
+      other_separator = options[:other_separator] || " "
+
+      extractor       = MarcExtractor.new(spec)
+
+      return lambda do |record, accumulator|
+        accumulator.concat( extractor.collect_matching_lines(record) do |field, spec|
+          Marc21Semantics.assemble_lcsh(field, subd_separator, other_separator)
+        end)
+      end
+
+    end
+
+    # Takes a MARC::Field and formats it into a pre-coordinated LCSH string
+    # with subdivision seperators in the right place. 
+    #
+    # For 600 fields especially, need to not just join with subdivision seperator
+    # to take acount of $a$d$t -- for other fields, might be able to just
+    # join subfields, not sure. 
+    #
+    # WILL strip trailing period from generated string, contrary to some LCSH practice.
+    # Our data is inconsistent on whether it has period or not, this was
+    # the easiest way to standardize. 
+    #
+    # Default subdivision seperator is em-dash with spaces, set to '--' if you want. 
+    #
+    # Cite: "Dash (-) that precedes a subdivision in an extended 600 subject heading
+    # is not carried in the MARC record. It may be system generated as a display constant
+    # associated with the content of subfield $v, $x, $y, and $z."
+    # http://www.loc.gov/marc/bibliographic/bd600.html
+    def self.assemble_lcsh(marc_field, subd_separator = " — ", other_separator = " ")
+      str = ""
+      subd_prefix_codes = %w{v x y z}
+
+
+      marc_field.subfields.each_with_index do |sf, i|
+        # ignore non-alphabetic, like numeric control subfields
+        next unless sf.code =~ /\A[a-z]\Z/
+
+        prefix = if subd_prefix_codes.include? sf.code
+          subd_separator
+        elsif i == 0
+          ""
+        else
+          other_separator
+        end
+        str << prefix << sf.value
+      end
+
+      str.gsub!(/\.\Z/, '')
+
+      return nil if str == ""
+
+      return str
     end
 
 

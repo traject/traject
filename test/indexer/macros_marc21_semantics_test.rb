@@ -1,3 +1,5 @@
+# Encoding: UTF-8
+
 require 'test_helper'
 
 require 'traject/indexer'
@@ -231,7 +233,52 @@ describe "Traject::Macros::Marc21Semantics" do
       assert_equal ["Early modern, 1500-1700", "17th century", "Great Britain: Puritan Revolution, 1642-1660", "Great Britain: Civil War, 1642-1649", "1642-1660"],
         output["era_facet"]
     end
+  end
 
+  describe "marc_lcsh_display" do
+    it "formats typical field" do      
+      field = MARC::DataField.new('650', ' ', ' ', ['a', 'Psychoanalysis and literature'], ['z', 'England'], ['x', 'History'], ['y', '19th century.'])
+      str = Marc21Semantics.assemble_lcsh(field)
+
+      assert_equal "Psychoanalysis and literature — England — History — 19th century", str
+    end
+
+    it "ignores numeric subfields" do
+      field = MARC::DataField.new('650', ' ', ' ', ['a', 'Psychoanalysis and literature'], ['x', 'History'], ['0', '01234'], ['3', 'Some part'])
+      str = Marc21Semantics.assemble_lcsh(field)
+
+      assert_equal "Psychoanalysis and literature — History", str
+    end
+
+    it "doesn't put subdivision in wrong place" do 
+      field = MARC::DataField.new('600', ' ', ' ', ['a', 'Eliot, George,'],['d', '1819-1880.'], ['t', 'Middlemarch'])
+      str = Marc21Semantics.assemble_lcsh(field)
+
+      assert_equal "Eliot, George, 1819-1880. Middlemarch", str
+    end
+
+    it "mixes non-subdivisions with subdivisions" do
+      field = MARC::DataField.new('600', ' ', ' ', ['a', 'Eliot, George,'],['d', '1819-1880.'], ['t', 'Middlemarch'], ['x', 'Criticism.'])
+      str = Marc21Semantics.assemble_lcsh(field)
+
+      assert_equal "Eliot, George, 1819-1880. Middlemarch — Criticism", str
+    end
+
+    it "returns nil for a field with no relevant subfields" do
+      field = MARC::DataField.new('650', ' ', ' ')
+      assert_nil Marc21Semantics.assemble_lcsh(field)
+    end
+
+    describe "marc_lcsh_formatted macro" do
+      it "smoke test" do
+        @record = MARC::Reader.new(support_file_path  "george_eliot.marc").to_a.first
+        @indexer.instance_eval {to_field "lcsh", marc_lcsh_formatted}
+        output = @indexer.map_record(@record)
+
+        assert output["lcsh"].length > 0, "outputs data"
+        assert output["lcsh"].include?("Eliot, George, 1819-1880 — Characters"), "includes a string its supposed to"
+      end
+    end
   end
 
   describe "extract_marc_filing_version" do
@@ -271,7 +318,6 @@ describe "Traject::Macros::Marc21Semantics" do
         end
       end
     end
-
 
   end
 
