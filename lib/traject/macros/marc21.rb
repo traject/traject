@@ -191,6 +191,10 @@ module Traject::Macros
     #
     # Returns altered string, doesn't change original arg.
     def self.trim_punctuation(str)
+      
+      # If something went wrong and we got a nil, just return it
+      return str unless str
+      
       # trailing: comma, slash, semicolon, colon (possibly preceded and followed by whitespace)
       str = str.sub(/ *[ ,\/;:] *\Z/, '')
 
