@@ -3,7 +3,7 @@
 Tools for reading MARC records, transforming them with indexing rules, and indexing to Solr.
 Might be used to index MARC data for a Solr-based discovery product like [Blacklight](https://github.com/projectblacklight/blacklight) or [VUFind](http://vufind.org/).
 
-Traject might also be generalized to a set of tools for getting structured data from a source, and sending it to a destination. 
+Traject might also be generalized to a set of tools for getting structured data from a source, and transforming it to a hash-like object to send to a destination. 
 
 
 **Traject is nearing 1.0, it is robust, feature-rich and being used in production by authors -- feedback invited**
