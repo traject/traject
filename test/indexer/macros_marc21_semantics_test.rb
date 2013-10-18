@@ -153,6 +153,12 @@ describe "Traject::Macros::Marc21Semantics" do
       assert_equal nil,  Marc21Semantics.publication_date(empty_record)
     end
     
+    it "uses macro correctly with no date info" do
+      @indexer.instance_eval {to_field "date", marc_publication_date }
+      assert_equal({}, @indexer.map_record(empty_record))
+    end
+    
+    
     it "pulls out 008 date_type s" do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
       assert_equal 2002, Marc21Semantics.publication_date(@record)
