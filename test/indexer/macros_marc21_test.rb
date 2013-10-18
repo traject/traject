@@ -26,6 +26,8 @@ describe "Traject::Macros::Marc21" do
       output = @indexer.map_record(@record)
 
       assert_equal ["Manufacturing consent : the political economy of the mass media /"], output["title"]
+      assert_equal({}, @indexer.map_record(empty_record))
+      
     end
 
     it "respects :first=>true option" do
