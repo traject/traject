@@ -28,6 +28,8 @@ describe "Traject::Macros::Marc21Semantics" do
     output = @indexer.map_record(@record)
 
     assert_equal %w{47971712},  output["oclcnum"]
+    
+    assert_equal({}, @indexer.map_record(empty_record))
   end
 
   it "#marc_series_facet" do
@@ -40,6 +42,8 @@ describe "Traject::Macros::Marc21Semantics" do
 
     # trims punctuation too
     assert_equal ["Big bands"], output["series_facet"]
+    assert_equal({}, @indexer.map_record(empty_record))
+    
   end
 
   describe "marc_sortable_author" do
@@ -54,6 +58,8 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
 
       assert_equal ["Herman, Edward S.   Manufacturing consent the political economy of the mass media Edward S. Herman and Noam Chomsky ; with a new introduction by the authors"], output["author_sort"]
+      assert_equal [""], @indexer.map_record(empty_record)['author_sort']
+    
     end
     it "respects non-filing" do
       @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
@@ -61,6 +67,8 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
 
       assert_equal ["Business renaissance quarterly [electronic resource]."], output["author_sort"]
+      assert_equal [""], @indexer.map_record(empty_record)['author_sort']
+    
     end
   end
 
@@ -71,6 +79,8 @@ describe "Traject::Macros::Marc21Semantics" do
     it "works" do
       output = @indexer.map_record(@record)
       assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title_sort"]
+      assert_equal({}, @indexer.map_record(empty_record))
+    
     end
     it "respects non-filing" do
       @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
@@ -95,6 +105,8 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
 
       assert_equal ["English", "French", "German", "Italian", "Spanish", "Russian"], output["languages"]
+      assert_equal({}, @indexer.map_record(empty_record))
+    
     end
   end
 
@@ -108,6 +120,8 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
 
       assert_equal ["Larger ensemble, Unspecified", "Piano", "Soprano voice", "Tenor voice", "Violin", "Larger ensemble, Ethnic", "Guitar", "Voices, Unspecified"], output["instrumentation"]
+      assert_equal({}, @indexer.map_record(empty_record))
+    
     end
   end
 
@@ -126,16 +140,23 @@ describe "Traject::Macros::Marc21Semantics" do
       @record = MARC::Reader.new(support_file_path  "louis_armstrong.marc").to_a.first
       output = @indexer.map_record(@record)
 
-      assert_equal ["bb01", "bb01.s", "bb", "bb.s", "oe"],
-        output["instrument_codes"]
+      assert_equal ["bb01", "bb01.s", "bb", "bb.s", "oe"], output["instrument_codes"]
+      assert_equal({}, @indexer.map_record(empty_record))
+   
     end
   end
 
   describe "publication_date" do
     # there are way too many edge cases for us to test em all, but we'll test some of em.
+    
+    it "works when there's no date information" do
+      assert_equal nil,  Marc21Semantics.publication_date(empty_record)
+    end
+    
     it "pulls out 008 date_type s" do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
       assert_equal 2002, Marc21Semantics.publication_date(@record)
+      
     end
     it "uses start date for date_type c continuing resource" do
       @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").to_a.first
@@ -182,18 +203,24 @@ describe "Traject::Macros::Marc21Semantics" do
       output = @indexer.map_record(@record)
 
       assert_equal ["Language & Literature"], output["discipline_facet"]
+      
     end
     it "maps to default" do
       @record = MARC::Reader.new(support_file_path  "musical_cage.marc").to_a.first
       output = @indexer.map_record(@record)
       assert_equal ["Unknown"], output["discipline_facet"]
+      assert_equal(["Unknown"], @indexer.map_record(empty_record)['discipline_facet'])
     end
+
     it "maps to nothing if none and no default" do
       @indexer.instance_eval {to_field "discipline_no_default", marc_lcc_to_broad_category(:default => nil)}
       @record = MARC::Reader.new(support_file_path  "musical_cage.marc").to_a.first
       output = @indexer.map_record(@record)
 
       assert_nil output["discipline_no_default"]
+      
+      assert_nil @indexer.map_record(empty_record)["discipline_no_default"]
+      
     end
 
     describe "LCC_REGEX" do
@@ -212,13 +239,15 @@ describe "Traject::Macros::Marc21Semantics" do
       @record = MARC::Reader.new(support_file_path  "multi_geo.marc").to_a.first
       output = @indexer.map_record(@record)
 
-      assert_equal ["Europe", "Middle East", "Africa, North", "Agora (Athens, Greece)", "Rome (Italy)", "Italy"],
-        output["geo_facet"]
+      assert_equal ["Europe", "Middle East", "Africa, North", "Agora (Athens, Greece)", "Rome (Italy)", "Italy"], output["geo_facet"]
+      assert_equal({}, @indexer.map_record(empty_record))
     end
     it "maps nothing on a record with no geo" do
       @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
       output = @indexer.map_record(@record)
       assert_nil output["geo_facet"]
+      assert_equal({}, @indexer.map_record(empty_record))
+      
     end
   end
 
@@ -232,6 +261,8 @@ describe "Traject::Macros::Marc21Semantics" do
 
       assert_equal ["Early modern, 1500-1700", "17th century", "Great Britain: Puritan Revolution, 1642-1660", "Great Britain: Civil War, 1642-1649", "1642-1660"],
         output["era_facet"]
+      assert_equal({}, @indexer.map_record(empty_record))
+        
     end
   end
 
@@ -241,6 +272,7 @@ describe "Traject::Macros::Marc21Semantics" do
       str = Marc21Semantics.assemble_lcsh(field)
 
       assert_equal "Psychoanalysis and literature — England — History — 19th century", str
+
     end
 
     it "ignores numeric subfields" do
@@ -277,6 +309,9 @@ describe "Traject::Macros::Marc21Semantics" do
 
         assert output["lcsh"].length > 0, "outputs data"
         assert output["lcsh"].include?("Eliot, George, 1819-1880 — Characters"), "includes a string its supposed to"
+        
+        assert_equal({}, @indexer.map_record(empty_record))
+        
       end
     end
   end
@@ -292,6 +327,8 @@ describe "Traject::Macros::Marc21Semantics" do
       end
       output = @indexer.map_record(@record)
       assert_equal ['Business renaissance quarterly'], output['title_phrase']
+      assert_equal({}, @indexer.map_record(empty_record))
+      
     end
 
     it "works with :include_original" do
@@ -300,6 +337,7 @@ describe "Traject::Macros::Marc21Semantics" do
       end
       output = @indexer.map_record(@record)
       assert_equal ['The Business renaissance quarterly', 'Business renaissance quarterly'], output['title_phrase']
+      assert_equal({}, @indexer.map_record(empty_record))
     end
 
     it "doesn't do anything if you don't include the first subfield" do
@@ -308,6 +346,8 @@ describe "Traject::Macros::Marc21Semantics" do
       end
       output = @indexer.map_record(@record)
       assert_equal ['[electronic resource].'], output['title_phrase']
+      assert_equal({}, @indexer.map_record(empty_record))
+   
     end
 
 
