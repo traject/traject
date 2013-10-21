@@ -18,7 +18,9 @@ with jruby 1.7.x or later, this should be default, recommend
 you use jruby 1.7.x.
 
 Especially when running under a cron job, it can be difficult to
-set things up so traject runs under jruby.
+set things up so traject runs under jruby -- and then when you add
+bundler into it, things can get positively byzantine. It's not you,
+this gets confusing. 
 
 It can sometimes be useful to create a wrapper script for traject
 that takes care of making sure it's running under the right ruby
@@ -31,8 +33,11 @@ Simply run with:
     chruby-exec jruby -- traject {other arguments}
 
 Whether specifying that directly in a crontab, or in a shell script
-that needs to call traject, etc. So simple you might not need
-a wrapper script, but it might still be convenient to create one. Say
+that needs to call traject, etc. In a crontab environment, it'll actually need
+you to set PATH and SHELL variables, as specified in the [chruby docs](https://github.com/postmodern/chruby/wiki/Cron)
+
+
+So simple you might not need a wrapper script, but it might still be convenient to create one. Say
 you put a `jruby-traject` at `/usr/local/bin/jruby-traject`, that
 looks like this:
 
@@ -40,9 +45,55 @@ looks like this:
 
     chruby-exec jruby -- traject "$@"
 
-Now any account, in a crontab, in an interactive shell, wherever,
-can just execute `jruby-traject {arguments}`, and execute traject
-in a jruby environment.
+Now you can can just execute `jruby-traject {arguments}`, and execute traject
+in a jruby environment. (In a crontab, you'll still need to fix your
+PATH and SHELL env variables for `chruby-exec` to work, either in the
+crontab or in this wrapper script)
+
+### chruby monster wrapper script
+
+I am still not sure if this is a good idea, but here's an example of 
+a wrapper script for chruby that will take care of the ENV even
+when running in a crontab, use chruby-exec only if jruby isn't
+already the default ruby, and add in `bundle exec` too. 
+
+~~~bash
+#!/usr/bin/env bash
+
+# A wrapper for traject that uses chruby to make sure jruby
+# is being used before calling traject, and then calls
+# traject with bundle exec from within our traject project
+# dir. 
+
+# Make sure /usr/local/bin is in PATH for chruby-exec,
+# which it's not ordinarily in a cronjob. 
+if [[ ":$PATH:" != *":/usr/local/bin:"* ]]
+then
+  export PATH=$PATH:/usr/local/bin
+fi
+# chruby needs SHELL set, which it won't be from a crontab
+export SHELL=/bin/bash
+
+# Find the dir based on location of this wrapper script,
+# then use that dir to cd to for the bundle exec to find
+# the right Gemfile. 
+traject_dir=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
+
+# do we need to use chruby to switch to jruby?
+if [[ "$(ruby -v)" == *jruby* ]]
+then
+  ruby_picker="" # nothing needed "
+else
+  ruby_picker="chruby-exec jruby --"
+fi
+
+cmd="cd $traject_dir && $ruby_picker bundle exec traject $@"
+
+echo $cmd
+eval $cmd
+~~~
+
+This monster script can perhaps be adapted for rbenv or rvm. 
 
 ### for rbenv
 
@@ -62,7 +113,7 @@ If you're running inside a cronjob, things get a bit trickier,
 because rbenv isn't normally set up in the limited environment
 of cron tasks. One way to deal with this is to have your
 cronjob explicitly execute in a bash login shell, that
-will then have rbenv set up so long as it's running
+will then have rbenv set up -- so long as it's running
 under an account with rbenv set up properly!
 
     # in a cronfile
@@ -98,6 +149,7 @@ it might be at `/usr/local/rvm/environments`... instead.
 Now any account, in a crontab, in an interactive shell, wherever,
 can just execute `jruby-traject {arguments}`, and execute traject
 in a jruby environment.
+
 
 ### Bundler too?
 
