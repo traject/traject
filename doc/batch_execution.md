@@ -87,7 +87,7 @@ else
   ruby_picker="chruby-exec jruby --"
 fi
 
-cmd="cd $traject_dir && $ruby_picker bundle exec traject $@"
+cmd="BUNDLE_GEMFILE=$traject_dir/Gemfile $ruby_picker bundle exec traject $@"
 
 echo $cmd
 eval $cmd
