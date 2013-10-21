@@ -37,6 +37,16 @@ def assert_start_with(start_with, obj, msg = nil)
   assert obj.start_with?(start_with), msg
 end
 
+
+# An empty record, for making sure extractors and macros work when
+# the fields they're looking for aren't there
+
+def empty_record
+  rec = MARC::Record.new
+  rec.append(MARC::ControlField.new('001', '000000000'))
+  rec
+end
+
 # pretends to be a SolrJ HTTPServer-like thing, just kind of mocks it up
 # and records what happens and simulates errors in some cases.
 class MockSolrServer

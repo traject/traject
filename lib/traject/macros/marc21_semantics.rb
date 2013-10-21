@@ -83,7 +83,8 @@ module Traject::Macros
     # 245 a and b, with non-filing characters stripped off
     def marc_sortable_title
       lambda do |record, accumulator|
-        accumulator << Marc21Semantics.get_sortable_title(record)
+        st = Marc21Semantics.get_sortable_title(record)
+        accumulator << st if st
       end
     end
 

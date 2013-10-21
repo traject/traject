@@ -16,6 +16,7 @@ of a couple traject features meant to make it easier.
 * Traject `-I` argument command line can be used to list directories to
   add to the load path, similar to the `ruby -I` argument. You
   can then 'require' local project files from the load path.
+  * Or modify the ruby `$LOAD_PATH` manually at the top of a traject config file you are loading. 
   * translation map files found in a
     "./translation_maps" subdir on the load path will be found
     for Traject translation maps.
@@ -155,7 +156,8 @@ by running `bundler init`, probably in the directory
 right next to your traject config files.
 
 Then specify what gems your traject project will use,
-possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemfile.html).
+possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemfile.html) -- 
+**do** include `gem 'traject'` in the Gemfile. 
 
 Run `bundle install` from the directory with the Gemfile, on any system
 at any time, to make sure specified gems are installed.

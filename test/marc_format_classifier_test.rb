@@ -10,7 +10,11 @@ def classifier_for(filename)
 end
 
 describe "MarcFormatClassifier" do
-
+  
+  it "returns 'Print' when there's no other data" do
+    assert_equal ['Print'],  MarcFormatClassifier.new( empty_record  ).formats
+  end
+  
   describe "genre" do
     # We don't have the patience to test every case, just a sampling
     it "says book" do

@@ -114,11 +114,14 @@ module Traject
       # * If it has any RDA 338, then it's print if it has a value of
       #   volume, sheet, or card.
       # * If it does not have an RDA 338, it's print if and only if it has
-      #   NO 245$h GMD.
+      #   no 245$h GMD.
       #
       # * Here at JH, for legacy reasons we also choose to not
       #   call it print if it's already been marked audio, but
       #   we do that in a different method.
+      #
+      # Note that any record that has neither a 245 nor a 338rda is going
+      # to be marked print
       #
       # This algorithm is definitely going to get some things wrong in
       # both directions, with real world data. But seems to be good enough.
@@ -137,7 +140,7 @@ module Traject
             end
           end
         else
-          normalized_gmd.length == 0
+          normalized_gmd.length == 0 
         end
       end
 

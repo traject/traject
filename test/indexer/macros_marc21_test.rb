@@ -26,6 +26,8 @@ describe "Traject::Macros::Marc21" do
       output = @indexer.map_record(@record)
 
       assert_equal ["Manufacturing consent : the political economy of the mass media /"], output["title"]
+      assert_equal({}, @indexer.map_record(empty_record))
+      
     end
 
     it "respects :first=>true option" do
@@ -36,6 +38,7 @@ describe "Traject::Macros::Marc21" do
       output = @indexer.map_record(@record)
 
       assert_length 1, output["other_id"]
+      
     end
 
     it "trims punctuation with :trim_punctuation => true" do
@@ -46,6 +49,8 @@ describe "Traject::Macros::Marc21" do
       output = @indexer.map_record(@record)
 
       assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title"]
+      assert_equal({}, @indexer.map_record(empty_record))
+      
     end
 
     it "respects :default option" do
@@ -70,6 +75,7 @@ describe "Traject::Macros::Marc21" do
       output = @indexer.map_record(@record)
       assert_equal ["eng"], output['lang1']
       assert_equal ["eng", "eng"], output['lang2']
+      assert_equal({}, @indexer.map_record(empty_record))
     end
 
     it "fails on an extra/misspelled argument to extract_marc" do
