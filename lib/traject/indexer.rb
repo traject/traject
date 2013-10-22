@@ -7,6 +7,7 @@ require 'traject/indexer/settings'
 require 'traject/marc_reader'
 require 'traject/marc4j_reader'
 require 'traject/json_writer'
+require 'traject/solrj_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
