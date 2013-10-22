@@ -148,8 +148,8 @@ module Traject
       # resource. But sometimes resort to 245$h GMD too.
       def online?
         # field 007, byte 0 c="electronic" byte 1 r="remote" ==> sure Online
-        found_007 = record.find do |field|
-          field.tag == "007" && field.value.slice(0) == "c" && field.value.slice(1) == "r"
+        found_007 = record.fields('007').find do |field|
+          field.value.slice(0) == "c" && field.value.slice(1) == "r"
         end
 
         return true if found_007
