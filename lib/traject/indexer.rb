@@ -168,38 +168,39 @@ class Traject::Indexer
   attr_writer :logger
 
 
-  # Just calculates the arg that's gonna be given to Yell.new
-  # or SomeLogger.new
-  def logger_argument
-    specified = settings["log.file"] || "STDERR"
-
-    case specified
-    when "STDOUT" then STDOUT
-    when "STDERR" then STDERR
-    else specified
-    end
-  end
-
-  # Second arg to Yell.new, options hash, calculated from
-  # settings
-  def logger_options
-    # formatter, default is fairly basic
+  def logger_format
     format = settings["log.format"] || "%d %5L %m"
     format = case format
-    when "false" then false
-    when "" then nil
-    else format
+      when "false" then false
+      when "" then nil
+      else format
     end
-
-    level = settings["log.level"] || "info"
-
-    {:format => format, :level => level}
   end
 
   # Create logger according to settings
   def create_logger
+
+    logger_level  = settings["log.level"] || "info"
+
     # log everything to STDERR or specified logfile
-    logger = Yell.new( logger_argument, logger_options )
+    logger = Yell.new
+    logger.format = logger_format
+    logger.level  = logger_level
+
+    logger_destination = settings["log.file"] || "STDERR"
+    # We intentionally repeat the logger_level
+    # on the adapter, so it will stay there if overall level
+    # is changed.
+    case logger_destination
+    when "STDERR"
+      logger.adapter :stderr, level: logger_level
+    when "STDOUT"
+      logger.adapter :stdout, level: logger_level
+    else
+      logger.adapter :file, logger_destination, level: logger_level
+    end
+
+
     # ADDITIONALLY log error and higher to....
     if settings["log.error_file"]
       logger.adapter :file, settings["log.error_file"], :level => 'gte.error'
