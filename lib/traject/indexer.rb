@@ -8,6 +8,7 @@ require 'traject/indexer/settings'
 require 'traject/marc_reader'
 require 'traject/marc4j_reader'
 require 'traject/json_writer'
+require 'traject/solrj_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
@@ -74,7 +75,7 @@ require 'traject/macros/basic'
 #  The default writer is the SolrJWriter, using Java SolrJ to
 #  write to a Solr.  A few other built-in writers are available,
 #  but it's anticipated more will be created as plugins or local
-#  code for special purposes. 
+#  code for special purposes.
 #
 #  You can set alternate writers by setting a Class object directly
 #  with the #writer_class method, or by the 'writer_class_name' Setting,
@@ -168,38 +169,39 @@ class Traject::Indexer
   attr_writer :logger
 
 
-  # Just calculates the arg that's gonna be given to Yell.new
-  # or SomeLogger.new
-  def logger_argument
-    specified = settings["log.file"] || "STDERR"
-
-    case specified
-    when "STDOUT" then STDOUT
-    when "STDERR" then STDERR
-    else specified
-    end
-  end
-
-  # Second arg to Yell.new, options hash, calculated from
-  # settings
-  def logger_options
-    # formatter, default is fairly basic
+  def logger_format
     format = settings["log.format"] || "%d %5L %m"
     format = case format
-    when "false" then false
-    when "" then nil
-    else format
+      when "false" then false
+      when "" then nil
+      else format
     end
-
-    level = settings["log.level"] || "info"
-
-    {:format => format, :level => level}
   end
 
   # Create logger according to settings
   def create_logger
+
+    logger_level  = settings["log.level"] || "info"
+
     # log everything to STDERR or specified logfile
-    logger = Yell.new( logger_argument, logger_options )
+    logger = Yell.new
+    logger.format = logger_format
+    logger.level  = logger_level
+
+    logger_destination = settings["log.file"] || "STDERR"
+    # We intentionally repeat the logger_level
+    # on the adapter, so it will stay there if overall level
+    # is changed.
+    case logger_destination
+    when "STDERR"
+      logger.adapter :stderr, level: logger_level, format: logger_format
+    when "STDOUT"
+      logger.adapter :stdout, level: logger_level, format: logger_format
+    else
+      logger.adapter :file, logger_destination, level: logger_level, format: logger_format
+    end
+
+
     # ADDITIONALLY log error and higher to....
     if settings["log.error_file"]
       logger.adapter :file, settings["log.error_file"], :level => 'gte.error'
@@ -330,7 +332,7 @@ class Traject::Indexer
       if log_batch_size && (count % log_batch_size == 0)
         batch_rps = log_batch_size / (Time.now - batch_start_time)
         overall_rps = count / (Time.now - start_time)
-        logger.info "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall"
+        logger.debug "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall"
         batch_start_time = Time.now
       end
 
