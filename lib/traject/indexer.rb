@@ -2,6 +2,7 @@ require 'yell'
 
 require 'traject'
 require 'traject/qualified_const_get'
+require 'traject/thread_pool'
 
 require 'traject/indexer/settings'
 require 'traject/marc_reader'
