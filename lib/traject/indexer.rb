@@ -184,7 +184,7 @@ class Traject::Indexer
     logger_level  = settings["log.level"] || "info"
 
     # log everything to STDERR or specified logfile
-    logger = Yell.new
+    logger = Yell::Logger.new(:null)
     logger.format = logger_format
     logger.level  = logger_level
 
