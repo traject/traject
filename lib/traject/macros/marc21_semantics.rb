@@ -514,7 +514,7 @@ module Traject::Macros
     # customization you probably just want to write your own method in
     # terms of the Marc21Semantics.assemble_lcsh method. 
     def marc_lcsh_formatted(options = {})
-      spec            = options[:spec] || "600:610:611:630:648:650:651:654:6662"
+      spec            = options[:spec] || "600:610:611:630:648:650:651:654:662"
       subd_separator  = options[:subdivison_separator] || " — "
       other_separator = options[:other_separator] || " "
 
