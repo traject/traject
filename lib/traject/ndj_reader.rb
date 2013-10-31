@@ -12,13 +12,13 @@ class Traject::NDJReader
   def initialize(input_stream, settings)
     @settings = settings
     @input_stream = input_stream
-    if settings['command_line.filename'] =~ /\.gz$/
+    if @settings['command_line.filename'] =~ /\.gz$/
       @input_stream = Zlib::GzipReader.new(@input_stream, :external_encoding => "UTF-8")
     end
   end
 
   def logger
-    @logger ||= (settings[:logger] || Yell.new(STDERR, :level => "gt.fatal")) # null logger)
+    @logger ||= (@settings[:logger] || Yell.new(STDERR, :level => "gt.fatal")) # null logger)
   end
 
   def each
