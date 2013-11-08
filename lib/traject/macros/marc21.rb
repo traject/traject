@@ -47,10 +47,6 @@ module Traject::Macros
         raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - EXTRACT_MARC_VALID_OPTIONS).join(', ')}' in extract_marc at #{Traject::Util.extract_caller_location(caller.first)}")
       end
 
-      only_first              = options.delete(:first)
-      trim_punctuation        = options.delete(:trim_punctuation)
-      default_value           = options.delete(:default)
-      allow_duplicates        = options.delete(:allow_duplicates)
 
       # We create the TranslationMap and the MarcExtractor here
       # on load, so the lambda can just refer to already created
@@ -61,6 +57,8 @@ module Traject::Macros
 
       if translation_map_arg  = options.delete(:translation_map)
         translation_map = Traject::TranslationMap.new(translation_map_arg)
+      else
+        translation_map = nil
       end
 
 
@@ -68,29 +66,39 @@ module Traject::Macros
 
       lambda do |record, accumulator, context|
         accumulator.concat extractor.extract(record)
-
-        if only_first
-          Marc21.first! accumulator
-        end
-
-        if translation_map
-          translation_map.translate_array! accumulator
-        end
-
-        if trim_punctuation
-          accumulator.collect! {|s| Marc21.trim_punctuation(s)}
-        end
-
-        unless allow_duplicates
-          accumulator.uniq!
-        end
-
-        if default_value && accumulator.empty?
-          accumulator << default_value
-        end
-
+        Marc21.apply_extraction_options(accumulator, options, translation_map)
       end
     end
+    
+    # Side-effect the accumulator with the options
+    def self.apply_extraction_options(accumulator, options, translation_map=nil)
+      only_first              = options.delete(:first)
+      trim_punctuation        = options.delete(:trim_punctuation)
+      default_value           = options.delete(:default)
+      allow_duplicates        = options.delete(:allow_duplicates)
+      
+      if only_first
+        Marc21.first! accumulator
+      end
+
+      if translation_map
+        translation_map.translate_array! accumulator
+      end
+
+      if trim_punctuation
+        accumulator.collect! {|s| Marc21.trim_punctuation(s)}
+      end
+
+      unless allow_duplicates
+        accumulator.uniq!
+      end
+
+      if default_value && accumulator.empty?
+        accumulator << default_value
+      end
+    end
+      
+    
     #  A list of symbols that are valid keys in the options hash
     EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default,
                                   :allow_duplicates, :separator, :translation_map,
