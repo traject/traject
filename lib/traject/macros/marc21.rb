@@ -72,13 +72,13 @@ module Traject::Macros
     
     # Side-effect the accumulator with the options
     def self.apply_extraction_options(accumulator, options, translation_map=nil)
-      only_first              = options.delete(:first)
-      trim_punctuation        = options.delete(:trim_punctuation)
-      default_value           = options.delete(:default)
-      allow_duplicates        = options.delete(:allow_duplicates)
-      
+      only_first              = options[:first]
+      trim_punctuation        = options[:trim_punctuation]
+      default_value           = options[:default]
+      allow_duplicates        = options[:allow_duplicates]
+
       if only_first
-        Marc21.first! accumulator
+        accumulator.replace Array(accumulator[0])
       end
 
       if translation_map
