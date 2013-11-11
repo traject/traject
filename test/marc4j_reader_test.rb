@@ -20,7 +20,7 @@ describe "Marc4JReader" do
     first = array.first
 
     assert_kind_of MARC::Record, first
-    assert first['245']['a'].encoding.name, "UTF-8"
+    assert_equal first['245']['a'].encoding.name, "UTF-8"
   end
 
   it "can skip a bad subfield code" do
