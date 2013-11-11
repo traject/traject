@@ -51,5 +51,20 @@ describe "Traject::MarcReader" do
   end
 
 
+  it "replaces bad byte in UTF8 marc" do
+    file = File.new(support_file_path "bad_utf_byte.utf8.marc")
+
+    settings = Traject::Indexer::Settings.new() # binary type is default
+    reader = Traject::MarcReader.new(file, settings)
+
+    record = reader.to_a.first
+    
+    value = record['300']['a']
+
+    assert_equal value.encoding.name, "UTF-8"
+    assert value.valid_encoding?, "Has valid encoding"
+    assert_equal "This is a bad byte: '\uFFFD' and another: '\uFFFD'", value
+  end
+
 
 end

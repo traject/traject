@@ -62,7 +62,7 @@ class Traject::MarcReader
         when 'json'
           Traject::NDJReader.new(self.input_stream, settings)
         else
-          MARC::Reader.new(self.input_stream)
+          MARC::Reader.new(self.input_stream, :invalid => :replace)
         end
     end
     return @internal_reader
