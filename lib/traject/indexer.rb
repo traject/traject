@@ -332,7 +332,7 @@ class Traject::Indexer
       if log_batch_size && (count % log_batch_size == 0)
         batch_rps = log_batch_size / (Time.now - batch_start_time)
         overall_rps = count / (Time.now - start_time)
-        logger.debug "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall"
+        logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
         batch_start_time = Time.now
       end
 

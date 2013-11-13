@@ -47,8 +47,10 @@ settings are applied first of all. It's recommended you use `provide`.
 * `log.level`:  Log this level and above. Default 'info', set to eg 'debug' to get potentially more logging info,
               or 'error' to get less. https://github.com/rudionrails/yell/wiki/101-setting-the-log-level
 
-* `log.batch_size`: If set to a number N (or string representation), will output a progress line to DEBUG
-   log, every N records. (use -d to turn logging to DEBUG to see.)
+* `log.batch_size`: If set to a number N (or string representation), will output a progress line to
+   log. (by default as INFO, but see log.batch_size.severity)
+
+* `log.batch_size.severity`: If `log.batch_size` is set, what logger severity level to log to. Default "INFO", set to "DEBUG" etc if desired. 
 
 * `marc_source.type`: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 

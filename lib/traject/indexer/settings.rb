@@ -69,7 +69,8 @@ class Traject::Indexer
       "marc4j_reader.source_encoding" => "BESTGUESS",
       "solrj_writer.batch_size"   => 200,
       "solrj_writer.thread_pool"  => 1,
-      "processing_thread_pool"    => 3
+      "processing_thread_pool"    => 3,
+      "log.batch_size.severity"   => "info"
       }
     end
 
