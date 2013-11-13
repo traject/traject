@@ -224,13 +224,17 @@ object you configure yourself however you like:
 ~~~ruby
   # inside a traject configuration file
 
-  logger = Yell.new do |l|
+  self.logger = Yell.new do |l|
     l.level = 'gte.info' # will only pass :info and above to the adapters
 
     l.adapter :datefile, 'production.log', level: 'lte.warn' # anything lower or equal to :warn
     l.adapter :datefile, 'error.log', level: 'gte.error' # anything greater or equal to :error
   end
 ~~~
+
+**note** it's important to use to use `self.logger =`, or due to
+ruby idiosyncracies you'll just be setting a local variable, not the Indexer's
+logger attribute. 
 
 See [yell](https://github.com/rudionrails/yell)  docs for more, you can
 do whatever you can make yell, just write ruby.
