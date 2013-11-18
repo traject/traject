@@ -84,5 +84,53 @@ describe "Marc4JReader" do
     assert_kind_of Java::org.marc4j.marc.impl::RecordImpl, record.original_marc4j
   end
 
+  it "replaces unicode character reference in Marc8 transcode" do
+    file = File.new(support_file_path "escaped_character_reference.marc8.marc")
+    # due to marc4j idiosyncracies, this test will NOT pass with default source_encoding
+    # of "BESTGUESS", it only works if you explicitly set to MARC8. Doh. 
+    settings = Traject::Indexer::Settings.new("marc4j_reader.source_encoding" => "MARC8") # binary type is default
+    record = Traject::Marc4JReader.new(file, settings).to_a.first
+
+    assert_equal "Rio de Janeiro escaped replacement char: \uFFFD .", record['260']['a']
+  end
+
+  describe "Marc4J Java Permissive Stream Reader" do 
+    # needed for sanity check when our tests fail to see if Marc4J
+    # is not behaving how we think it should. 
+    it "converts character references" do
+      file = File.new(support_file_path "escaped_character_reference.marc8.marc")
+      reader = MarcPermissiveStreamReader.new(file.to_inputstream, true, true, "MARC-8")
+      record = reader.next
+
+      field = record.getVariableField("260")
+      subfield = field.getSubfield('a'.ord)
+      value = subfield.getData
+      
+      assert_equal "Rio de Janeiro escaped replacement char: \uFFFD .", value        
+    end
+  end
+
+  it "replaces bad byte in UTF8 marc" do
+    skip "Marc4J needs fixing on it's end" # Marc4J won't do this in 'permissive' mode, gah. 
+
+    # Note this only works because the marc file DOES correctly
+    # have leader byte 9 set to 'a' for UTF8, otherwise Marc4J can't do it. 
+    file = File.new(support_file_path "bad_utf_byte.utf8.marc")
+
+    settings = Traject::Indexer::Settings.new() # binary UTF8 type is default
+    reader = Traject::Marc4JReader.new(file, settings)
+
+    record = reader.to_a.first
+    
+    value = record['300']['a']
+
+    assert_equal value.encoding.name, "UTF-8"
+    assert value.valid_encoding?, "Has valid encoding"
+    assert_equal "This is a bad byte: '\uFFFD' and another: '\uFFFD'", record['300']['a']
+  end
+
+
+
+
 
 end
