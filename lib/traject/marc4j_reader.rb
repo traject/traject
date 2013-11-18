@@ -26,11 +26,13 @@ require 'marc/marc4j'
 #
 # * marc4j_reader.source_encoding: Only used for 'binary', otherwise always UTF-8.
 #         String of the values MarcPermissiveStreamReader accepts:
-#         * BESTGUESS  (tries to use MARC leader and believe it, I think)
+#         * BESTGUESS  (default: not entirely clear what Marc4J does with this)
 #         * ISO8859_1
 #         * UTF-8
 #         * MARC8
-#         Default 'BESTGUESS', but marc records in the wild are so wrong here, recommend setting.
+#         Default 'BESTGUESS', but HIGHLY recommend setting
+#         to avoid some Marc4J unpredictability, Marc4J "BESTGUESS" can be unpredictable
+#         in a variety of ways. 
 #         (will ALWAYS be transcoded to UTF-8 on the way out. We insist.)
 #
 # * marc4j_reader.jar_dir: Path to a directory containing Marc4J jar file to use. All .jar's in dir will
