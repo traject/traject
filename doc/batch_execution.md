@@ -224,7 +224,7 @@ object you configure yourself however you like:
 ~~~ruby
   # inside a traject configuration file
 
-  self.logger = Yell.new(:null) do |l|
+  self.logger = Yell.new do |l|
     l.level = 'gte.info' # will only pass :info and above to the adapters
 
     l.adapter :datefile, 'production.log', level: 'lte.warn' # anything lower or equal to :warn
