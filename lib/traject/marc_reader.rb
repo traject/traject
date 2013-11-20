@@ -13,13 +13,24 @@ require 'traject/ndj_reader'
 # ## Settings
 
 # * "marc_source.type":  serialization type. default 'binary'
-#       * "binary". standard ISO 2709 "binary" MARC format.
-#       * "xml", MarcXML
+#       * "binary". standard ISO 2709 "binary" MARC format, 
+#           will use ruby-marc MARC::Reader (Note, if you are using
+#          type 'binary', you probably want to also set 'marc_source.encoding')
+#       * "xml", MarcXML, will use ruby-marc MARC::XMLReader
 #       * "json" The "marc-in-json" format, encoded as newline-separated
 #         json. (synonym 'ndj'). A simplistic newline-separated json, with no comments
 #         allowed, and no unescpaed internal newlines allowed in the json
 #         objects -- we just read line by line, and assume each line is a
 #         marc-in-json. http://dilettantes.code4lib.org/blog/2010/09/a-proposal-to-serialize-marc-in-json/
+#         will use Traject::NDJReader which uses MARC::Record.new_from_hash. 
+# * "marc_source.encoding": Only used for marc_source.type 'binary', character encoding
+#         of the source marc records. Can be any
+#         encoding recognized by ruby, OR 'MARC-8'.  For 'MARC-8', content will
+#         be transcoded (by ruby-marc) to UTF-8 in internal MARC::Record Strings. 
+#         Default nil, meaning let MARC::Reader use it's default, which will
+#         probably be Encoding.default_internal, which will probably be UTF-8. 
+#         Right now Traject::MarcReader is hard-coded to transcode to UTF-8 as
+#         an internal encoding. 
 # * "marc_reader.xml_parser": For XML type, which XML parser to tell Marc::Reader
 #         to use. Anything recognized by [Marc::Reader :parser
 #         argument](http://rdoc.info/github/ruby-marc/ruby-marc/MARC/XMLReader).
@@ -62,7 +73,9 @@ class Traject::MarcReader
         when 'json'
           Traject::NDJReader.new(self.input_stream, settings)
         else
-          MARC::Reader.new(self.input_stream, :invalid => :replace)
+          args = { :invalid => :replace }
+          args[:external_encoding] = settings["marc_source.encoding"]          
+          MARC::Reader.new(self.input_stream, args)
         end
     end
     return @internal_reader
