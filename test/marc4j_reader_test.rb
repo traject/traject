@@ -37,7 +37,7 @@ describe "Marc4JReader" do
 
   it "reads Marc binary in Marc8 encoding" do
     file = File.new(support_file_path("one-marc8.mrc"))
-    settings = Traject::Indexer::Settings.new("marc4j_reader.source_encoding" => "MARC8")
+    settings = Traject::Indexer::Settings.new("marc_source.encoding" => "MARC8")
     reader = Traject::Marc4JReader.new(file, settings)
 
     array = reader.to_a
@@ -88,7 +88,7 @@ describe "Marc4JReader" do
     file = File.new(support_file_path "escaped_character_reference.marc8.marc")
     # due to marc4j idiosyncracies, this test will NOT pass with default source_encoding
     # of "BESTGUESS", it only works if you explicitly set to MARC8. Doh. 
-    settings = Traject::Indexer::Settings.new("marc4j_reader.source_encoding" => "MARC8") # binary type is default
+    settings = Traject::Indexer::Settings.new("marc_source.encoding" => "MARC8") # binary type is default
     record = Traject::Marc4JReader.new(file, settings).to_a.first
 
     assert_equal "Rio de Janeiro escaped replacement char: \uFFFD .", record['260']['a']

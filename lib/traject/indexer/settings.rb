@@ -64,9 +64,8 @@ class Traject::Indexer
       @@defaults ||= {
       "reader_class_name"         => "Traject::MarcReader",
       "writer_class_name"         => "Traject::SolrJWriter",
-      "marc_source.type"          => "binary",
+      "marc_source.type"          => "binary",            
       "marc4j_reader.permissive"  => true,
-      "marc4j_reader.source_encoding" => "BESTGUESS",
       "solrj_writer.batch_size"   => 200,
       "solrj_writer.thread_pool"  => 1,
       "processing_thread_pool"    => 3,

@@ -23,12 +23,12 @@ require 'marc/marc4j'
 #                             value to 'permissive' arg of MarcPermissiveStreamReader constructor.
 #                             Only used for 'binary'
 #
-# * marc4j_reader.source_encoding: Only used for 'binary', otherwise always UTF-8.
+# * marc_source.encoding: Only used for 'binary', otherwise always UTF-8.
 #         String of the values MarcPermissiveStreamReader accepts:
 #         * BESTGUESS  (default: not entirely clear what Marc4J does with this)
-#         * ISO8859_1
+#         * ISO-8859-1 (also accepted: ISO8859_1)
 #         * UTF-8
-#         * MARC8
+#         * MARC-8 (also accepted: MARC8)
 #         Default 'BESTGUESS', but HIGHLY recommend setting
 #         to avoid some Marc4J unpredictability, Marc4J "BESTGUESS" can be unpredictable
 #         in a variety of ways. 
@@ -55,7 +55,7 @@ require 'marc/marc4j'
 #
 #       # Or instead for binary:
 #       provide "marc4j_reader.permissive", true
-#       provide "marc4j_reader.source_encoding", "MARC8"
+#       provide "marc_source.encoding", "MARC8"
 #     end
 class Traject::Marc4JReader
   include Enumerable
@@ -95,6 +95,20 @@ class Traject::Marc4JReader
     settings["marc_source.type"]
   end
 
+  def specified_source_encoding
+    #settings["marc4j_reader.source_encoding"]
+    enc = settings["marc_source.encoding"]
+
+    # one is standard for ruby and we want to support,
+    # the other is used by Marc4J and we have to pass it to Marc4J
+    enc = "ISO8859_1" if enc == "ISO-8859-1"
+
+    # default
+    enc = "BESTGUESS" if enc.nil? || enc.empty?
+
+    return enc
+  end
+
   def create_marc_reader!
     case input_type
     when "binary"
@@ -102,7 +116,7 @@ class Traject::Marc4JReader
 
       # #to_inputstream turns our ruby IO into a Java InputStream
       # third arg means 'convert to UTF-8, yes'
-      MarcPermissiveStreamReader.new(input_stream.to_inputstream, permissive, true, settings["marc4j_reader.source_encoding"])
+      MarcPermissiveStreamReader.new(input_stream.to_inputstream, permissive, true, specified_source_encoding)
     when "xml"
       MarcXmlReader.new(input_stream.to_inputstream)
     else
