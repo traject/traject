@@ -4,11 +4,11 @@ require 'traject/ndj_reader'
 # `Traject::MarcReader` uses pure ruby marc gem to parse MARC records. It
 # can read MARC ISO 2709 ('binary'), MARC-XML, and Marc-in-json (newline-delimited-json).
 #
-# MarcReader can not currently read binary MARC in the MARC8 encoding, see
-# the Traject::Marc4JReader instead.
+# Marc4JReader is an alternative to this class, powered by Marc4J. You may be interested
+# in comparing for performance, under your particular use case. 
 #
 # By default assumes binary MARC encoding, please set marc_source.type setting
-# for XML or json.
+# for XML or json. If binary, please set marc_source.encoding with char encoding. 
 #
 # ## Settings
 

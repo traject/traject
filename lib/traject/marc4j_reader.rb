@@ -3,9 +3,8 @@ require 'marc'
 require 'marc/marc4j'
 
 # `Traject::Marc4JReader` uses the marc4j java package to parse the MARC records
-# into standard ruby-marc MARC::Record objects. This reader is often faster than
-# Traject::MarcReader, especially for XML, and offers support for reading Marc8
-# encoded records and transcoding to UTF8.
+# into standard ruby-marc MARC::Record objects. This reader may be faster than
+# Traject::MarcReader, especially for XML.
 #
 # Marc4JReader can read MARC ISO 2709 ("binary") or MARCXML. We use the Marc4J MarcPermissiveStreamReader
 # for reading binary, but sometimes in non-permissive mode, according to settings. We use the Marc4j MarcXmlReader
