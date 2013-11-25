@@ -3,9 +3,8 @@ require 'marc'
 require 'marc/marc4j'
 
 # `Traject::Marc4JReader` uses the marc4j java package to parse the MARC records
-# into standard ruby-marc MARC::Record objects. This reader is often faster than
-# Traject::MarcReader, especially for XML, and offers support for reading Marc8
-# encoded records and transcoding to UTF8.
+# into standard ruby-marc MARC::Record objects. This reader may be faster than
+# Traject::MarcReader, especially for XML.
 #
 # Marc4JReader can read MARC ISO 2709 ("binary") or MARCXML. We use the Marc4J MarcPermissiveStreamReader
 # for reading binary, but sometimes in non-permissive mode, according to settings. We use the Marc4j MarcXmlReader
@@ -24,13 +23,15 @@ require 'marc/marc4j'
 #                             value to 'permissive' arg of MarcPermissiveStreamReader constructor.
 #                             Only used for 'binary'
 #
-# * marc4j_reader.source_encoding: Only used for 'binary', otherwise always UTF-8.
+# * marc_source.encoding: Only used for 'binary', otherwise always UTF-8.
 #         String of the values MarcPermissiveStreamReader accepts:
-#         * BESTGUESS  (tries to use MARC leader and believe it, I think)
-#         * ISO8859_1
+#         * BESTGUESS  (default: not entirely clear what Marc4J does with this)
+#         * ISO-8859-1 (also accepted: ISO8859_1)
 #         * UTF-8
-#         * MARC8
-#         Default 'BESTGUESS', but marc records in the wild are so wrong here, recommend setting.
+#         * MARC-8 (also accepted: MARC8)
+#         Default 'BESTGUESS', but HIGHLY recommend setting
+#         to avoid some Marc4J unpredictability, Marc4J "BESTGUESS" can be unpredictable
+#         in a variety of ways. 
 #         (will ALWAYS be transcoded to UTF-8 on the way out. We insist.)
 #
 # * marc4j_reader.jar_dir: Path to a directory containing Marc4J jar file to use. All .jar's in dir will
@@ -54,7 +55,7 @@ require 'marc/marc4j'
 #
 #       # Or instead for binary:
 #       provide "marc4j_reader.permissive", true
-#       provide "marc4j_reader.source_encoding", "MARC8"
+#       provide "marc_source.encoding", "MARC8"
 #     end
 class Traject::Marc4JReader
   include Enumerable
@@ -94,6 +95,20 @@ class Traject::Marc4JReader
     settings["marc_source.type"]
   end
 
+  def specified_source_encoding
+    #settings["marc4j_reader.source_encoding"]
+    enc = settings["marc_source.encoding"]
+
+    # one is standard for ruby and we want to support,
+    # the other is used by Marc4J and we have to pass it to Marc4J
+    enc = "ISO8859_1" if enc == "ISO-8859-1"
+
+    # default
+    enc = "BESTGUESS" if enc.nil? || enc.empty?
+
+    return enc
+  end
+
   def create_marc_reader!
     case input_type
     when "binary"
@@ -101,7 +116,7 @@ class Traject::Marc4JReader
 
       # #to_inputstream turns our ruby IO into a Java InputStream
       # third arg means 'convert to UTF-8, yes'
-      MarcPermissiveStreamReader.new(input_stream.to_inputstream, permissive, true, settings["marc4j_reader.source_encoding"])
+      MarcPermissiveStreamReader.new(input_stream.to_inputstream, permissive, true, specified_source_encoding)
     when "xml"
       MarcXmlReader.new(input_stream.to_inputstream)
     else

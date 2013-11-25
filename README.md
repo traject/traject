@@ -6,7 +6,7 @@ Might be used to index MARC data for a Solr-based discovery product like [Blackl
 Traject might also be generalized to a set of tools for getting structured data from a source, and transforming it to a hash-like object to send to a destination. 
 
 
-**Traject is nearing 1.0, it is robust, feature-rich and being used in production by authors -- feedback invited**
+**Traject is stable, mature software, that is already being used in production by its authors.**
 
 [![Gem Version](https://badge.fury.io/rb/traject.png)](http://badge.fury.io/rb/traject)
 [![Build Status](https://travis-ci.org/traject-project/traject.png)](https://travis-ci.org/traject-project/traject)
@@ -89,13 +89,11 @@ settings do
   # various others...
   provide "solrj_writer.commit_on_close", "true"
 
-  # By default, we use the Traject::Marc4JReader, which
-  # can read marc8 and ISO8859_1 -- if your records are all in UTF8,
-  # the pure-ruby MarcReader may be faster...
-  # provide "reader_class_name", "Traject::MarcReader"
-  # If you ARE using the Marc4JReader, it defaults to "BESTGUESS"
-  # as to encoding when reading binary, you may want to tell it instead
-  provide "marc4j_reader.source_encoding", "MARC8" # or UTF-8 or ISO8859_1
+  # By default, we use the Traject::MarcReader
+  # One altenrnative is the Marc4JReader, using Marc4J. 
+  # provide "reader_class_name", "Traject::Marc4Reader"
+  # If we're reading binary MARC, it's best to tell it the encoding. 
+  provide "marc4j_reader.source_encoding", "MARC-8" # or 'UTF-8' or 'ISO-8859-1' or whatever. 
 end
 ~~~
 
