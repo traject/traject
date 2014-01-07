@@ -1,6 +1,7 @@
 require 'traject'
 
 require 'yaml'
+require 'dot-properties'
 
 
 module Traject
@@ -14,7 +15,8 @@ module Traject
   #
   # What makes it more useful than a stunted hash is it's ability to load
   # the hash definitions from configuration files, either pure ruby,
-  # yaml, or (limited subset of) java .properties file.
+  # yaml, or java .properties file (not all .properties features may
+  # be supported, we use dot-properties gem for reading)
   #
   # traject's `extract_marc` macro allows you to specify a :translation_map=>filename argument
   # that will automatically find and use a translation map on the resulting data:
@@ -232,36 +234,10 @@ module Traject
 
     protected
 
-    # No built-in way to read java-style .properties, we hack it.
-    # inspired by various hacky things found google ruby java properties parse
-    # .properties spec seems to be:
-    # http://docs.oracle.com/javase/6/docs/api/java/util/Properties.html#load%28java.io.Reader%29
-    #
-    # We do NOT handle split lines, don't do that!
-    def self.read_properties(file_name)
-      hash = {}
-      i = 0
-      f = File.open(file_name)
-      f.each_line do |line|
-        i += 1
-
-        line.strip!
-
-        # skip blank lines
-        next if line.empty?
-
-        # skip comment lines
-        next if line =~ /^\s*[!\#].*$/
-
-        if line =~ /\A([^:=]+)[\:\=]\s*(.*)\s*\Z/
-          hash[$1.strip] = $2
-        else
-          raise IOError.new("Can't parse from #{file_name} line #{i}: #{line}")
-        end
-      end
-      f.close
-
-      return hash
+    # We use dot-properties gem for reading .properties files,
+    # return a hash. 
+    def self.read_properties(file_name)   
+      return DotProperties.load(file_name).to_h      
     end
 
   end
