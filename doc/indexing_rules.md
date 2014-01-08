@@ -62,7 +62,7 @@ The third optional argument is a
 object. Most of the time you don't need it, but you can use it for 
 some sophisticated functionality, for example using these Context methods:
 
-* `context.clipboard` A hash into which you can stuff values that you want to pass from one indexing step to another. For example, if you go through a bunch of work to query a database and get a result you'll need more than once, stick the results somewhere in the clipboard.
+* `context.clipboard` A hash into which you can stuff values that you want to pass from one indexing step to another. For example, if you go through a bunch of work to query a database and get a result you'll need more than once, stick the results somewhere in the clipboard. This clipboard is record-specific, and won't persist between records. 
 * `context.position` The position of the record in the input file (e.g., was it the first record, seoncd, etc.). Useful for error reporting
 * `context.output_hash` A hash mapping the field names (generally defined in `to_field` calls) to an array of values to be sent to the writer associated with that field. This allows you to modify what goes to the writer without going through a `to_field` call -- you can just set `context.output_hash['myfield'] = ['my', 'values']` and you're set. See below for more examples
 * `context.skip!(msg)` An assertion that this record should be ignored. No more indexing steps will be called, no results will be sent to the writer, and a `debug`-level log message will be written stating that the record was skipped.
