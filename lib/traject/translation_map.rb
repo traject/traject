@@ -226,6 +226,18 @@ module Traject
       array.replace( self.translate_array(array))
     end
 
+    # Return a new TranslationMap that results from merging argument on top of self. 
+    # Can be useful for taking an existing translation map, but merging a few
+    # overrides on top. 
+    #
+    #     merged_map = TranslationMap.new(something).merge TranslationMap.new(else)
+    #
+    # If a default is set in the second map, it will merge over the first too. 
+    def merge(other_map)
+      default = other_map.default || self.default 
+      TranslationMap.new(self.to_hash.merge(other_map.to_hash), :default => default)
+    end
+
     class NotFound < Exception
       def initialize(path)
         super("No translation map definition file found at 'translation_maps/#{path}.[rb|yaml|properties]' in load path: #{$LOAD_PATH}")
