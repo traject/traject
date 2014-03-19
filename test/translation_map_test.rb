@@ -189,6 +189,18 @@ describe "TranslationMap" do
       assert_equal "NEW_DEFAULT_VALUE", merged["SOME_KEY_NOT_MATCHED"]
     end
 
+    it "merges in a plain hash too" do
+      original = Traject::TranslationMap.new("yaml_map")
+      merged   = original.merge(
+        "other" => "OVERRIDE",
+        "new"   => "NEW"
+      )
+
+      assert_equal "value1",    merged["key1"]
+      assert_equal "OVERRIDE",  merged["other"]
+      assert_equal "NEW",       merged["new"]
+    end
+
   end
 
 end

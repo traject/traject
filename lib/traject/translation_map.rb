@@ -231,8 +231,14 @@ module Traject
     # overrides on top. 
     #
     #     merged_map = TranslationMap.new(something).merge TranslationMap.new(else)
+    #     #...
+    #     merged_map.translate_array(something) # etc
     #
     # If a default is set in the second map, it will merge over the first too. 
+    #
+    # You can also pass in a plain hash as an arg, instead of an existing TranslationMap:
+    #
+    #     TranslationMap.new(something).merge("overridden_key" => "value", "a" => "b")
     def merge(other_map)
       default = other_map.default || self.default 
       TranslationMap.new(self.to_hash.merge(other_map.to_hash), :default => default)
