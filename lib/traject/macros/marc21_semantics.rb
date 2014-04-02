@@ -29,7 +29,7 @@ module Traject::Macros
     # If a num begins with a known OCLC prefix, return it without the prefix.
     # otherwise nil.
     def self.oclcnum_extract(num)
-      stripped = num.gsub(/\A(ocm)|(ocn)|(on)|(\(OCoLC\))/, '')
+      stripped = num.gsub /\A\s*(?:\(OCoLC\))?(?:(?:ocm)|(?:ocn)|(?:on))/, ''
       if num != stripped
         # it had the prefix, which we've now stripped
         return stripped

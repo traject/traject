@@ -31,6 +31,18 @@ describe "Traject::Macros::Marc21Semantics" do
     
     assert_equal({}, @indexer.map_record(empty_record))
   end
+  
+  it "deals with double-prefixed OCLC nunbers" do
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', '(OCoLC)ocm111111111']))
+    @indexer.instance_eval do
+      to_field "oclcnum", oclcnum
+    end
+    output = @indexer.map_record(@record)
+
+    assert_equal %w{47971712 111111111},  output["oclcnum"]
+  end
+    
+  
 
   it "#marc_series_facet" do
     @record = MARC::Reader.new(support_file_path  "louis_armstrong.marc").to_a.first
