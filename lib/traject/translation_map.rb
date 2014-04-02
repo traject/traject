@@ -199,7 +199,9 @@ module Traject
     # Returns a dup of internal hash, dup so you can modify it
     # if you like.
     def to_hash
-      @hash.dup
+      dup = @hash.dup
+      dup.delete("__default__")
+      dup
     end
 
     # Run every element of an array through this translation map,
@@ -224,6 +226,24 @@ module Traject
 
     def translate_array!(array)
       array.replace( self.translate_array(array))
+    end
+
+    # Return a new TranslationMap that results from merging argument on top of self. 
+    # Can be useful for taking an existing translation map, but merging a few
+    # overrides on top. 
+    #
+    #     merged_map = TranslationMap.new(something).merge TranslationMap.new(else)
+    #     #...
+    #     merged_map.translate_array(something) # etc
+    #
+    # If a default is set in the second map, it will merge over the first too. 
+    #
+    # You can also pass in a plain hash as an arg, instead of an existing TranslationMap:
+    #
+    #     TranslationMap.new(something).merge("overridden_key" => "value", "a" => "")
+    def merge(other_map)
+      default = other_map.default || self.default 
+      TranslationMap.new(self.to_hash.merge(other_map.to_hash), :default => default)
     end
 
     class NotFound < Exception

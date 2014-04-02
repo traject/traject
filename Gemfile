@@ -8,5 +8,5 @@ group :development do
 end
 
 group :debug do
-  gem "ruby-debug"
+  gem "ruby-debug", :platform => "jruby"
 end

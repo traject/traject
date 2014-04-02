@@ -109,7 +109,7 @@ describe "TranslationMap" do
 
     assert_equal "DEFAULT LITERAL", map["not in the map"]
   end
-
+  
   it "respects __default__ __passthrough__" do
     map = Traject::TranslationMap.new("default_passthrough")
 
@@ -135,16 +135,82 @@ describe "TranslationMap" do
     assert_equal ["one"], values
   end
 
-  it "#to_hash" do
-    map = Traject::TranslationMap.new("yaml_map")
+  describe "#to_hash" do
+    it "produces a hash" do
+      map = Traject::TranslationMap.new("yaml_map")
 
-    hash = map.to_hash
+      hash = map.to_hash
 
-    assert_kind_of Hash, hash
+      assert_kind_of Hash, hash
 
-    assert ! hash.frozen?, "#to_hash result is not frozen"
+      assert ! hash.frozen?, "#to_hash result is not frozen"
 
-    refute_same hash, map.to_hash, "each #to_hash result is a copy"
+      refute_same hash, map.to_hash, "each #to_hash result is a copy"
+    end
+
+    it "does not include __default__ key" do
+      map = Traject::TranslationMap.new("default_passthrough")
+
+      refute map.to_hash.has_key?("__default__")
+      assert_nil map.to_hash["__default__"]
+    end
+
+  end
+
+  describe "#merge" do
+    it "merges" do
+      original = Traject::TranslationMap.new("yaml_map")
+      override = Traject::TranslationMap.new("other" => "OVERRIDE", "new" => "NEW")
+
+      merged = original.merge(override)
+
+      assert_equal "value1",    merged["key1"]
+      assert_equal "OVERRIDE",  merged["other"]
+      assert_equal "NEW",       merged["new"]
+    end
+
+    it "passes through default from first map when no default in second" do
+      original = Traject::TranslationMap.new("yaml_map", :default => "DEFAULT_VALUE")
+      override = Traject::TranslationMap.new("other" => "OVERRIDE")
+
+      merged = original.merge(override)
+
+      assert_equal "DEFAULT_VALUE", merged.default
+      assert_equal "DEFAULT_VALUE", merged["SOME_KEY_NOT_MATCHED"]
+    end
+
+    it "passes through default from second map when no default in first" do
+      original = Traject::TranslationMap.new("yaml_map")
+      override = Traject::TranslationMap.new({"other" => "OVERRIDE"}, :default => "DEFAULT_VALUE")
+
+      merged = original.merge(override)
+
+      assert_equal "DEFAULT_VALUE", merged.default
+      assert_equal "DEFAULT_VALUE", merged["SOME_KEY_NOT_MATCHED"]
+    end
+
+    it "merges second default on top of first" do
+      original = Traject::TranslationMap.new("yaml_map", :default => "DEFAULT_VALUE")
+      override = Traject::TranslationMap.new({"other" => "OVERRIDE"}, :default => "NEW_DEFAULT_VALUE")
+
+      merged = original.merge(override)
+
+      assert_equal "NEW_DEFAULT_VALUE", merged.default
+      assert_equal "NEW_DEFAULT_VALUE", merged["SOME_KEY_NOT_MATCHED"]
+    end
+
+    it "merges in a plain hash too" do
+      original = Traject::TranslationMap.new("yaml_map")
+      merged   = original.merge(
+        "other" => "OVERRIDE",
+        "new"   => "NEW"
+      )
+
+      assert_equal "value1",    merged["key1"]
+      assert_equal "OVERRIDE",  merged["other"]
+      assert_equal "NEW",       merged["new"]
+    end
+
   end
 
 end
