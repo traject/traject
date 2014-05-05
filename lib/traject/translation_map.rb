@@ -171,6 +171,9 @@ module Traject
     def initialize(defn, options = {})
       if defn.kind_of? Hash
         @hash = defn
+      elsif defn.kind_of? self.class
+        @hash = defn.to_hash
+        @default = defn.default
       else
         @hash = self.class.cache.lookup(defn)
         raise NotFound.new(defn) if @hash.nil?

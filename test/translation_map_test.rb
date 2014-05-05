@@ -104,6 +104,15 @@ describe "TranslationMap" do
     assert_equal "output_value", map["input_value"]
   end
 
+  it "can be initialized with another map" do
+    map = Traject::TranslationMap.new({"alpha" => "one", "beta" => nil}, :default => "DEFAULT")
+
+    new_map = Traject::TranslationMap.new(map)
+
+    assert_equal map.to_hash, new_map.to_hash
+    assert_equal map.default, new_map.default
+  end
+
   it "respects __default__ literal" do
     map = Traject::TranslationMap.new("default_literal")
 
