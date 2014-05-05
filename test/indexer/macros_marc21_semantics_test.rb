@@ -31,6 +31,25 @@ describe "Traject::Macros::Marc21Semantics" do
     
     assert_equal({}, @indexer.map_record(empty_record))
   end
+  
+  it "deals with all prefixed OCLC nunbers" do
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', '(OCoLC)ocm111111111']))
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', '(OCoLC)222222222']))
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', 'ocm333333333']))
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', 'ocn444444444']))
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', '(OCoLC)ocn555555555']))
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', '(OCoLC)on666666666']))
+    @record.append(MARC::DataField.new('035', ' ', ' ', ['a', '777777777'])) # not OCLC number
+    
+    @indexer.instance_eval do
+      to_field "oclcnum", oclcnum
+    end
+    output = @indexer.map_record(@record)
+
+    assert_equal %w{47971712 111111111 222222222 333333333 444444444 555555555 666666666},  output["oclcnum"]
+  end
+    
+  
 
   it "#marc_series_facet" do
     @record = MARC::Reader.new(support_file_path  "louis_armstrong.marc").to_a.first

@@ -26,15 +26,23 @@ module Traject::Macros
         accumulator.concat list.uniq if list
       end
     end
+   
     # If a num begins with a known OCLC prefix, return it without the prefix.
     # otherwise nil.
+    #
+    # Allow (OCoLC) and/or ocn/ocm/on 
+    
+    OCLCPAT = /
+      \A\s*
+      (?:(?:\(OCoLC\)) |
+         (?:\(OCoLC\))?(?:(?:ocm)|(?:ocn)|(?:on))
+         )(\d+)
+         /x
+         
     def self.oclcnum_extract(num)
-      stripped = num.gsub(/\A(ocm)|(ocn)|(on)|(\(OCoLC\))/, '')
-      if num != stripped
-        # it had the prefix, which we've now stripped
-        return stripped
+      if OCLCPAT.match(num)
+        return $1
       else
-        # it didn't have the prefix
         return nil
       end
     end
