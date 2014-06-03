@@ -12,7 +12,7 @@ module Traject
   #
   # A CommandLine object has a single persistent Indexer object it uses
   class CommandLine
-    # orig_argv is origina one passed in, remaining_argv is after destructive
+    # orig_argv is original one passed in, remaining_argv is after destructive
     # processing by slop, still has file args in it etc.
     attr_accessor :orig_argv, :remaining_argv
     attr_accessor :slop, :options
