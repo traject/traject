@@ -63,6 +63,8 @@ describe "Traject::Indexer#process" do
   end
 
   it "returns false if skipped records" do
+    skip unless defined? JRUBY_VERSION
+
     @indexer = Traject::Indexer.new(
       "solrj_writer.server_class_name" => "MockSolrServer",
       "solr.url" => "http://example.org",
@@ -83,8 +85,6 @@ describe "Traject::Indexer#process" do
   require 'traject/null_writer'
   it "calls after_processing after processing" do
     @indexer = Traject::Indexer.new(
-      "solrj_writer.server_class_name" => "MockSolrServer",
-      "solr.url" => "http://example.org",
       "writer_class_name" => "Traject::NullWriter"
     )
     @file = File.open(support_file_path "test_data.utf8.mrc")
