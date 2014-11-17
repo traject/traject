@@ -91,9 +91,10 @@ settings do
 
   # The default reader is Traject::MarcReader, which uses the
   # normal ruby-marc gem. A MARC reader based on the java
-  # marc4j library is no longer packaged with traject; see
+  # marc4j library is available but no longer packaged with traject; see
   # https://github.com/billdueber/traject_marc4j_reader if
-  # you want to use it.
+  # you want to use it. It generally gives a performance boost when reading
+  # both marc21 binary and marc-xml files.
 
 end
 ~~~

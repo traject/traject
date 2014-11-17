@@ -73,7 +73,9 @@ settings are applied first of all. It's recommended you use `provide`.
    solrj_writer.thread_pool is full. Having a multi-threaded pool here can help even out throughput
    through Solr's pauses for committing too. 
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4jReader. If you don't need to read marc binary with Marc8 encoding, the pure ruby MarcReader may give you better performance.  Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4Reader, the pure
+ruby reader. When running under JRuby, the Traject::Marc4JReader (available in the traject_marc4j_reader gem) will generally
+give much better performance. Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
 
