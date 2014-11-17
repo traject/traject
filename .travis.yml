@@ -9,11 +9,7 @@ jdk:
 matrix:
   exclude:
     - rvm: 1.9.3
-      jdk: openjdk6
-    - rvm: 1.9.3
       jdk: openjdk7
-    - rvm: 2.1.1
-      jdk: openjdk6
     - rvm: 2.1.1
       jdk: openjdk7
 
