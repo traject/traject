@@ -6,12 +6,14 @@ require 'traject/thread_pool'
 
 require 'traject/indexer/settings'
 require 'traject/marc_reader'
-require 'traject/marc4j_reader'
 require 'traject/json_writer'
-require 'traject/solrj_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
+
+if defined? JRUBY_VERSION
+  require 'traject/solrj_writer'
+end
 
 # This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output
@@ -53,8 +55,9 @@ require 'traject/macros/basic'
 #   2) Responds to the usual ruby #each, returning a source record from each #each.
 #      (Including Enumerable is prob a good idea too)
 #
-#  The default reader is the Traject::Marc4JReader, who's behavior is
-#  further customized by several settings in the Settings hash.
+#  The default reader is the Traject::MarcReader, who's behavior is
+#  further customized by several settings in the Settings hash. Jruby users
+#  with specialized needs may want to look at the gem traject_marc4j_reader.
 #
 #  Alternate readers can be set directly with the #reader_class= method, or
 #  with the "reader_class_name" Setting, a String name of a class
@@ -72,8 +75,11 @@ require 'traject/macros/basic'
 #  4) Optionally implements a #skipped_record_count method, returning int count of records
 #     that were skipped due to errors (and presumably logged)
 #
-#  The default writer is the SolrJWriter, using Java SolrJ to
-#  write to a Solr.  A few other built-in writers are available,
+#  Currently, the only solr writer is traject/solrj_writer, which
+#  is JRuby-only, as it uses the underlying solrj java library.
+#
+#  The default writer is the JsonWriter, which creates newline-delimited JSON
+#  as ouput. A few other built-in writers are available,
 #  but it's anticipated more will be created as plugins or local
 #  code for special purposes.
 #
@@ -310,7 +316,13 @@ class Traject::Indexer
     reader = self.reader!(io_stream)
     writer = self.writer!
 
-    thread_pool = Traject::ThreadPool.new(settings["processing_thread_pool"].to_i)
+
+    processing_threads = settings["processing_thread_pool"].to_i
+    if processing_threads > 0 and !(defined? JRuby)
+      processing_threads = 0
+      logger.warn "Processing threads set to 0 because we're not running under JRuby"
+    end
+    thread_pool = Traject::ThreadPool.new(processing_threads)
 
     logger.info "   Indexer with reader: #{reader.class.name} and writer: #{writer.class.name}"
 

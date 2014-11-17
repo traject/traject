@@ -54,14 +54,6 @@ settings are applied first of all. It's recommended you use `provide`.
 
 * `marc_source.type`: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 
-* `marc4j.jar_dir`:   Path to a directory containing Marc4J jar file to use. All .jar's in dir will
-                      be loaded. If unset, uses marc4j.jar bundled with traject.
-
-* `marc4j_reader.permissive`: Used by Marc4JReader only when marc.source_type is 'binary', boolean, argument to the underlying MarcPermissiveStreamReader. Default true.
-
-* `marc4j_reader.source_encoding`: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
-  by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
-
 * `marcout.allow_oversized`: Used with `-x marcout` command to output marc when outputting
      as ISO 2709 binary, set to true or string "true", and the MARC::Writer will have
      allow_oversized=true set, allowing oversized records to be serialized with length
