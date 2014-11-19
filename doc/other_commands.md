@@ -38,10 +38,8 @@ If set to true, then oversized MARC records can still be serialized,
 with length bytes zero'd out -- technically illegal, but can
 be read by MARC::Reader in permissive mode. 
 
-As the standard Marc4JReader always convert to UTF8,
-output will always be in UTF8. For standard readeres, you
-do need to set the `marc_source.type` setting to XML for xml input
-using the standard MARC readers.
+If you have MARC-XML *input*, you need to
+set the `marc_source.type` setting to XML for xml input.
 
 ~~~bash
 traject -x marcout somefile.marc -o output.xml -s marcout.type=xml

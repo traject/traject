@@ -54,14 +54,6 @@ settings are applied first of all. It's recommended you use `provide`.
 
 * `marc_source.type`: default 'binary'. Can also set to 'xml' or (not yet implemented todo) 'json'. Command line shortcut `-t`
 
-* `marc4j.jar_dir`:   Path to a directory containing Marc4J jar file to use. All .jar's in dir will
-                      be loaded. If unset, uses marc4j.jar bundled with traject.
-
-* `marc4j_reader.permissive`: Used by Marc4JReader only when marc.source_type is 'binary', boolean, argument to the underlying MarcPermissiveStreamReader. Default true.
-
-* `marc4j_reader.source_encoding`: Used by Marc4JReader only when marc.source_type is 'binary', encoding strings accepted
-  by marc4j MarcPermissiveStreamReader. Default "BESTGUESS", also "UTF-8", "MARC"
-
 * `marcout.allow_oversized`: Used with `-x marcout` command to output marc when outputting
      as ISO 2709 binary, set to true or string "true", and the MARC::Writer will have
      allow_oversized=true set, allowing oversized records to be serialized with length
@@ -81,7 +73,9 @@ settings are applied first of all. It's recommended you use `provide`.
    solrj_writer.thread_pool is full. Having a multi-threaded pool here can help even out throughput
    through Solr's pauses for committing too. 
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4jReader. If you don't need to read marc binary with Marc8 encoding, the pure ruby MarcReader may give you better performance.  Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::Marc4Reader, the pure
+ruby reader. When running under JRuby, the Traject::Marc4JReader (available in the traject_marc4j_reader gem) will generally
+give much better performance. Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
 

@@ -89,11 +89,13 @@ settings do
   # various others...
   provide "solrj_writer.commit_on_close", "true"
 
-  # By default, we use the Traject::MarcReader
-  # One altenrnative is the Marc4JReader, using Marc4J. 
-  # provide "reader_class_name", "Traject::Marc4Reader"
-  # If we're reading binary MARC, it's best to tell it the encoding. 
-  provide "marc4j_reader.source_encoding", "MARC-8" # or 'UTF-8' or 'ISO-8859-1' or whatever. 
+  # The default reader is Traject::MarcReader, which uses the
+  # normal ruby-marc gem. A MARC reader based on the java
+  # marc4j library is available but no longer packaged with traject; see
+  # https://github.com/billdueber/traject_marc4j_reader if
+  # you want to use it. It generally gives a performance boost when reading
+  # both marc21 binary and marc-xml files.
+
 end
 ~~~
 

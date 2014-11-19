@@ -1,7 +1,16 @@
 language: ruby
 rvm:
   - jruby-19mode
+  - 1.9.3
+  - 2.1.1
 jdk:
   - openjdk7
   - openjdk6
+matrix:
+  exclude:
+    - rvm: 1.9.3
+      jdk: openjdk7
+    - rvm: 2.1.1
+      jdk: openjdk7
+
 bundler_args: --without debug

@@ -2,6 +2,7 @@ module Traject
   # An abstraction wrapping a threadpool executor in some configuration choices
   # and other apparatus.
   #
+  #
   # 1) Initialize with chosen pool size -- we create fixed size pools, where
   # core and max sizes are the same.
   #
@@ -47,7 +48,7 @@ module Traject
 
     # First arg is pool size, 0 or nil and we'll be a null/no-op pool
     def initialize(pool_size)
-      unless pool_size.nil? || pool_size == 0
+       unless pool_size.nil? || pool_size == 0
         require 'java' # trigger an exception now if we're not jruby
 
         @label = label
