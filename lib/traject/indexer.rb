@@ -339,7 +339,7 @@ class Traject::Indexer
       thread_pool.raise_collected_exception!
 
       if settings["debug_ascii_progress"].to_s == "true"
-        $stderr.write "." if count % settings["solrj_writer.batch_size"] == 0
+        $stderr.write "." if count % settings["solrj_writer.batch_size"].to_i == 0
       end
 
       if log_batch_size && (count % log_batch_size == 0)
