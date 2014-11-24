@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "slop", ">= 3.4.5", "< 4.0"   # command line parsing
   spec.add_dependency "yell" # logging
   spec.add_dependency "dot-properties", ">= 0.1.1" # reading java style .properties
+  spec.add_dependency "httpclient", "~> 2.5"
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
