@@ -14,6 +14,7 @@ require 'concurrent' # for atomic_fixnum
 
 unless defined? JRUBY_VERSION
   require 'traject/queue'
+  require 'traject/all_ruby_thread_pool'
 end
 
 # Write to Solr using the JSON interface; only works for Solr >= 3.2
@@ -30,6 +31,8 @@ end
 #
 # * solr_writer.batch_size How big a batch to send to solr. Somewhere between
 #   50 and 100 seems to be a sweet spot. Default is 50
+#
+# * solr_writer.thread_pool How many threads to use for the writer. Default is 1.
 #
 # * solr_writer.commit_on_close Set to true (or "true") if you want to commit at the
 #   end of the indexing run
@@ -50,16 +53,31 @@ class Traject::SolrJsonWriter
     settings_check!(settings)
 
     @http_client = HTTPClient.new
-    @batch_size  = settings["solr_writer.batch_size"].to_i
-    @batch_size = 1 if @batch_size == 0
+
+    @batch_size = settings["solr_writer.batch_size"]
+    if defined? @batch_size
+      @batch_size = @batch_size.to_i
+      @batch_size = 1 if @batch_size == 0
+    else
+      @batch_size = 100
+    end
 
     # Store error count in an AtomicInteger, so multi threads can increment
     # it safely, if we're threaded.
     @skipped_record_incrementer = Concurrent::AtomicFixnum.new(0)
 
 
+    # How many threads to use for the writer?
+    thread_pool_size = @settings["solr_writer.thread_pool"]
+    if defined? thread_pool_size
+      thread_pool_size = thread_pool_size.to_i
+    else
+      thread_pool_size = 1
+    end
+
     # Under JRuby, we'll use high-performance classes from
     # java.util.concurrent. Otherwise, just the normal queue
+    # and concurrent-ruby for the thread pool.
 
     if defined? JRUBY_VERSION
 
@@ -70,14 +88,18 @@ class Traject::SolrJsonWriter
       # since we need to check it frequently.
       @async_exception_queue = java.util.concurrent.ConcurrentLinkedQueue.new
 
+      # Get a thread pool
+      @thread_pool     = Traject::ThreadPool.new(thread_pool_size)
+
+
     else
       @batched_queue         = Traject::Queue.new
       @async_exception_queue = Queue.new
+      @thread_pool = Traject::AllRubyThreadPool.new(thread_pool_size)
     end
 
     # if our thread pool settings are 0, it'll just create a null threadpool that
     # executes in calling context.
-    @thread_pool     = Traject::ThreadPool.new(@settings["solrj_writer.thread_pool"].to_i)
 
     # Figure out where to send updates
     @solr_update_url = self.determine_solr_update_url
