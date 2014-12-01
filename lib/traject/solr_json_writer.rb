@@ -1,111 +1,242 @@
+require 'yell'
+
+require 'traject'
+require 'traject/util'
+require 'traject/qualified_const_get'
+require 'traject/thread_pool'
+
 require 'json'
 require 'httpclient'
 
-# Writes to a Solr using Solr's JSON update handler:
-# https://wiki.apache.org/solr/UpdateJSON
-# Requires Solr 3.2+
+require 'uri'
+require 'thread'     # for Mutex/Queue
+require 'concurrent' # for atomic_fixnum
+
+unless defined? JRUBY_VERSION
+  require 'traject/queue'
+end
+
+# Write to Solr using the JSON interface; only works for Solr >= 3.2
 #
-# NOTE: This is a LOW PERFORMANCE writer, designed for convenience under MRI. 
-# For production use, we strongly recommend Jruby and the SolrJWriter. 
+# This should work under both MRI and JRuby, with JRuby getting much
+# better performance due to the threading model.
 #
-# ## Settings Used
+# Relevant settings
 #
-# * solr.url: Path to your solr server
-# * solr_writer.commit_on_close : true or "true" means send a commit to Solr
-#   on close. We definitely encourage configuring Solr for auto commit too
-# * solr_writer.commit_on_close_timeout: in Seconds, how long to be willing to wait
-#   for Solr. 
+# * solr.url (optional if solr.update_url is set) The URL to the solr core to index into
+#
+# * solr.update_url The actual update url. If unset, we'll first see if
+#   "#{solr.url}/update/json" exists, and if not use "#{solr.url}/update"
+#
+# * solr_writer.batch_size How big a batch to send to solr. Somewhere between
+#   50 and 100 seems to be a sweet spot. Default is 50
+#
+# * solr_writer.commit_on_close Set to true (or "true") if you want to commit at the
+#   end of the indexing run
+
+
 class Traject::SolrJsonWriter
-  attr_reader :http_client
+  include Traject::QualifiedConstGet
+
+  # The passed-in settings
   attr_reader :settings
 
+  # A queue to hold documents before sending to solr
+  attr_reader :batched_queue
+
+
   def initialize(argSettings)
-    @settings = argSettings
+    @settings = Traject::Indexer::Settings.new(argSettings)
+    settings_check!(settings)
 
-    # A HTTPClient will re-use persistent HTTP connections, in a thread-safe
-    # way -- our HTTPClient object can be safely used by multiple threads simultaneously. 
-    #
-    # Note HTTPClient does have an async feature, which MIGHT be one option for
-    # improving performance in the future. 
     @http_client = HTTPClient.new
+    @batch_size  = settings["solr_writer.batch_size"].to_i
+    @batch_size = 1 if @batch_size == 0
 
-    logger.info("   #{self.class.name} writing to `#{settings['solr.url']}`")
-    logger.info("   WARNING: #{self.class.name} is a LOW PERFORMANCE writer. For production use, traject recommends Jruby with SolrJWriter")
+    # Store error count in an AtomicInteger, so multi threads can increment
+    # it safely, if we're threaded.
+    @skipped_record_incrementer = Concurrent::AtomicFixnum.new(0)
+
+
+    # Under JRuby, we'll use high-performance classes from
+    # java.util.concurrent. Otherwise, just the normal queue
+
+    if defined? JRUBY_VERSION
+
+      @batched_queue         = java.util.concurrent.LinkedBlockingQueue.new
+
+      # when multi-threaded exceptions raised in threads are held here
+      # we need a HIGH performance queue here to try and avoid slowing things down,
+      # since we need to check it frequently.
+      @async_exception_queue = java.util.concurrent.ConcurrentLinkedQueue.new
+
+    else
+      @batched_queue         = Traject::Queue.new
+      @async_exception_queue = Queue.new
+    end
+
+    # if our thread pool settings are 0, it'll just create a null threadpool that
+    # executes in calling context.
+    @thread_pool     = Traject::ThreadPool.new(@settings["solrj_writer.thread_pool"].to_i)
+
+    # Figure out where to send updates
+    @solr_update_url = self.determine_solr_update_url
+
+
+    logger.info("   #{self.class.name} writing to '#{@solr_update_url}'")
   end
 
 
-  # Thread-safe for calling by multiple threads simultaneously on the same Writer,
-  # because we do not currently batch, every individual #put call results in an 
-  # individual HTTP request to Solr. We do re-use HTTP connections which should
-  # provide some performance advantage. 
+  # Add a single context to the queue, ready to be sent to solr
   def put(context)
-    # Hash in an array.
-    json_package = JSON.generate( [ update_hash_for_context(context) ]  )
+    @batched_queue << context
+    if @batched_queue.size >= @batch_size
+      batch = []
+      @batched_queue.drain_to(batch)
+      @thread_pool.maybe_in_thread_pool { send_batch(batch) }
+    end
+  end
 
+  # Send the given batch of contexts. If something goes wrong, send
+  # them one at a time.
+  # @param [Array<Traject::Indexer::Context>] an array of contexts
+  def send_batch(batch)
+    return if batch.empty?
+    json_package = JSON.generate(batch.map { |c| c.output_hash })
     begin
-      response = http_client.post solr_update_url, json_package, "Content-type" => "application/json" 
+      resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
     rescue StandardError => exception
     end
-
-    if exception || response.status != 200
-      id            = context.source_record && context.source_record['001'] && context.source_record['001'].value
-      position      = context.position
-      position_str  = position ? "at file position #{position} (starting at 1)" : ""
-
-      message = "Could not index record #{id} #{position_str}."
-      message += " Solr HTTP response #{response.status} #{response.body}" if response
-      message += " #{exception.class} #{exception.message}." if exception
-      message += "\n"
-
-      logger.error(message)
-      logger.debug(context.source_record.to_s)
-    end
-  end
-
-  # Sends a commit if so configured.
-  def close
-    if settings["solr_writer.commit_on_close"].to_s == "true"
-      commit_url = settings["solr.url"].chomp("/") + "/update?commit=true"
-      logger.info "SolrJsonWriter: Sending commit at GET #{commit_url}" 
-      
-      if settings["solr_writer.commit_on_close_timeout"]
-        # set the httpclient timeouts, don't worry about resetting it
-        # when we're done, we're about to close. 
-        http_client.receive_timeout = settings["solr_writer.commit_on_close_timeout"].to_f
-      end
-
-      response = http_client.get commit_url
-      if response.status != 200
-        logger.error("Error sending commit to Solr: #{response.status} #{response.body}")
+    if exception || resp.status != 200
+      logger.error "Error in batch. Sending one at a time"
+      batch.each do |c|
+        send_single(c)
       end
     end
   end
 
+
+  # Send a single context to Solr, logging an error if need be
+  # @param [Traject::Indexer::Context] c The context whose document you want to send
+  def send_single(c)
+    json_package = JSON.generate([c.output_hash])
+    begin
+      resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
+    rescue StandardError => exception
+    end
+    if exception || resp.status != 200
+      id = c.output_hash['id'] || "<no id field found>"
+      if exception
+        msg = "(#{exception.class}) #{exception.message}"
+      else
+        msg = resp.body
+      end
+      logger.error "Error indexing record #{id} at position #{c.position}: #{msg}"
+      @skipped_record_incrementer.increment
+    end
+
+  end
+
+
+  # Get the logger from the settings, or build one if necessary
   def logger
-    settings["logger"] ||=  Yell.new(STDERR, :level => "gt.fatal") # null logger
+    settings["logger"] ||= Yell.new(STDERR, :level => "gt.fatal") # null logger
   end
 
 
+  # On close, we need to (a) raise any exceptions we might have, (b) send off
+  # the last (possibly empty) batch, and (c) commit if instructed to do so
+  # via the solr_writer.commit_on_close setting.
+  def close
+    @thread_pool.raise_collected_exception!
+    # Finish off whatever's left
+    batch = []
+    @batched_queue.drain_to(batch)
+    send_batch(batch)
 
-  # Returns a hash suitable for including in Json to represent a single document
-  # update
-  def update_hash_for_context(context)
-    # Just the output hash. Do we need to make single-values strings instead
-    # of arrays?
-    return context.output_hash
+    # Wait for shutdown, and time it.
+    logger.debug "#{self.class.name}: Shutting down thread pool, waiting if needed..."
+    elapsed = @thread_pool.shutdown_and_wait
+    if elapsed > 60
+      logger.warn "Waited #{elapsed} seconds for all threads, you may want to increase solr_writer.thread_pool (currently #{@settings["solr_writer.thread_pool"]})"
+    end
+    logger.debug "#{self.class.name}: Thread pool shutdown complete"
+    logger.warn "#{self.class.name}: #{skipped_record_count} skipped records" if skipped_record_count > 0
+
+    # check again now that we've waited, there could still be some
+    # that didn't show up before.
+    @thread_pool.raise_collected_exception!
+
+    # Commit if we're supposed to
+    commit if settings["solr_writer.commit_on_close"].to_s == "true"
   end
 
-  # In Solr 4.0, we can use plain /update with a JSON content-type. Previously
-  # we need to send to /update/json. We trust the `solr.version` setting to determine
-  def solr_update_url
-    settings["solr.url"].chomp("/") + if settings["solr.version"] && settings['solr.version'].split('.').first.to_i < 4
-      "/update/json"
-    else
-      "/update"
+
+  # Send a commit
+  def commit
+    logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}"
+    resp = @http_client.get(@solr_update_url, {:commit => 'true'})
+    unless resp.status == 200
+      logger.error("Problems with commit: #{resp.status} #{resp.body}")
     end
   end
 
 
-  protected 
+  # Return count of encountered skipped records. Most accurate to call
+  # it after #close, in which case it should include full count, even
+  # under async thread_pool.
+  def skipped_record_count
+    @skipped_record_incrementer.value
+  end
+
+  def settings_check!(settings)
+    unless settings.has_key?("solr.url") && !settings["solr.url"].nil?
+      raise ArgumentError.new("JRubySolrJSONWriter requires a 'solr.url' solr url in settings")
+    end
+
+    unless settings["solr.url"] =~ /^#{URI::regexp}$/
+      raise ArgumentError.new("JRubySolrJSONWriter requires a 'solr.url' setting that looks like a URL, not: `#{settings['solr.url']}`")
+    end
+  end
+
+
+  # Relatively complex logic to determine if we have a valid URL and what it is
+  def determine_solr_update_url
+    if settings['solr.update_url']
+      check_solr_update_url(settings['solr.update_url'])
+    else
+      derive_solr_update_url_from_solr_url(settings['solr.url'])
+    end
+  end
+
+
+  # If we've got a solr.update_url, make sure it's ok
+  def check_solr_udpate_url
+    unless url =~ /^#{URI::regexp}$/
+      raise ArgumentError.new("#{self.class.name} setting `solr.update_url` doesn't look like a URL: `#{url}`")
+    end
+    url
+  end
+
+  def derive_solr_update_url_from_solr_url(url)
+    # Nil? Then we bail
+    if url.nil?
+      raise ArgumentError.new("#{self.class.name}: Neither solr.update_url nor solr.url set; need at least one")
+    end
+
+    # Not a URL? Bail
+    unless url =~ /^#{URI::regexp}$/
+      raise ArgumentError.new("#{self.class.name} setting `solr.url` doesn't look like a URL: `#{url}`")
+    end
+
+    # First, try the /update/json handler
+    candidate = [url.chomp('/'), 'update', 'json'].join('/')
+    resp      = @http_client.get(candidate)
+    if resp.status == 404
+      candidate = [url.chomp('/'), 'update'].join('/')
+    end
+    candidate
+  end
+
 
 end
