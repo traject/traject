@@ -48,6 +48,7 @@ module Traject
 
     # First arg is pool size, 0 or nil and we'll be a null/no-op pool
     def initialize(pool_size)
+       pool_size = nil unless defined? JRUBY_VERSION
        unless pool_size.nil? || pool_size == 0
         require 'java' # trigger an exception now if we're not jruby
 
