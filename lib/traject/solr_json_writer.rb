@@ -29,17 +29,23 @@ end
 # * solr.update_url The actual update url. If unset, we'll first see if
 #   "#{solr.url}/update/json" exists, and if not use "#{solr.url}/update"
 #
-# * solr_writer.batch_size How big a batch to send to solr. Somewhere between
-#   50 and 100 seems to be a sweet spot. Default is 50
+# * solr_writer.batch_size How big a batch to send to solr. Default is 100.
+#   My tests indicate that this setting doesn't change overall index speed by a ton.
 #
 # * solr_writer.thread_pool How many threads to use for the writer. Default is 1.
 #
 # * solr_writer.commit_on_close Set to true (or "true") if you want to commit at the
 #   end of the indexing run
+#
+# * solr_writer.max_errors How many errors before we bail out and assume something
+#   more serious is wrong? Set to -1 to disable checks. Default 500
 
 
 class Traject::SolrJsonWriter
   include Traject::QualifiedConstGet
+
+  DEFAULT_MAX_ERRORS = 500
+  DEFAULT_BATCH_SIZE = 100
 
   # The passed-in settings
   attr_reader :settings
@@ -50,15 +56,17 @@ class Traject::SolrJsonWriter
 
   def initialize(argSettings)
     @settings = Traject::Indexer::Settings.new(argSettings)
+
+    # Set max errors
+    @max_errors = (@settings['solr_writer.max_errors'] || DEFAULT_MAX_ERRORS).to_i
+    if @max_errors <= 0
+      @max_errors = nil
+    end
+
     @http_client = HTTPClient.new
 
-    @batch_size = settings["solr_writer.batch_size"]
-    if defined? @batch_size
-      @batch_size = @batch_size.to_i
-      @batch_size = 1 if @batch_size == 0
-    else
-      @batch_size = 100
-    end
+    @batch_size = (settings["solr_writer.batch_size"] || DEFAULT_BATCH_SIZE).to_i
+    @batch_size = 1 if @batch_size == 0
 
     # Store error count in an AtomicInteger, so multi threads can increment
     # it safely, if we're threaded.
@@ -103,7 +111,7 @@ class Traject::SolrJsonWriter
     @solr_update_url = self.determine_solr_update_url
 
 
-    logger.info("   #{self.class.name} writing to '#{@solr_update_url}'")
+    logger.info("   #{self.class.name} writing to '#{@solr_update_url}' in batches of #{@batch_size}")
   end
 
 
@@ -144,6 +152,7 @@ class Traject::SolrJsonWriter
       resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
     rescue StandardError => exception
     end
+
     if exception || resp.status != 200
       id = c.output_hash['id'] || "<no id field found>"
       if exception
@@ -152,7 +161,12 @@ class Traject::SolrJsonWriter
         msg = resp.body
       end
       logger.error "Error indexing record #{id} at position #{c.position}: #{msg}"
+
       @skipped_record_incrementer.increment
+      if @max_errors and skipped_record_count > @max_errors
+          raise RuntimeError.new("Exceeded maximum number of errors (#{@max_errors}): aborting")
+      end
+
     end
 
   end
