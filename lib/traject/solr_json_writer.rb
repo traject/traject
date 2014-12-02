@@ -50,8 +50,6 @@ class Traject::SolrJsonWriter
 
   def initialize(argSettings)
     @settings = Traject::Indexer::Settings.new(argSettings)
-    settings_check!(settings)
-
     @http_client = HTTPClient.new
 
     @batch_size = settings["solr_writer.batch_size"]
@@ -209,16 +207,6 @@ class Traject::SolrJsonWriter
   # under async thread_pool.
   def skipped_record_count
     @skipped_record_incrementer.value
-  end
-
-  def settings_check!(settings)
-    unless settings.has_key?("solr.url") && !settings["solr.url"].nil?
-      raise ArgumentError.new("JRubySolrJSONWriter requires a 'solr.url' solr url in settings")
-    end
-
-    unless settings["solr.url"] =~ /^#{URI::regexp}$/
-      raise ArgumentError.new("JRubySolrJSONWriter requires a 'solr.url' setting that looks like a URL, not: `#{settings['solr.url']}`")
-    end
   end
 
 
