@@ -4,11 +4,8 @@ require 'thread'
 # Extend the normal queue class with some useful methods derived from
 # its java counterpart
 
-
-if defined? JRUBY_VERSION
-  Traject::Queue = java.util.concurrent.LinkedBlockingQueue
-else
-  class Traject::Queue < Queue
+module Traject
+  class Queue < Queue
 
     alias_method :put, :enq
     alias_method :take, :deq
@@ -35,3 +32,4 @@ else
     end
   end
 end
+
