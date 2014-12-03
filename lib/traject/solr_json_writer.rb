@@ -4,6 +4,7 @@ require 'traject'
 require 'traject/util'
 require 'traject/qualified_const_get'
 require 'traject/thread_pool'
+require 'traject/queue'
 
 require 'json'
 require 'httpclient'
@@ -11,11 +12,6 @@ require 'httpclient'
 require 'uri'
 require 'thread'     # for Mutex/Queue
 require 'concurrent' # for atomic_fixnum
-
-unless defined? JRUBY_VERSION
-  require 'traject/queue'
-  require 'traject/all_ruby_thread_pool'
-end
 
 # Write to Solr using the JSON interface; only works for Solr >= 3.2
 #
@@ -81,28 +77,9 @@ class Traject::SolrJsonWriter
       thread_pool_size = 1
     end
 
-    # Under JRuby, we'll use high-performance classes from
-    # java.util.concurrent. Otherwise, just the normal queue
-    # and concurrent-ruby for the thread pool.
-
-    if defined? JRUBY_VERSION
-
-      @batched_queue         = java.util.concurrent.LinkedBlockingQueue.new
-
-      # when multi-threaded exceptions raised in threads are held here
-      # we need a HIGH performance queue here to try and avoid slowing things down,
-      # since we need to check it frequently.
-      @async_exception_queue = java.util.concurrent.ConcurrentLinkedQueue.new
-
-      # Get a thread pool
-      @thread_pool     = Traject::ThreadPool.new(thread_pool_size)
-
-
-    else
-      @batched_queue         = Traject::Queue.new
-      @async_exception_queue = Queue.new
-      @thread_pool = Traject::AllRubyThreadPool.new(thread_pool_size)
-    end
+    @batched_queue         = Traject::Queue.new # need #drain_to
+    @async_exception_queue = Queue.new
+    @thread_pool = Traject::ThreadPool.new(thread_pool_size)
 
     # if our thread pool settings are 0, it'll just create a null threadpool that
     # executes in calling context.
