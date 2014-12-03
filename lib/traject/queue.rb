@@ -4,59 +4,34 @@ require 'thread'
 # Extend the normal queue class with some useful methods derived from
 # its java counterpart
 
-class Traject::Queue < Queue
 
-  alias_method :put, :enq
-  alias_method :take, :deq
+if defined? JRUBY_VERSION
+  Traject::Queue = java.util.concurrent.LinkedBlockingQueue
+else
+  class Traject::Queue < Queue
 
-  def initialize(*args)
-    super
-    @mutex = Mutex.new
-  end
+    alias_method :put, :enq
+    alias_method :take, :deq
 
-
-  # Drain it to an array (or, really, anything that response to <<)
-  def drain_to(a)
-    @mutex.synchronize do
-      self.size.times do
-        a << self.pop
-      end
+    def initialize(*args)
+      super
+      @mutex = Mutex.new
     end
-    a
-  end
 
 
-  def to_a
-    a = []
-    @mutex.synchronize do
-      self.size.times do
-        elem = self.pop
-        a << elem
-        self.push elem
+    # Drain it to an array (or, really, anything that response to <<)
+    # Only take out what we had when we started, and if we run out of
+    # stuff, well, just return what we actually managed to get.
+
+    def drain_to(a)
+      current_size = self.size
+      begin
+        current_size.times do
+          a << self.deq(:throw_error_if_empty)
+        end
+      rescue ThreadError
       end
+      current_size
     end
-    a
   end
-  alias_method :to_array, :to_a
-
-
-
-
-  # Check out the first element. Hideously expensive
-  # because we have to drain it and then put it all
-  # back together to maintain order
-
-  def peek
-    first = nil
-    @mutex.synchronize do
-      first = self.pop
-      self.push(first)
-      (self.size - 1).times do
-        self.push self.pop
-      end
-    end
-    first
-  end
-
-
 end
