@@ -16,14 +16,18 @@ require 'thread'
 # method. For instance, see JsonWriter.
 class Traject::LineWriter
   attr_reader :settings
-  attr_reader :write_mutex
+  attr_reader :write_mutex, :output_file
 
   def initialize(argSettings)
     @settings     = argSettings
     @write_mutex  = Mutex.new
 
     # trigger lazy loading now for thread-safety
-    output_file
+    @output_file = open_output_file
+  end
+
+  def _write(data)
+    output_file.puts(data)
   end
 
 
@@ -34,13 +38,13 @@ class Traject::LineWriter
   def put(context)
     serialized = serialize(context)
     write_mutex.synchronize do
-      output_file.puts(serialized)
+      _write(serialized)
     end
   end
 
-  def output_file
+  def open_output_file
     unless defined? @output_file
-      @output_file =
+      of =
         if settings["output_file"]
           File.open(settings["output_file"], 'w:UTF-8')
         elsif settings["output_stream"]
@@ -49,7 +53,7 @@ class Traject::LineWriter
           $stdout
         end
     end
-    return @output_file
+    return of
   end
 
   def close
