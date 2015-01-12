@@ -37,6 +37,12 @@ describe "Traject::SolrJsonWriter" do
         @post_args.dup
       end
     end
+
+    def get_args
+      @mutex.synchronize do
+        @get_args.dup
+      end
+    end
   end
 
 
@@ -44,12 +50,18 @@ describe "Traject::SolrJsonWriter" do
     Traject::Indexer::Context.new(:output_hash => hash)
   end
 
+  def create_writer(settings = {})
+    settings = {"solr.url" => "http://example.com/solr"}.merge!(settings)
+
+    writer = Traject::SolrJsonWriter.new(settings)
+    @fake_http_client = FakeHTTPClient.new
+    writer.http_client = @fake_http_client
+
+    return writer
+  end
 
   before do
-    @writer = Traject::SolrJsonWriter.new({"solr.url" => "http://example.com/solr"})
-    @fake_http_client = FakeHTTPClient.new
-
-    @writer.http_client = @fake_http_client
+    @writer = create_writer
   end
 
 
@@ -82,6 +94,17 @@ describe "Traject::SolrJsonWriter" do
     assert_length Traject::SolrJsonWriter::DEFAULT_BATCH_SIZE, JSON.parse(@fake_http_client.post_args[0][1])
 
     assert_length 1, JSON.parse(@fake_http_client.post_args[1][1])
+  end
+
+  it "commits on close when set" do
+    @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_on_close" => "true")
+    @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
+    @writer.close
+
+    last_solr_get = @fake_http_client.get_args.last
+
+    assert_equal "http://example.com/update", last_solr_get[0]
+    assert_equal( {"commit" => "true"}, last_solr_get[1] )
   end
 
 

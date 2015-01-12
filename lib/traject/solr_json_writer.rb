@@ -187,7 +187,7 @@ class Traject::SolrJsonWriter
   # Send a commit
   def commit
     logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}"
-    resp = @http_client.get(@solr_update_url, {:commit => 'true'})
+    resp = @http_client.get(@solr_update_url, {"commit" => 'true'})
     unless resp.status == 200
       logger.error("Problems with commit: #{resp.status} #{resp.body}")
     end
