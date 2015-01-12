@@ -86,5 +86,25 @@ module Traject
       end
     end
 
+    # Ruby stdlib queue lacks a 'drain' function, we write one. 
+    # 
+    # Removes everything currently in the ruby stdlib queue, and returns
+    # it an array.  Should be concurrent-safe, but queue may still have
+    # some things in it after drain, if there are concurrent writers. 
+    def self.drain_queue(queue)
+      result = []
+
+      queue_size = queue.size
+      begin
+        queue_size.times do
+          result << queue.deq(:raise_if_empty)
+        end
+      rescue ThreadError
+        # Need do nothing, queue was concurrently popped, no biggie
+      end
+      
+      return result
+    end
+
   end
 end

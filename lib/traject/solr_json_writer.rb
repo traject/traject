@@ -4,7 +4,6 @@ require 'traject'
 require 'traject/util'
 require 'traject/qualified_const_get'
 require 'traject/thread_pool'
-require 'traject/queue'
 
 require 'json'
 require 'httpclient'
@@ -81,7 +80,7 @@ class Traject::SolrJsonWriter
       thread_pool_size = 1
     end
 
-    @batched_queue         = Traject::Queue.new # need #drain_to
+    @batched_queue         = Queue.new
     @async_exception_queue = Queue.new
     @thread_pool = Traject::ThreadPool.new(thread_pool_size)
 
@@ -100,8 +99,7 @@ class Traject::SolrJsonWriter
   def put(context)
     @batched_queue << context
     if @batched_queue.size >= @batch_size
-      batch = []
-      @batched_queue.drain_to(batch)
+      batch = Traject::Util.drain_queue(@batched_queue)
       @thread_pool.maybe_in_thread_pool { send_batch(batch) }
     end
   end
@@ -165,8 +163,7 @@ class Traject::SolrJsonWriter
   def close
     @thread_pool.raise_collected_exception!
     # Finish off whatever's left
-    batch = []
-    @batched_queue.drain_to(batch)
+    batch = Traject::Util.drain_queue(@batched_queue)
     send_batch(batch)
 
     # Wait for shutdown, and time it.
