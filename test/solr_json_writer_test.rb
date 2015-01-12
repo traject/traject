@@ -64,6 +64,10 @@ describe "Traject::SolrJsonWriter" do
     @writer = create_writer
   end
 
+  it "defaults to 1 bg thread" do
+    assert_equal 1, @writer.thread_pool_size
+  end
+
 
   it "adds a document" do
     @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
@@ -88,12 +92,18 @@ describe "Traject::SolrJsonWriter" do
     end
     @writer.close
 
-
     assert_length 2, @fake_http_client.post_args, "Makes two posts to Solr for two batches"
-    
-    assert_length Traject::SolrJsonWriter::DEFAULT_BATCH_SIZE, JSON.parse(@fake_http_client.post_args[0][1])
 
-    assert_length 1, JSON.parse(@fake_http_client.post_args[1][1])
+    # Actual order of sends may differ due to thread pool
+    one_doc_add = @fake_http_client.post_args.find do |args|
+      JSON.parse(args[1]).length == 1
+    end
+    assert one_doc_add, "Does not include a an add with one document"
+
+    one_batch_add = @fake_http_client.post_args.find do |args|
+      JSON.parse(args[1]).length == Traject::SolrJsonWriter::DEFAULT_BATCH_SIZE
+    end
+    assert one_batch_add, "Does not include a an add with DEFAULT_BATCH_SIZE documents"    
   end
 
   it "commits on close when set" do

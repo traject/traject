@@ -43,7 +43,7 @@ class Traject::SolrJsonWriter
   DEFAULT_BATCH_SIZE = 100
 
   # The passed-in settings
-  attr_reader :settings
+  attr_reader :settings, :thread_pool_size
 
   # A queue to hold documents before sending to solr
   attr_reader :batched_queue
@@ -65,7 +65,7 @@ class Traject::SolrJsonWriter
     @http_client = HTTPClient.new
 
     @batch_size = (settings["solr_writer.batch_size"] || DEFAULT_BATCH_SIZE).to_i
-    @batch_size = 1 if @batch_size == 0
+    @batch_size = 1 if @batch_size < 1
 
     # Store error count in an AtomicInteger, so multi threads can increment
     # it safely, if we're threaded.
@@ -73,25 +73,18 @@ class Traject::SolrJsonWriter
 
 
     # How many threads to use for the writer?
-    thread_pool_size = @settings["solr_writer.thread_pool"]
-    if defined? thread_pool_size
-      thread_pool_size = thread_pool_size.to_i
-    else
-      thread_pool_size = 1
-    end
+    # if our thread pool settings are 0, it'll just create a null threadpool that
+    # executes in calling context.
+    @thread_pool_size = (@settings["solr_writer.thread_pool"] || 1).to_i
 
     @batched_queue         = Queue.new
     @async_exception_queue = Queue.new
-    @thread_pool = Traject::ThreadPool.new(thread_pool_size)
-
-    # if our thread pool settings are 0, it'll just create a null threadpool that
-    # executes in calling context.
+    @thread_pool = Traject::ThreadPool.new(@thread_pool_size)
 
     # Figure out where to send updates
     @solr_update_url = self.determine_solr_update_url
 
-
-    logger.info("   #{self.class.name} writing to '#{@solr_update_url}' in batches of #{@batch_size}")
+    logger.info("   #{self.class.name} writing to '#{@solr_update_url}' in batches of #{@batch_size} with #{@thread_pool_size} bg threads")
   end
 
 
