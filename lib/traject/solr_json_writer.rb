@@ -49,6 +49,10 @@ class Traject::SolrJsonWriter
   # A queue to hold documents before sending to solr
   attr_reader :batched_queue
 
+  # Mostly used for testing, set to an HTTPClient or something
+  # that mocks it.
+  attr_writer :http_client
+
 
   def initialize(argSettings)
     @settings = Traject::Indexer::Settings.new(argSettings)
