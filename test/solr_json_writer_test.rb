@@ -20,11 +20,13 @@ describe "Traject::SolrJsonWriter" do
     # Always reply with this status, normally 200, can
     # be reset for testing error conditions. 
     attr_accessor :response_status
+    attr_accessor :allow_update_json_path
 
     def initialize(*args)
       @post_args = []
       @get_args  = []
       @response_status = 200
+      @allow_update_json_path = true
       @mutex = Monitor.new
     end
 
@@ -46,6 +48,11 @@ describe "Traject::SolrJsonWriter" do
 
       resp = HTTP::Message.new_response("")
       resp.status = self.response_status
+
+      if args.first.end_with?("/update/json") && ! self.allow_update_json_path
+        # Need to test auto-detection of /update/json being available
+        resp.status = 404
+      end
 
       return resp
     end
@@ -196,11 +203,23 @@ describe "Traject::SolrJsonWriter" do
         @writer.close
       end
     end
- 
-
-
-
   end  
+
+  describe "auto-discovers proper update path" do
+    it "finds /update/json" do
+      assert_equal "http://example.com/solr/update/json", @writer.determine_solr_update_url
+    end
+
+    it "resorts to plain /update" do 
+      @fake_http_client = FakeHTTPClient.new
+      @fake_http_client.allow_update_json_path = false
+
+      @writer = create_writer("solr.url" => "http://example.com/solr", 
+        "solr_json_writer.http_client" => @fake_http_client)
+
+      assert_equal "http://example.com/solr/update", @writer.determine_solr_update_url
+    end
+  end
 
 
 end
