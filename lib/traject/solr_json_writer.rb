@@ -21,22 +21,25 @@ require 'concurrent' # for atomic_fixnum
 #
 # * solr.url (optional if solr.update_url is set) The URL to the solr core to index into
 #
-# * solr.update_url The actual update url. If unset, we'll first see if
+# * solr.update_url: The actual update url. If unset, we'll first see if
 #   "#{solr.url}/update/json" exists, and if not use "#{solr.url}/update"
 #
-# * solr_writer.batch_size How big a batch to send to solr. Default is 100.
+# * solr_writer.batch_size: How big a batch to send to solr. Default is 100.
 #   My tests indicate that this setting doesn't change overall index speed by a ton.
 #
-# * solr_writer.thread_pool How many threads to use for the writer. Default is 1.
+# * solr_writer.thread_pool: How many threads to use for the writer. Default is 1.
 #   Likely useful even under MRI since thread will be waiting on Solr for some time. 
 #
-# * solr_writer.commit_on_close Set to true (or "true") if you want to commit at the
+# * solr_writer.max_skipped: How many records skipped due to errors before we 
+#   bail out with a fatal error? Set to -1 for unlimited skips. Default 0, 
+#   raise and abort on a single record that could not be added to Solr. 
+#
+# * solr_writer.commit_on_close: Set to true (or "true") if you want to commit at the
 #   end of the indexing run. (Old "solrj_writer.commit_on_close" supported for backwards
 #   compat only.)
 #
-# * solr_writer.max_skipped How many records skipped due to errors before we 
-#   bail out with a fatal error? Set to -1 for unlimited skips. Default 0, 
-#   raise and abort on a single record that could not be added to Solr. 
+# * solr_writer.commit_timeout: If commit_on_close, how long to wait for Solr before
+#   giving up as a timeout. Default 10 minutes. Solr can be slow. 
 #
 # * solr_json_writer.http_client Mainly intended for testing, set your own HTTPClient
 #   or mock object to be used for HTTP. 
@@ -207,10 +210,16 @@ class Traject::SolrJsonWriter
   def commit
     logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}..."
 
+    original_timeout = @http_client.receive_timeout
+
+    @http_client.receive_timeout = (settings["commit_timeout"] || (10 * 60)).to_i
+
     resp = @http_client.get(@solr_update_url, {"commit" => 'true'})
     unless resp.status == 200
       logger.error("Could not commit to Solr: #{resp.status} #{resp.body}")
     end
+
+    @http_client.receive_timeout = original_timeout
   end
 
 
