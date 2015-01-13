@@ -216,7 +216,7 @@ class Traject::SolrJsonWriter
 
     resp = @http_client.get(@solr_update_url, {"commit" => 'true'})
     unless resp.status == 200
-      logger.error("Could not commit to Solr: #{resp.status} #{resp.body}")
+      raise RuntimeError.new("Could not commit to Solr: #{resp.status} #{resp.body}")
     end
 
     @http_client.receive_timeout = original_timeout
