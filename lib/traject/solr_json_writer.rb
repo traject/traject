@@ -28,19 +28,24 @@ require 'concurrent' # for atomic_fixnum
 #   My tests indicate that this setting doesn't change overall index speed by a ton.
 #
 # * solr_writer.thread_pool How many threads to use for the writer. Default is 1.
+#   Likely useful even under MRI since thread will be waiting on Solr for some time. 
 #
 # * solr_writer.commit_on_close Set to true (or "true") if you want to commit at the
 #   end of the indexing run
 #
-# * solr_writer.max_errors How many errors before we bail out and assume something
-#   more serious is wrong? Set to -1 to disable checks. Default 500
+# * solr_writer.max_skipped How many records skipped due to errors before we 
+#   bail out with a fatal error? Set to -1 for unlimited skips. Default 0, 
+#   raise and abort on a single record that could not be added to Solr. 
+#
+# * solr_json_writer.http_client Mainly intended for testing, set your own HTTPClient
+#   or mock object to be used for HTTP. 
 
 
 class Traject::SolrJsonWriter
   include Traject::QualifiedConstGet
 
-  DEFAULT_MAX_ERRORS = 500
-  DEFAULT_BATCH_SIZE = 100
+  DEFAULT_MAX_SKIPPED = 0
+  DEFAULT_BATCH_SIZE  = 100
 
   # The passed-in settings
   attr_reader :settings, :thread_pool_size
@@ -48,21 +53,16 @@ class Traject::SolrJsonWriter
   # A queue to hold documents before sending to solr
   attr_reader :batched_queue
 
-  # Mostly used for testing, set to an HTTPClient or something
-  # that mocks it.
-  attr_writer :http_client
-
-
   def initialize(argSettings)
     @settings = Traject::Indexer::Settings.new(argSettings)
 
     # Set max errors
-    @max_errors = (@settings['solr_writer.max_errors'] || DEFAULT_MAX_ERRORS).to_i
-    if @max_errors <= 0
-      @max_errors = nil
+    @max_skipped = (@settings['solr_writer.max_skipped'] || DEFAULT_MAX_SKIPPED).to_i
+    if @max_skipped < 0
+      @max_skipped = nil
     end
 
-    @http_client = HTTPClient.new
+    @http_client = @settings["solr_json_writer.http_client"] || HTTPClient.new
 
     @batch_size = (settings["solr_writer.batch_size"] || DEFAULT_BATCH_SIZE).to_i
     @batch_size = 1 if @batch_size < 1
@@ -78,7 +78,6 @@ class Traject::SolrJsonWriter
     @thread_pool_size = (@settings["solr_writer.thread_pool"] || 1).to_i
 
     @batched_queue         = Queue.new
-    @async_exception_queue = Queue.new
     @thread_pool = Traject::ThreadPool.new(@thread_pool_size)
 
     # Figure out where to send updates
@@ -90,6 +89,8 @@ class Traject::SolrJsonWriter
 
   # Add a single context to the queue, ready to be sent to solr
   def put(context)
+    @thread_pool.raise_collected_exception!
+
     @batched_queue << context
     if @batched_queue.size >= @batch_size
       batch = Traject::Util.drain_queue(@batched_queue)
@@ -107,8 +108,14 @@ class Traject::SolrJsonWriter
       resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
     rescue StandardError => exception
     end
+
     if exception || resp.status != 200
-      logger.error "Error in batch. Sending one at a time"
+      error_message = exception ? 
+        Traject::Util.exception_to_log_message(exception) : 
+        "Solr response: #{resp.status}: #{resp.body}"
+
+      logger.error "Error in Solr batch add. Will retry documents individually at performance penalty: #{error_message}"
+      
       batch.each do |c|
         send_single(c)
       end
@@ -122,21 +129,23 @@ class Traject::SolrJsonWriter
     json_package = JSON.generate([c.output_hash])
     begin
       resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
-    rescue StandardError => exception
+      # Catch Timeouts and network errors as skipped records, but otherwise
+      # allow unexpected errors to propagate up. 
+    rescue HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED => exception
     end
 
     if exception || resp.status != 200
-      id = c.output_hash['id'] || "<no id field found>"
       if exception
-        msg = "(#{exception.class}) #{exception.message}"
+        msg = Traject::Util.exception_to_log_message(e)
       else
-        msg = resp.body
+        msg = "Solr error response: #{resp.status}: #{resp.body}"
       end
-      logger.error "Error indexing record #{id} at position #{c.position}: #{msg}"
+      logger.error "Could not add record #{record_id_from_context c} at source file position #{c.position}: #{msg}"
+      logger.debug(c.source_record.to_s)
 
       @skipped_record_incrementer.increment
-      if @max_errors and skipped_record_count > @max_errors
-          raise RuntimeError.new("Exceeded maximum number of errors (#{@max_errors}): aborting")
+      if @max_skipped and skipped_record_count > @max_skipped
+        raise RuntimeError.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
       end
 
     end
@@ -144,9 +153,18 @@ class Traject::SolrJsonWriter
   end
 
 
-  # Get the logger from the settings, or build one if necessary
+  # Get the logger from the settings, or default to an effectively null logger
   def logger
     settings["logger"] ||= Yell.new(STDERR, :level => "gt.fatal") # null logger
+  end
+
+  # Returns MARC 001, then a slash, then output_hash["id"] -- if both
+  # are present. Otherwise may return just one, or even an empty string. 
+  def record_id_from_context(context)
+    marc_id = context.source_record && context.source_record['001'] && package.context.source_record['001'].value
+    output_id = context.output_hash["id"]
+
+    return [marc_id, output_id].compact.join("/")
   end
 
 
@@ -155,9 +173,10 @@ class Traject::SolrJsonWriter
   # via the solr_writer.commit_on_close setting.
   def close
     @thread_pool.raise_collected_exception!
+
     # Finish off whatever's left
     batch = Traject::Util.drain_queue(@batched_queue)
-    send_batch(batch)
+    send_batch(batch) if batch.length > 0
 
     # Wait for shutdown, and time it.
     logger.debug "#{self.class.name}: Shutting down thread pool, waiting if needed..."
@@ -173,7 +192,10 @@ class Traject::SolrJsonWriter
     @thread_pool.raise_collected_exception!
 
     # Commit if we're supposed to
-    commit if settings["solr_writer.commit_on_close"].to_s == "true"
+    if settings["solr_writer.commit_on_close"].to_s == "true"
+      logger.info "#{self.class.name}: Sending commit to solr..."
+      commit
+    end
   end
 
 
@@ -182,7 +204,7 @@ class Traject::SolrJsonWriter
     logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}"
     resp = @http_client.get(@solr_update_url, {"commit" => 'true'})
     unless resp.status == 200
-      logger.error("Problems with commit: #{resp.status} #{resp.body}")
+      logger.error("Could not commit to Solr: #{resp.status} #{resp.body}")
     end
   end
 

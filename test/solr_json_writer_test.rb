@@ -3,16 +3,28 @@ require 'httpclient'
 require 'traject/solr_json_writer'
 require 'thread'
 require 'json'
+require 'stringio'
+require 'logger'
 
 
 # Some basic tests, using a mocked HTTPClient so we can see what it did -- 
 # these tests do not run against a real solr server at present. 
 describe "Traject::SolrJsonWriter" do
+
+
+  #######
+  # A bunch of utilities to help testing
+  #######
+
   class FakeHTTPClient
+    # Always reply with this status, normally 200, can
+    # be reset for testing error conditions. 
+    attr_accessor :response_status
 
     def initialize(*args)
       @post_args = []
       @get_args  = []
+      @response_status = 200
       @mutex = Monitor.new
     end
 
@@ -21,7 +33,10 @@ describe "Traject::SolrJsonWriter" do
         @post_args << args
       end
 
-      return HTTP::Message.new_response("")
+      resp = HTTP::Message.new_response("")
+      resp.status = self.response_status
+
+      return resp
     end
 
     def get (*args)
@@ -29,7 +44,10 @@ describe "Traject::SolrJsonWriter" do
         @get_args << args
       end
 
-      return HTTP::Message.new_response("")
+      resp = HTTP::Message.new_response("")
+      resp.status = self.response_status
+
+      return resp
     end
 
     def post_args
@@ -51,14 +69,30 @@ describe "Traject::SolrJsonWriter" do
   end
 
   def create_writer(settings = {})
-    settings = {"solr.url" => "http://example.com/solr"}.merge!(settings)
+    settings = {
+      "solr.url" => "http://example.com/solr",
+      "solr_json_writer.http_client" => FakeHTTPClient.new
+      }.merge!(settings)
+    @fake_http_client = settings["solr_json_writer.http_client"]
 
-    writer = Traject::SolrJsonWriter.new(settings)
-    @fake_http_client = FakeHTTPClient.new
-    writer.http_client = @fake_http_client
+    writer = Traject::SolrJsonWriter.new(settings)    
 
     return writer
   end
+
+  # strio = StringIO.new
+  # logger_to_strio(strio)
+  #
+  # Later check for strio.string for contents
+  def logger_to_strio(strio)
+    # Yell makes this hard, let's do it with an ordinary logger, think
+    # it's okay. 
+    Logger.new(strio)
+  end
+
+  #########
+  # Actual tests
+  #########
 
   before do
     @writer = create_writer
@@ -68,7 +102,6 @@ describe "Traject::SolrJsonWriter" do
     assert_equal 1, @writer.thread_pool_size
   end
 
-
   it "adds a document" do
     @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
     @writer.close
@@ -77,7 +110,7 @@ describe "Traject::SolrJsonWriter" do
 
     refute_nil post_args
 
-    assert_equal "http://example.com/solr/update", post_args[0]
+    assert_equal "http://example.com/solr/update/json", post_args[0]
 
     refute_nil post_args[1]
     posted_json = JSON.parse(post_args[1])
@@ -95,6 +128,9 @@ describe "Traject::SolrJsonWriter" do
     assert_length 2, @fake_http_client.post_args, "Makes two posts to Solr for two batches"
 
     # Actual order of sends may differ due to thread pool
+    # TODO: This is NOT right, the order SHOULD be predictable, and in
+    # the opposite order that we are getting it. Need to investigate. Something gone wrong
+    # in Concurrent::ThreadPoolExecutor? 
     one_doc_add = @fake_http_client.post_args.find do |args|
       JSON.parse(args[1]).length == 1
     end
@@ -113,9 +149,58 @@ describe "Traject::SolrJsonWriter" do
 
     last_solr_get = @fake_http_client.get_args.last
 
-    assert_equal "http://example.com/update", last_solr_get[0]
+    assert_equal "http://example.com/update/json", last_solr_get[0]
     assert_equal( {"commit" => "true"}, last_solr_get[1] )
   end
+
+  describe "skipped records" do
+    it "skips and reports under max_skipped" do
+      strio = StringIO.new
+      @writer = create_writer("solr_writer.max_skipped" => 10, "logger" => logger_to_strio(strio))
+      @fake_http_client.response_status = 500
+
+      10.times do |i|
+        @writer.put context_with("id" => "doc_#{i}", "key" => "value")
+      end
+      @writer.close
+
+      assert_equal 10, @writer.skipped_record_count
+
+      logged = strio.string
+
+      10.times do |i|
+        assert_match /ERROR.*Could not add record doc_#{i} at source file position : Solr error response: 500/, logged
+      end
+    end
+
+    it "raises when skipped more than max_skipped" do
+      @writer = create_writer("solr_writer.max_skipped" => 5)
+      @fake_http_client.response_status = 500
+
+      e = assert_raises(RuntimeError) do
+        6.times do |i|
+          @writer.put context_with("id" => "doc_#{i}", "key" => "value")
+        end
+        @writer.close
+      end
+
+      assert_includes e.message, "Exceeded maximum number of skipped records"
+    end
+
+    it "raises on one skipped record when max_skipped is 0" do
+      @writer = create_writer("solr_writer.max_skipped" => 0)
+      @fake_http_client.response_status = 500
+
+      e = assert_raises(RuntimeError) do
+        @writer.put context_with("id" => "doc_1", "key" => "value")
+        @writer.close
+      end
+    end
+ 
+
+
+
+  end  
 
 
 end
