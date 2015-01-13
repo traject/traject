@@ -31,7 +31,8 @@ require 'concurrent' # for atomic_fixnum
 #   Likely useful even under MRI since thread will be waiting on Solr for some time. 
 #
 # * solr_writer.commit_on_close Set to true (or "true") if you want to commit at the
-#   end of the indexing run
+#   end of the indexing run. (Old "solrj_writer.commit_on_close" supported for backwards
+#   compat only.)
 #
 # * solr_writer.max_skipped How many records skipped due to errors before we 
 #   bail out with a fatal error? Set to -1 for unlimited skips. Default 0, 
@@ -79,6 +80,10 @@ class Traject::SolrJsonWriter
 
     @batched_queue         = Queue.new
     @thread_pool = Traject::ThreadPool.new(@thread_pool_size)
+
+    # old setting solrj_writer supported for backwards compat, as we make
+    # this the new default writer. 
+    @commit_on_close = (settings["solr_writer.commit_on_close"] || settings["solrj_writer.commit_on_close"]).to_s == "true"
 
     # Figure out where to send updates
     @solr_update_url = self.determine_solr_update_url
@@ -192,7 +197,7 @@ class Traject::SolrJsonWriter
     @thread_pool.raise_collected_exception!
 
     # Commit if we're supposed to
-    if settings["solr_writer.commit_on_close"].to_s == "true"
+    if @commit_on_close
       logger.info "#{self.class.name}: Sending commit to solr..."
       commit
     end
