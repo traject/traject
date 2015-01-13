@@ -68,6 +68,10 @@ describe "Traject::SolrJsonWriter" do
         @get_args.dup
       end
     end
+
+    # Everything else, just return nil please
+    def method_missing(*args)
+    end
   end
 
 
