@@ -198,7 +198,6 @@ class Traject::SolrJsonWriter
 
     # Commit if we're supposed to
     if @commit_on_close
-      logger.info "#{self.class.name}: Sending commit to solr..."
       commit
     end
   end
@@ -206,7 +205,8 @@ class Traject::SolrJsonWriter
 
   # Send a commit
   def commit
-    logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}"
+    logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}..."
+
     resp = @http_client.get(@solr_update_url, {"commit" => 'true'})
     unless resp.status == 200
       logger.error("Could not commit to Solr: #{resp.status} #{resp.body}")
