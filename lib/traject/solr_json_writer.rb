@@ -102,7 +102,7 @@ class Traject::SolrJsonWriter
     @batched_queue << context
     if @batched_queue.size >= @batch_size
       batch = Traject::Util.drain_queue(@batched_queue)
-      @thread_pool.maybe_in_thread_pool { send_batch(batch) }
+      @thread_pool.maybe_in_thread_pool(batch) {|batch_arg| send_batch(batch_arg) }
     end
   end
 
