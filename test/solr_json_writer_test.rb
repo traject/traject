@@ -136,21 +136,12 @@ describe "Traject::SolrJsonWriter" do
     end
     @writer.close
 
-    assert_length 2, @fake_http_client.post_args, "Makes two posts to Solr for two batches"
+    post_args = @fake_http_client.post_args
 
-    # Actual order of sends may differ due to thread pool
-    # TODO: This is NOT right, the order SHOULD be predictable, and in
-    # the opposite order that we are getting it. Need to investigate. Something gone wrong
-    # in Concurrent::ThreadPoolExecutor? 
-    one_doc_add = @fake_http_client.post_args.find do |args|
-      JSON.parse(args[1]).length == 1
-    end
-    assert one_doc_add, "Does not include a an add with one document"
+    assert_length 2, post_args, "Makes two posts to Solr for two batches"
 
-    one_batch_add = @fake_http_client.post_args.find do |args|
-      JSON.parse(args[1]).length == Traject::SolrJsonWriter::DEFAULT_BATCH_SIZE
-    end
-    assert one_batch_add, "Does not include a an add with DEFAULT_BATCH_SIZE documents"    
+    assert_length Traject::SolrJsonWriter::DEFAULT_BATCH_SIZE, JSON.parse(post_args[0][1]), "first batch posted with batch size docs"
+    assert_length 1, JSON.parse(post_args[1][1]), "second batch posted with last remaining doc"
   end
 
   it "commits on close when set" do

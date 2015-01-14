@@ -182,9 +182,13 @@ class Traject::SolrJsonWriter
   def close
     @thread_pool.raise_collected_exception!
 
-    # Finish off whatever's left
+    # Finish off whatever's left. Do it in the thread pool for
+    # consistency, and to ensure expected order of operations, so
+    # it goes to the end of the queue behind any other work.
     batch = Traject::Util.drain_queue(@batched_queue)
-    send_batch(batch) if batch.length > 0
+    if batch.length > 0
+      @thread_pool.maybe_in_thread_pool { send_batch(batch) }
+    end
 
     # Wait for shutdown, and time it.
     logger.debug "#{self.class.name}: Shutting down thread pool, waiting if needed..."
