@@ -69,8 +69,8 @@ settings are applied first of all. It's recommended you use `provide`.
    But this is the first thread_pool to try increasing for better performance on a multi-core machine.
 
    A pool here can sometimes result in multi-threaded commiting to Solr too with the
-   SolrJWriter, as processing worker threads will do their own commits to solr if the
-   solrj_writer.thread_pool is full. Having a multi-threaded pool here can help even out throughput
+   SolrJsonWriter, as processing worker threads will do their own commits to solr if the
+   solr_writer.thread_pool is full. Having a multi-threaded pool here can help even out throughput
    through Solr's pauses for committing too.
 
 * `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::MarcReader, the pure
