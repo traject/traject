@@ -1,6 +1,10 @@
+require 'concurrent'
+require 'thread' # for Queue
+
 module Traject
-  # An abstraction wrapping a threadpool executor in some configuration choices
-  # and other apparatus.
+  # An abstraction wrapping a Concurrent::ThreadPool in some configuration choices
+  # and other apparatus.  Concurrent::ThreadPool is a Java ThreadPool executor on
+  # jruby for performance, and is ruby-concurrent's own ruby implementation otherwise.
   #
   # 1) Initialize with chosen pool size -- we create fixed size pools, where
   # core and max sizes are the same.
@@ -17,12 +21,12 @@ module Traject
   # variables in the block, unless the variable has an object you can
   # use thread-safely!
   #
-  # 4) Thread pools are java.util.concurrent.ThreadPoolExecutor, manually created
+  # 4) Thread pools Concurrent::ThreadPoolExecutor,
   # with a work queue that will buffer up to (pool_size*3) tasks. If queue is full,
-  # the ThreadPoolExecutor is set up to use the ThreadPoolExecutor.CallerRunsPolicy,
+  # the ThreadPoolExecutor is set up to use the :caller_runs policy
   # meaning the block will end up executing in caller's own thread. With the kind
   # of work we're doing, where each unit of work is small and there are many of them--
-  # the CallerRunsPolicy serves as an effective 'back pressure' mechanism to keep
+  # the :caller_runs serves as an effective 'back pressure' mechanism to keep
   # the work queue from getting too large and exhausting memory, when producers are
   # faster than consumers.
   #
@@ -43,33 +47,27 @@ module Traject
   #  threads are still executing, as it's not entirely thread safe (may get
   #  an off by one as to total iterations)
   class ThreadPool
-    attr_reader :pool_size, :label, :queue_capacity
+    attr_reader :pool_size, :queue_capacity
 
-    # First arg is pool size, 0 or nil and we'll be a null/no-op pool
+    # First arg is pool size, 0 or nil and we'll be a null/no-op pool which executes
+    # work in caller thread. 
     def initialize(pool_size)
       unless pool_size.nil? || pool_size == 0
-        require 'java' # trigger an exception now if we're not jruby
-
-        @label = label
-
-        @pool_size = pool_size.to_i # just for reflection, we don't really need it again
+        @pool_size = pool_size.to_i 
         @queue_capacity = pool_size * 3
 
-
-        blockingQueue            =  java.util.concurrent.ArrayBlockingQueue.new(@queue_capacity)
-        rejectedExecutionHandler =  java.util.concurrent.ThreadPoolExecutor::CallerRunsPolicy.new
-
-        # keepalive times don't matter, we are setting core and max pool to
-        # same thing, fixed size pool.
-        @thread_pool =  java.util.concurrent.ThreadPoolExecutor.new(
-          @pool_size, @pool_size, 0, java.util.concurrent.TimeUnit::MILLISECONDS,
-          blockingQueue, rejectedExecutionHandler)
+        @thread_pool = Concurrent::ThreadPoolExecutor.new(
+          :min_threads     => @pool_size,
+          :max_threads     => @pool_size,
+          :max_queue       => @queue_capacity,
+          :overflow_policy => :caller_runs
+        )
 
         # A thread-safe queue to collect exceptions cross-threads.
-        # We make it small, we really only need to store the first
-        # exception, we don't care too much about others. But we'll
-        # keep the first 20, why not.
-        @async_exception_queue   =  java.util.concurrent.ArrayBlockingQueue.new(20)
+        # We really only need to save the first exception, but a queue
+        # is a convenient way to store a value concurrency-safely, and
+        # might as well store all of them. 
+        @exceptions_caught_queue   =  Queue.new
       end
     end
 
@@ -106,7 +104,7 @@ module Traject
       start_t = Time.now
 
       if @thread_pool
-        @thread_pool.execute do
+        @thread_pool.post do
           begin
             yield(*args)
           rescue Exception => e
@@ -119,21 +117,13 @@ module Traject
 
     end
 
-    # Just for monitoring/debugging purposes, we'll return the work queue
-    # used by the threadpool. Don't recommend you do anything with it, as
-    # the original java.util.concurrent docs make the same recommendation.
-    def queue
-      @thread_pool && @thread_pool.queue
-    end
 
     # thread-safe way of storing an exception, to raise
     # later in a different thread. We don't guarantee
     # that we can store more than one at a time, only
     # the first one recorded may be stored.
     def collect_exception(e)
-      # offer will silently do nothing if the queue is full, that's fine
-      # with us.
-      @async_exception_queue.offer(e)
+      @exceptions_caught_queue.push(e)
     end
 
     # If there's a stored collected exception, raise it
@@ -144,7 +134,8 @@ module Traject
     # as a non-functioning threadpool -- then this method is just
     # a no-op.
     def raise_collected_exception!
-      if @async_exception_queue && e = @async_exception_queue.poll
+      if @exceptions_caught_queue && (! @exceptions_caught_queue.empty?)
+        e = @exceptions_caught_queue.pop
         raise e
       end
     end
@@ -159,9 +150,7 @@ module Traject
 
       if @thread_pool
         @thread_pool.shutdown
-        # We pretty much want to wait forever, although we need to give
-        # a timeout. Okay, one day!
-        @thread_pool.awaitTermination(1, java.util.concurrent.TimeUnit::DAYS)
+        @thread_pool.wait_for_termination
       end
 
       return (Time.now - start_t)

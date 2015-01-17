@@ -6,9 +6,8 @@ require 'traject/thread_pool'
 
 require 'traject/indexer/settings'
 require 'traject/marc_reader'
-require 'traject/marc4j_reader'
 require 'traject/json_writer'
-require 'traject/solrj_writer'
+require 'traject/solr_json_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
@@ -53,8 +52,9 @@ require 'traject/macros/basic'
 #   2) Responds to the usual ruby #each, returning a source record from each #each.
 #      (Including Enumerable is prob a good idea too)
 #
-#  The default reader is the Traject::Marc4JReader, who's behavior is
-#  further customized by several settings in the Settings hash.
+#  The default reader is the Traject::MarcReader, who's behavior is
+#  further customized by several settings in the Settings hash. Jruby users
+#  with specialized needs may want to look at the gem traject_marc4j_reader.
 #
 #  Alternate readers can be set directly with the #reader_class= method, or
 #  with the "reader_class_name" Setting, a String name of a class
@@ -72,14 +72,22 @@ require 'traject/macros/basic'
 #  4) Optionally implements a #skipped_record_count method, returning int count of records
 #     that were skipped due to errors (and presumably logged)
 #
-#  The default writer is the SolrJWriter, using Java SolrJ to
-#  write to a Solr.  A few other built-in writers are available,
-#  but it's anticipated more will be created as plugins or local
-#  code for special purposes.
+#  Traject packages one solr writer: traject/solr_json_writer, which sends
+#  in json format and works under both ruby and  jruby, but only with solr version
+#  >= 3.2. To index to an older solr installation, you'll need to use jruby and
+#  install the gem traject_solrj_writer, which uses the solrj .jar underneath.
 #
 #  You can set alternate writers by setting a Class object directly
 #  with the #writer_class method, or by the 'writer_class_name' Setting,
-#  with a String name of class meeting the Writer contract.
+#  with a String name of class meeting the Writer contract. There are several
+#  that ship with traject itself:
+#
+#  * traject/json_writer (Traject::JsonWriter) -- write newline-delimied json files.
+#  * traject/yaml_writer (Traject::YamlWriter) -- write pretty yaml file; very human-readable
+#  * traject/debug_writer (Traject::DebugWriter) -- write a tab-delimited file where
+#    each line consists of the id, field, and value(s).
+#  * traject/delimited_writer and traject/csv_writer -- write character-delimited files
+#    (default is tab-delimited) or comma-separated-value files.
 #
 class Traject::Indexer
 
@@ -310,7 +318,13 @@ class Traject::Indexer
     reader = self.reader!(io_stream)
     writer = self.writer!
 
-    thread_pool = Traject::ThreadPool.new(settings["processing_thread_pool"].to_i)
+
+    processing_threads = settings["processing_thread_pool"].to_i
+    if processing_threads > 0 and !(defined? JRuby)
+      processing_threads = 0
+      logger.warn "Processing threads set to 0 because we're not running under JRuby"
+    end
+    thread_pool = Traject::ThreadPool.new(processing_threads)
 
     logger.info "   Indexer with reader: #{reader.class.name} and writer: #{writer.class.name}"
 
@@ -326,7 +340,7 @@ class Traject::Indexer
       thread_pool.raise_collected_exception!
 
       if settings["debug_ascii_progress"].to_s == "true"
-        $stderr.write "." if count % settings["solrj_writer.batch_size"] == 0
+        $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
       end
 
       if log_batch_size && (count % log_batch_size == 0)
