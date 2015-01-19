@@ -5,6 +5,8 @@ require 'stringio'
 require 'traject/delimited_writer'
 require 'traject/csv_writer'
 
+require 'csv'
+
 describe "Delimited/CSV Writers" do
 
   before do
@@ -75,6 +77,27 @@ describe "Delimited/CSV Writers" do
       cw = Traject::CSVWriter.new(@settings)
       cw.put @context
       @out.string.split("\n").last.must_equal ['four', 'one', 'two1|two2'].join(',')
+    end
+
+    it "produces complex output" do
+      @context.output_hash = {
+          'four' => ['Bill Clinton, Jr.', 'Jesse "the Body" Ventura'],
+          'one' => 'Willard "Mitt" Romney',
+          'two' => 'Dueber, Bill'
+      }
+      canonical = StringIO.new
+      csv = CSV.new(canonical)
+
+      csv_vals = [@context.output_hash['four'].join('|'), @context.output_hash['one'], @context.output_hash['two']]
+      csv << csv_vals
+      csv_output = canonical.string.chomp
+
+      cw = Traject::CSVWriter.new(@settings)
+      cw.put @context
+      traject_csvwriter_output = @out.string.split("\n").last.chomp
+
+      assert_equal(csv_output, traject_csvwriter_output)
+
     end
 
   end
