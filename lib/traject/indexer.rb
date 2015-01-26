@@ -75,7 +75,7 @@ require 'traject/macros/basic'
 #  Traject packages one solr writer: traject/solr_json_writer, which sends
 #  in json format and works under both ruby and  jruby, but only with solr version
 #  >= 3.2. To index to an older solr installation, you'll need to use jruby and
-#  install the gem traject_solrj_writer, which uses the solrj .jar underneath.
+#  install the gem traject-solrj_writer, which uses the solrj .jar underneath.
 #
 #  You can set alternate writers by setting a Class object directly
 #  with the #writer_class method, or by the 'writer_class_name' Setting,
