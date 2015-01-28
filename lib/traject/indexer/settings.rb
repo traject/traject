@@ -22,9 +22,6 @@ class Traject::Indexer
     include Hashie::Extensions::MergeInitializer # can init with hash
     include Hashie::Extensions::IndifferentAccess
 
-    # Hashie bug Issue #100 https://github.com/intridea/hashie/pull/100
-    alias_method :store, :indifferent_writer
-
     def initialize(*args)
       super
       self.default_proc = lambda do |hash, key|
