@@ -22,12 +22,12 @@ module Traject
   # variables in the block, unless the variable has an object you can
   # use thread-safely!
   #
-  # 4) Thread pools Concurrent::ThreadPoolExecutor,
-  # with a work queue that will buffer up to (pool_size*3) tasks. If queue is full,
-  # the ThreadPoolExecutor is set up to use the :caller_runs policy
+  # 4) We configure our underlying Concurrent::ThreadPool
+  # with a work queue that will buffer up to (pool_size*3) tasks. If the queue is full,
+  # the underlying Concurrent::ThreadPool is set up to use the :caller_runs policy
   # meaning the block will end up executing in caller's own thread. With the kind
   # of work we're doing, where each unit of work is small and there are many of them--
-  # the :caller_runs serves as an effective 'back pressure' mechanism to keep
+  # the :caller_runs policy serves as an effective 'back pressure' mechanism to keep
   # the work queue from getting too large and exhausting memory, when producers are
   # faster than consumers.
   #
@@ -39,8 +39,8 @@ module Traject
   #  #shutdown_and_wait, which will wait for all current queued work
   #  to complete, then return.  You can not give any more work to the pool
   #  after you do this. By default it'll wait pretty much forever, which should
-  #  be fine. If you never call shutdown, the pool will keep running forever
-  #  and not allow your program to exit!
+  #  be fine. If you never call shutdown, then queued or in-progress work
+  #  may be abandoned when the program ends, which would be bad. 
   #
   # 7) We will keep track of total times a block is run in thread pool, and
   #  total elapsed (wall) time of running all blocks, so an average_execution_ms
