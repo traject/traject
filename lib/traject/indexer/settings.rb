@@ -1,4 +1,5 @@
 require 'hashie'
+require 'concurrent'
 
 class Traject::Indexer
 
@@ -64,7 +65,7 @@ class Traject::Indexer
       "marc_source.type"          => "binary",            
       "solrj_writer.batch_size"   => 200,
       "solrj_writer.thread_pool"  => 1,
-      "processing_thread_pool"    => 3,
+      "processing_thread_pool"    => self.default_processing_thread_pool,
       "log.batch_size.severity"   => "info"
       }
     end
@@ -76,5 +77,15 @@ class Traject::Indexer
         hash
       end.inspect
     end
+
+    protected
+    def self.default_processing_thread_pool
+      if ["jruby", "rbx"].include? ENV["RUBY_ENGINE"]
+        [1, Concurrent.processor_count - 1].max
+      else
+        1
+      end
+    end
+
   end
 end
