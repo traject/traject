@@ -60,7 +60,7 @@ module Traject
           :min_threads     => @pool_size,
           :max_threads     => @pool_size,
           :max_queue       => @queue_capacity,
-          :overflow_policy => :caller_runs
+          :fallback_policy => :caller_runs
         )
 
         # A thread-safe queue to collect exceptions cross-threads.
