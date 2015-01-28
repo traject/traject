@@ -9,7 +9,7 @@ module Traject
   # 1) Initialize with chosen pool size -- we create fixed size pools, where
   # core and max sizes are the same.
   #
-  # 2) If initialized with nil for threadcount,  no thread pool will actually
+  # 2) If initialized with nil or 0 for threadcount,  no thread pool will actually
   # be created, and work sent to the Traject::ThreadPool will just be executed
   # in the caller thread. We call this a nil threadpool. One situation it can be useful
   # is if you are running under MRI, where multi-core parallelism isn't available, so
