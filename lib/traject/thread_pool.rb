@@ -10,13 +10,14 @@ module Traject
   # core and max sizes are the same.
   #
   # 2) If initialized with nil for threadcount,  no thread pool will actually
-  # be created, and all threadpool-related methods become no-ops. We call this
-  # the nil/null threadpool.  A non-nil threadpool requires jruby, but you can
-  # create a null Traject::ThreadPool.new(nil) under MRI without anything
-  # complaining.
+  # be created, and work sent to the Traject::ThreadPool will just be executed
+  # in the caller thread. We call this a nil threadpool. One situation it can be useful
+  # is if you are running under MRI, where multi-core parallelism isn't available, so
+  # an actual threadpool may not be useful. (Although in some cases a thread pool, 
+  # especially one with size 1, can be useful in MRI for I/O blocking operations)
   #
   # 3) Use the #maybe_in_threadpool method to send blocks to thread pool for
-  # execution -- if no threadpool configured your block will just be
+  # execution -- if configurred with a nil threadcount, your block will just be
   # executed in calling thread. Be careful to not refer to any non-local
   # variables in the block, unless the variable has an object you can
   # use thread-safely!
