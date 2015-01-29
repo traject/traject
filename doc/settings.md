@@ -63,13 +63,16 @@ settings are applied first of all. It's recommended you use `provide`.
                  or Writer classes that write to files, like Traject::JsonWriter. Has an shortcut
                  `-o` on command line. 
 
-* `processing_thread_pool` Default 3. Main thread pool used for processing records with input rules. Choose a
-   pool size based on size of your machine, and complexity of your indexing rules. 
-   Probably no reason for it ever to be more than number of cores on indexing machine.  
-   But this is the first thread_pool to try increasing for better performance on a multi-core machine. 
+* `processing_thread_pool` Number of threads in the main thread pool used for processing 
+   records with input rules. On JRuby or Rubinius, defaults to 1 less than the number of processors detected on your machine. On other ruby platforms, defaults to 1. Set to 0 or nil
+   to disable thread pool, and do all processing in main thread. 
+
+   Choose a pool size based on size of your machine, and complexity of your indexing rules, you
+   might want to try different sizes and measure which works best for you.
+   Probably no reason for it ever to be more than number of cores on indexing machine.
    
-   A pool here can sometimes result in multi-threaded commiting to Solr too with the
-   SolrJWriter, as processing worker threads will do their own commits to solr if the
+   A value greater than 1 here can sometimes still result in multi-threaded commiting to Solr, as
+   processing worker threads will do their own commits to solr if the
    solrj_writer.thread_pool is full. Having a multi-threaded pool here can help even out throughput
    through Solr's pauses for committing too. 
 
