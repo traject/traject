@@ -12,10 +12,6 @@ require 'traject/solr_json_writer'
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
 
-if defined? JRUBY_VERSION
-  require 'traject/solrj_writer'
-end
-
 # This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output
 # hash off somewhere (usually Solr) with a Writer class.
@@ -76,17 +72,22 @@ end
 #  4) Optionally implements a #skipped_record_count method, returning int count of records
 #     that were skipped due to errors (and presumably logged)
 #
-#  Currently, the only solr writer is traject/solrj_writer, which
-#  is JRuby-only, as it uses the underlying solrj java library.
-#
-#  The default writer is the JsonWriter, which creates newline-delimited JSON
-#  as ouput. A few other built-in writers are available,
-#  but it's anticipated more will be created as plugins or local
-#  code for special purposes.
+#  Traject packages one solr writer: traject/solr_json_writer, which sends
+#  in json format and works under both ruby and  jruby, but only with solr version
+#  >= 3.2. To index to an older solr installation, you'll need to use jruby and
+#  install the gem traject-solrj_writer, which uses the solrj .jar underneath.
 #
 #  You can set alternate writers by setting a Class object directly
 #  with the #writer_class method, or by the 'writer_class_name' Setting,
-#  with a String name of class meeting the Writer contract.
+#  with a String name of class meeting the Writer contract. There are several
+#  that ship with traject itself:
+#
+#  * traject/json_writer (Traject::JsonWriter) -- write newline-delimied json files.
+#  * traject/yaml_writer (Traject::YamlWriter) -- write pretty yaml file; very human-readable
+#  * traject/debug_writer (Traject::DebugWriter) -- write a tab-delimited file where
+#    each line consists of the id, field, and value(s).
+#  * traject/delimited_writer and traject/csv_writer -- write character-delimited files
+#    (default is tab-delimited) or comma-separated-value files.
 #
 class Traject::Indexer
 
@@ -339,7 +340,7 @@ class Traject::Indexer
       thread_pool.raise_collected_exception!
 
       if settings["debug_ascii_progress"].to_s == "true"
-        $stderr.write "." if count % settings["solrj_writer.batch_size"].to_i == 0
+        $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
       end
 
       if log_batch_size && (count % log_batch_size == 0)

@@ -21,11 +21,6 @@ extend Traject::Macros::MarcFormats
 # config files as you like, `traject -c one.rb -c two.rb -c etc.rb`
 settings do
   provide "solr.url", "http://solr.somewhere.edu:8983/solr/corename"
-
-  # Only if you need to connect to a Solr 1.x:
-  provide "solrj_writer.parser_class_name", "XMLResponseParser"
-
-  provide "solrj_writer.commit_on_close", true
 end
 
 # Extract first 001, then supply code block to add "bib_" prefix to it

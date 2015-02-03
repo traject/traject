@@ -62,26 +62,6 @@ describe "Traject::Indexer#process" do
     assert writer_settings["memory_writer.closed"]
   end
 
-  it "returns false if skipped records" do
-    skip unless defined? JRUBY_VERSION
-
-    @indexer = Traject::Indexer.new(
-      "solrj_writer.server_class_name" => "MockSolrServer",
-      "solr.url" => "http://example.org",
-      "writer_class_name" => "Traject::SolrJWriter"
-    )
-    @file = File.open(support_file_path "manufacturing_consent.marc")
-
-
-    @indexer.to_field("id") do |record, accumulator|
-      # intentionally make error
-      accumulator.concat ["one_id", "two_id"]
-    end
-    return_value = @indexer.process(@file)
-
-    assert ! return_value, "returns false on skipped record errors"
-  end
-
   require 'traject/null_writer'
   it "calls after_processing after processing" do
     @indexer = Traject::Indexer.new(
@@ -106,8 +86,6 @@ describe "Traject::Indexer#process" do
   describe "demo_config.rb" do
     before do
       @indexer = Traject::Indexer.new(
-        "solrj_writer.server_class_name" => "MockSolrServer",
-        "solr.url" => "http://example.org",
         "writer_class_name" => "Traject::NullWriter"
       )
     end

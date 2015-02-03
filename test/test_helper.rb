@@ -47,9 +47,11 @@ def empty_record
   rec
 end
 
-# pretends to be a SolrJ HTTPServer-like thing, just kind of mocks it up
+# pretends to be a Solr HTTPServer-like thing, just kind of mocks it up
 # and records what happens and simulates errors in some cases.
 class MockSolrServer
+  class Exception < RuntimeError;end
+
   attr_accessor :things_added, :url, :committed, :parser, :shutted_down
 
   def initialize(url)
@@ -61,12 +63,12 @@ class MockSolrServer
   def add(thing)
     @add_mutex.synchronize do # easy peasy threadsafety for our mock
       if @url == "http://no.such.place"
-        raise org.apache.solr.client.solrj.SolrServerException.new("mock bad uri", java.io.IOException.new)
+        raise MockSolrServer::Exception.new("mock bad uri")
       end
 
       # simulate a multiple id error please
       if [thing].flatten.find {|doc| doc.getField("id").getValueCount() != 1}
-        raise org.apache.solr.client.solrj.SolrServerException.new("mock non-1 size of 'id'")
+        raise MockSolrServer::Exception.new("mock non-1 size of 'id'")
       else
         things_added << thing
       end
