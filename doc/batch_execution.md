@@ -8,17 +8,17 @@ with suggested solutions, and additional hints.
 
 ## Ruby version setting
 
-traject ordinarily needs to run under jruby. You will
+traject can run under any ruby, but will be best able to take advantage
+of multiple threads under jruby. You will
 ordinarily have jruby installed under a ruby version switcher -- we
 highly recommend [chruby](https://github.com/postmodern/chruby) over other choices,
 but other popular choices include rvm and rbenv.
 
-Remember that traject needs to run in 1.9.x mode in jruby--
-with jruby 1.7.x or later, this should be default, recommend
-you use jruby 1.7.x.
+**JRuby users**: Remember that traject needs to run in 1.9.x or 2.x mode in jruby--
+with jruby 1.7.x or later, this should be default.
 
 Especially when running under a cron job, it can be difficult to
-set things up so traject runs under jruby -- and then when you add
+set things up so traject runs under a specific ruby implementation -- and then when you add
 bundler into it, things can get positively byzantine. It's not you,
 this gets confusing. 
 
