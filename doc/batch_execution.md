@@ -8,14 +8,10 @@ with suggested solutions, and additional hints.
 
 ## Ruby version setting
 
-traject ordinarily needs to run under jruby. You will
+For best performance, traject should run under jruby. You will
 ordinarily have jruby installed under a ruby version switcher -- we
-highly recommend [chruby](https://github.com/postmodern/chruby) over other choices,
+recommend [chruby](https://github.com/postmodern/chruby) over other choices,
 but other popular choices include rvm and rbenv.
-
-Remember that traject needs to run in 1.9.x mode in jruby--
-with jruby 1.7.x or later, this should be default, recommend
-you use jruby 1.7.x.
 
 Especially when running under a cron job, it can be difficult to
 set things up so traject runs under jruby -- and then when you add

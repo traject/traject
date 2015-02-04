@@ -63,19 +63,19 @@ settings are applied first of all. It's recommended you use `provide`.
                  or Writer classes that write to files, like Traject::JsonWriter. Has an shortcut
                  `-o` on command line.
 
-* `processing_thread_pool` Default 3. Main thread pool used for processing records with input rules. Choose a
-   pool size based on size of your machine, and complexity of your indexing rules.
+* `processing_thread_pool` Number of threads in the main thread pool used for processing 
+   records with input rules. On JRuby or Rubinius, defaults to 1 less than the number of processors detected on your machine. On other ruby platforms, defaults to 1. Set to 0 or nil
+   to disable thread pool, and do all processing in main thread. 
+
+   Choose a pool size based on size of your machine, and complexity of your indexing rules, you
+   might want to try different sizes and measure which works best for you.
    Probably no reason for it ever to be more than number of cores on indexing machine.
-   But this is the first thread_pool to try increasing for better performance on a multi-core machine.
 
-   A pool here can sometimes result in multi-threaded commiting to Solr too with the
-   SolrJsonWriter, as processing worker threads will do their own commits to solr if the
-   solr_writer.thread_pool is full. Having a multi-threaded pool here can help even out throughput
-   through Solr's pauses for committing too.
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::MarcReader, the pure
-ruby reader. When running under JRuby, the Traject::Marc4JReader (available in the traject-marc4j_reader gem) will sometimes, but not always,
-give better performance. Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. 
+   Default Traject::MarcReader, the pure ruby reader. When running under JRuby, the 
+   Traject::Marc4JReader (available in the traject-marc4j_reader gem) provides
+   better performance. Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
 
@@ -98,4 +98,4 @@ give better performance. Command-line shortcut `-r`
                                     Note that processing_thread_pool threads can end up submitting
                                     to solr too, if solr_json_writer.thread_pool is full.
 
-* `writer_class_name`: a Traject Writer class, used by indexer to send processed dictionaries off. Default Traject::SolrJsonWriter, also available Traject::JsonWriter. See Traject::Indexer for more info. Command line shortcut `-w`
+* `writer_class_name`: a Traject Writer class, used by indexer to send processed dictionaries off. Default Traject::SolrJsonWriter, other writers for debugging or writing to files are also available. See Traject::Indexer for more info. Command line shortcut `-w`
