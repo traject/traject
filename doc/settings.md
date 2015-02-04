@@ -74,7 +74,7 @@ settings are applied first of all. It's recommended you use `provide`.
    through Solr's pauses for committing too.
 
 * `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. Default Traject::MarcReader, the pure
-ruby reader. When running under JRuby, the Traject::Marc4JReader (available in the traject_marc4j_reader gem) will sometimes, but not always,
+ruby reader. When running under JRuby, the Traject::Marc4JReader (available in the traject-marc4j_reader gem) will sometimes, but not always,
 give better performance. Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.

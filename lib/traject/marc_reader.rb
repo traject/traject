@@ -6,7 +6,7 @@ require 'traject/ndj_reader'
 #
 # Marc4JReader is an alternative to this class, powered by Marc4J. You may be interested
 # in comparing for performance, under your particular use case. To use it, you'll need
-# the gem traject_marc4j_reader.
+# the gem traject-marc4j_reader.
 #
 # By default assumes binary MARC encoding, please set marc_source.type setting
 # for XML or json. If binary, please set marc_source.encoding with char encoding. 

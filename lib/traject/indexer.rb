@@ -54,7 +54,7 @@ require 'traject/macros/basic'
 #
 #  The default reader is the Traject::MarcReader, who's behavior is
 #  further customized by several settings in the Settings hash. Jruby users
-#  with specialized needs may want to look at the gem traject_marc4j_reader.
+#  with specialized needs may want to look at the gem traject-marc4j_reader.
 #
 #  Alternate readers can be set directly with the #reader_class= method, or
 #  with the "reader_class_name" Setting, a String name of a class
