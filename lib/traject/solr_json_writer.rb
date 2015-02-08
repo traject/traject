@@ -169,7 +169,7 @@ class Traject::SolrJsonWriter
   # Returns MARC 001, then a slash, then output_hash["id"] -- if both
   # are present. Otherwise may return just one, or even an empty string. 
   def record_id_from_context(context)
-    marc_id = context.source_record && context.source_record['001'] && package.context.source_record['001'].value
+    marc_id = context.source_record && context.source_record['001'] && context.source_record['001'].value
     output_id = context.output_hash["id"]
 
     return [marc_id, output_id].compact.join("/")
