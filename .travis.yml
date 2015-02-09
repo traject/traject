@@ -18,5 +18,7 @@ matrix:
       jdk: openjdk7
     - rvm: jruby-head
       jdk: openjdk6
+  allow_failures:
+    - rvm: jruby-head
 
 bundler_args: --without debug
