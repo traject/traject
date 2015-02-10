@@ -28,6 +28,18 @@ Gem::Specification.new do |spec|
   spec.add_dependency "yell"                        # logging
   spec.add_dependency "dot-properties", ">= 0.1.1"  # reading java style .properties
   spec.add_dependency "httpclient", "~> 2.5"
+  
+  # If we're building the package under JRuby, add in the 
+  # jruby-only gems and specify the platform.
+  
+  if defined? JRUBY_VERSION
+    spec.platform = 'java'
+    spec.add_dependency "traject-marc4j_reader", "~>1"
+    spec.add_dependency "traject-solrj_writer",  "~>1"
+  else
+    spec.platform = "ruby"
+  end
+  
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"

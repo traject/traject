@@ -12,6 +12,11 @@ require 'traject/solr_json_writer'
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
 
+if defined? JRUBY_VERSION
+  require 'traject/solrj_writer'
+  require 'traject/marc4j_reader'
+end
+
 # This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output
 # hash off somewhere (usually Solr) with a Writer class.
