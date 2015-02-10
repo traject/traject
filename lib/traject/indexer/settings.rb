@@ -57,10 +57,18 @@ class Traject::Indexer
     def fill_in_defaults!
       self.reverse_merge!(self.class.defaults)
     end
-
+    
+    def self.default_reader
+      if defined? JRUBY_VERSION
+        "Traject::Marc4JReader"
+      else 
+        "Traject::MarcReader"
+      end
+    end
+    
     def self.defaults
       @@defaults ||= {
-      "reader_class_name"         => "Traject::MarcReader",
+      "reader_class_name"         => self.default_reader,
       "writer_class_name"         => "Traject::SolrJsonWriter",
       "marc_source.type"          => "binary",            
       "solrj_writer.batch_size"   => 200,

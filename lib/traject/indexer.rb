@@ -13,7 +13,6 @@ require 'traject/macros/marc21'
 require 'traject/macros/basic'
 
 if defined? JRUBY_VERSION
-  require 'traject/solrj_writer'
   require 'traject/marc4j_reader'
 end
 
