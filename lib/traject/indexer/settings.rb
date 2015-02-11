@@ -1,4 +1,5 @@
 require 'hashie'
+require 'concurrent'
 
 class Traject::Indexer
 
@@ -21,9 +22,6 @@ class Traject::Indexer
   class Settings < Hash
     include Hashie::Extensions::MergeInitializer # can init with hash
     include Hashie::Extensions::IndifferentAccess
-
-    # Hashie bug Issue #100 https://github.com/intridea/hashie/pull/100
-    alias_method :store, :indifferent_writer
 
     def initialize(*args)
       super
@@ -59,18 +57,36 @@ class Traject::Indexer
     def fill_in_defaults!
       self.reverse_merge!(self.class.defaults)
     end
-
-    def self.defaults
-      @@defaults ||= {
-      "reader_class_name"         => "Traject::MarcReader",
-      "writer_class_name"         => "Traject::SolrJWriter",
-      "marc_source.type"          => "binary",            
-      "marc4j_reader.permissive"  => true,
-      "solrj_writer.batch_size"   => 200,
-      "solrj_writer.thread_pool"  => 1,
-      "processing_thread_pool"    => 3,
-      "log.batch_size.severity"   => "info"
+    
+    
+    def self.mri_defaults
+      {
+        "reader_class_name"         => "Traject::MarcReader",
+        "writer_class_name"         => "Traject::SolrJsonWriter",
+        "marc_source.type"          => "binary",            
+        "solrj_writer.batch_size"   => 200,
+        "solrj_writer.thread_pool"  => 1,
+        "processing_thread_pool"    => self.default_processing_thread_pool,
+        "log.batch_size.severity"   => "info"
       }
+    end
+
+    def self.jruby_defaults
+      {
+        'reader_class_name' => "Traject::Marc4JReader",
+        'marc4j_reader.permissive' => true
+      }
+    end
+    
+        
+    def self.defaults
+      return @@defaults if defined? @@defaults
+      default_settings = self.mri_defaults
+      if defined? JRUBY_VERSION
+        default_settings.merge! self.jruby_defaults
+      end
+      
+      @@defaults = default_settings
     end
 
     def inspect
@@ -80,5 +96,15 @@ class Traject::Indexer
         hash
       end.inspect
     end
+
+    protected
+    def self.default_processing_thread_pool
+      if ["jruby", "rbx"].include? ENV["RUBY_ENGINE"]
+        [1, Concurrent.processor_count - 1].max
+      else
+        1
+      end
+    end
+
   end
 end

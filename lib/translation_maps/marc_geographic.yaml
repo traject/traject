@@ -1,5 +1,5 @@
 # Translation map for marc geographic codes constructed by `rake load_maps:marc_geographic` task
-# Scraped from http://www.loc.gov/marc/geoareas/gacs_code.html at 2013-07-31 12:05:20 -0400
+# Scraped from http://www.loc.gov/marc/geoareas/gacs_code.html at 2015-01-27 23:00:08 -0500
 # Intentionally includes discontinued codes.
 
 'a': 'Asia'
@@ -327,7 +327,7 @@
 'lnaz': 'Azores'
 'lnbm': 'Bermuda Islands'
 'lnca': 'Canary Islands'
-'lncv': 'Cape Verde'
+'lncv': 'Cabo Verde'
 'lnfa': 'Faroe Islands'
 'lnjn': 'Jan Mayen Island'
 'lnma': 'Madeira Islands'
