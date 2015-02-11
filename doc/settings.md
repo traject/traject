@@ -72,10 +72,10 @@ settings are applied first of all. It's recommended you use `provide`.
    Probably no reason for it ever to be more than number of cores on indexing machine.
 
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records. 
-   Default Traject::MarcReader, the pure ruby reader. When running under JRuby, the 
-   Traject::Marc4JReader (available in the traject-marc4j_reader gem) provides
-   better performance. Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source
+    of records.   Defaults to Traject::Marc4JReader (using the Java Marc4J
+    library) on JRuby; Traject::MarcReader (using the ruby marc gem) otherwise. 
+    Command-line shortcut `-r`
 
 * `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
 

@@ -91,11 +91,9 @@ settings do
   # various others...
   provide "solr_writer.commit_on_close", "true"
 
-  # The default reader is Traject::MarcReader, and the default writer
-  # is the Traject::SolrJsonWriter. A MARC reader based on the java
-  # marc4j library is available but no longer packaged with traject; see
-  # https://github.com/traject-project/traject-marc4j_reader if
-  # you want to use it. It generally provides improved performance under Jruby. 
+  # The default writer is the Traject::SolrJsonWriter. The default
+  # reader is Marc4JReader (using Java Marc4J library) on Jruby,
+  # MarcReader (using ruby-marc) otherwise.
 end
 ~~~
 
@@ -420,10 +418,8 @@ Own Code](./doc/extending.md)
   * [traject_horizon](https://github.com/jrochkind/traject_horizon): Export MARC records directly from a Horizon ILS rdbms, as serialized MARC or to  index into Solr.
   * [traject_umich_format](https://github.com/billdueber/traject_umich_format/): opinionated code and associated macros to extract format (book, audio file, etc.) and types (bibliography, conference report, etc.) from a MARC record. Code mirrors that used by the University of Michigan, and is an alternate approach to that taken by the `marc_formats` macro in `Traject::Macros::MarcFormatClassifier`.
   * [traject-solrj_writer](https://github.com/traject-project/traject-solrj_writer): a jruby-only writer that uses the solrj .jar to talk directly to solr. Your only option for speaking to a solr version < 3.2, which is when the json handler was added to solr.
-  * [traject_marc4j_reader](https://github.com/billdueber/traject_marc4j_reader): A JRuby-only reader for
-  reading marc records using the Marc4J library. We don't know of any good reason to use it
-  instead of the default MarcReader, but it is available for historical purposes, and you
-  can try it to see if you get any performance advantage. 
+  * [traject_marc4j_reader](https://github.com/billdueber/traject_marc4j_reader): Packaged with traject automatically on jruby. A JRuby-only reader for
+  reading marc records using the Marc4J library, fastest MARC reading on JRuby. 
 
 # Development
 
