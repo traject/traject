@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
   
   if defined? JRUBY_VERSION
     spec.platform = 'java'
-    spec.add_dependency "traject-marc4j_reader", "~>1"
+    spec.add_dependency "traject-marc4j_reader", "~> 1.0"
   else
     spec.platform = "ruby"
   end
