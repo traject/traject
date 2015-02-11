@@ -19,8 +19,8 @@ matrix:
       jdk: openjdk7
     - rvm: jruby-head
       jdk: openjdk6
-	- rvm: 2.2
-	  jdk: openjdk6
+    - rvm: 2.2
+      jdk: openjdk6
   allow_failures:
     - rvm: jruby-head
 
