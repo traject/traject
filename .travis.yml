@@ -2,22 +2,25 @@ language: ruby
 rvm:
   - jruby-19mode
   - jruby-head
-  - 1.9.3
-  - 2.1.1
+  - 1.9
+  - 2.1
+  - 2.2
   - rbx-2
 jdk:
   - openjdk7
   - openjdk6
 matrix:
   exclude:
-    - rvm: 1.9.3
+    - rvm: 1.9
       jdk: openjdk7
-    - rvm: 2.1.1
+    - rvm: 2.1
       jdk: openjdk7
     - rvm: rbx-2
       jdk: openjdk7
     - rvm: jruby-head
       jdk: openjdk6
+	- rvm: 2.2
+	  jdk: openjdk6
   allow_failures:
     - rvm: jruby-head
 
