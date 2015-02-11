@@ -330,7 +330,7 @@ class Traject::Indexer
     end
     thread_pool = Traject::ThreadPool.new(processing_threads)
 
-    logger.info "   Indexer with reader: #{reader.class.name} and writer: #{writer.class.name}"
+    logger.info "   Indexer with #{processing_threads} processing threads, reader: #{reader.class.name} and writer: #{writer.class.name}"
 
     log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
 
