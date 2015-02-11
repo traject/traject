@@ -324,10 +324,6 @@ class Traject::Indexer
 
 
     processing_threads = settings["processing_thread_pool"].to_i
-    if processing_threads > 0 and !(defined? JRuby)
-      processing_threads = 0
-      logger.warn "Processing threads set to 0 because we're not running under JRuby"
-    end
     thread_pool = Traject::ThreadPool.new(processing_threads)
 
     logger.info "   Indexer with #{processing_threads} processing threads, reader: #{reader.class.name} and writer: #{writer.class.name}"
