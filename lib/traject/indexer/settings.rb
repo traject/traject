@@ -57,17 +57,36 @@ class Traject::Indexer
     def fill_in_defaults!
       self.reverse_merge!(self.class.defaults)
     end
-
-    def self.defaults
-      @@defaults ||= {
-      "reader_class_name"         => "Traject::MarcReader",
-      "writer_class_name"         => "Traject::SolrJsonWriter",
-      "marc_source.type"          => "binary",            
-      "solrj_writer.batch_size"   => 200,
-      "solrj_writer.thread_pool"  => 1,
-      "processing_thread_pool"    => self.default_processing_thread_pool,
-      "log.batch_size.severity"   => "info"
+    
+    
+    def self.mri_defaults
+      {
+        "reader_class_name"         => "Traject::MarcReader",
+        "writer_class_name"         => "Traject::SolrJsonWriter",
+        "marc_source.type"          => "binary",            
+        "solrj_writer.batch_size"   => 200,
+        "solrj_writer.thread_pool"  => 1,
+        "processing_thread_pool"    => self.default_processing_thread_pool,
+        "log.batch_size.severity"   => "info"
       }
+    end
+
+    def self.jruby_defaults
+      {
+        'reader_class_name' => "Traject::Marc4JReader",
+        'marc4j_reader.permissive' => true
+      }
+    end
+    
+        
+    def self.defaults
+      return @@defaults if defined? @@defaults
+      default_settings = self.mri_defaults
+      if defined? JRUBY_VERSION
+        default_settings.merge! self.jruby_defaults
+      end
+      
+      @@defaults = default_settings
     end
 
     def inspect

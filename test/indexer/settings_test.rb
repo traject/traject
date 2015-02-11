@@ -124,5 +124,29 @@ describe "Traject::Indexer#settings" do
       assert_equal( {"a" => "a", "password" => "[hidden]", "some_password" => "[hidden]", "some.password" => "[hidden]"}, parsed)
     end
   end
+  
+  describe "JRuby / MRI" do
+    before do
+      @indexer = Traject::Indexer.new
+    end
+    
+    it "has the right indexer name" do
+      if defined? JRUBY_VERSION
+        assert_equal "Traject::Marc4JReader", @indexer.settings['reader_class_name']
+      else
+        assert_equal "Traject::MarcReader", @indexer.settings['reader_class_name']
+      end
+    end
+    
+    # This next one has the added effect of making sure the correct class
+    # has actually been loaded -- otherwise the constant wouldn't be available
+    it "has the correct default indexer class based on platform" do
+      if defined? JRUBY_VERSION
+        assert_equal Traject::Marc4JReader, @indexer.reader_class
+      else
+        assert_equal Traject::MarcReader, @indexer.reader_class
+      end
+    end
+  end
 
 end
