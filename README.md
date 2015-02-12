@@ -426,11 +426,6 @@ Run tests with `rake test` or just `rake`.  Tests are written using Minitest (pl
 list the tests -- but generally prefer unit-style "assert_*" methods
 to make actual assertions, for clarity.
 
-Some tests need to run against a solr instance. Currently no solr
-instance is baked in.  You can provide your own solr instance to test against and set shell ENV variable
-"solr_url", and the tests will use it. Otherwise, tests will
-use a mocked up Solr instance.
-
 To make a pull request, please make a feature branch *created from the master branch*, not from an existing feature branch. (If you need to do a feature branch dependent on an existing not-yet merged feature branch... discuss
 this with other developers first!)
 
