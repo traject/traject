@@ -31,11 +31,10 @@ that can combine to deal with any of your local needs.
 
 ## Installation
 
-Traject runs under MRI ruby (1.9 through 2.2), jruby 1.7.x, or rubinius. 
+Traject runs under jruby 1.7.x, MRI ruby (1.9 through 2.2), or probably any ruby platform.  
 
-For high-volume indexing in production, traject performs **much** better when run with **JRuby** (ruby on the JVM). 
-Standard MRI ruby can't use multiple CPU cores at once, but on JRuby traject can use
-multiple cores for much better performance. 
+**Traject runs much faster on JRuby** where it can use multi-core parallelism, and the Java
+Marc4J marc reader. If performance is a concern, you should run traject on JRuby. 
 
 Some options for installing a ruby other than your system-provided one are [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme).
 
