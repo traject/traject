@@ -31,7 +31,7 @@ that can combine to deal with any of your local needs.
 
 ## Installation
 
-Traject runs under jruby 1.7.x, MRI ruby (1.9 through 2.2), or probably any ruby platform.  
+Traject runs under jruby (1.7.x or higher), MRI ruby (1.9.3 or higher), or probably any other ruby platform.
 
 **Traject runs much faster on JRuby** where it can use multi-core parallelism, and the Java
 Marc4J marc reader. If performance is a concern, you should run traject on JRuby. 
@@ -149,7 +149,7 @@ to matched specifications, but you can turn that off, or extract *only* correspo
     to_field "title_vernacular", extract_marc("245abc", :alternate_script => :only)
 ~~~
 
-By default, specifications with multiple subfields (like "240abc") will produce one single string of output for each matching field. Specifications with single subfields (like "020a") will split subfields and produce an output string for each matching subfield.
+By default, specifications with multiple subfields (like "240abc") will produce one single string of output per field (for each '240'), with the concatenation of each matched subfield. Specifications with single subfields (like "020a") will split subfields and produce an output string for each matching subfield.
 
 For the syntax and complete possibilities of the specification
 string argument to extract_marc, see docs at the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/MarcExtractor)).
