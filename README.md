@@ -436,6 +436,9 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
 online api docs has a `--markup markdown` specified -- inline class/method docs are in markdown, not rdoc.
 
 Bundler rake tasks included for gem releases: `rake release`
+* Every traject release needs to be done once when running MRI, and switch to JRuby
+and do the same release again. The JRuby release is identical but for including
+a gemspec dependency on the Marc4JReader gem. 
 
 ## TODO
 
