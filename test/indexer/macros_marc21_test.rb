@@ -4,7 +4,7 @@ require 'traject/indexer'
 require 'traject/macros/marc21'
 
 require 'json'
-require 'marc/record'
+require 'marc'
 
 # See also marc_extractor_test.rb for more detailed tests on marc extraction,
 # this is just a basic test to make sure our macro works passing through to there
@@ -127,7 +127,8 @@ describe "Traject::Macros::Marc21" do
 
       assert_length 1, output["marc_record"]
       assert_kind_of String, output["marc_record"].first
-      assert output["marc_record"].first.start_with?("<record xmlns='http://www.loc.gov/MARC21/slim'>"), "looks like serialized MarcXML"
+      roundtrip_record = MARC::XMLReader.new(StringIO.new(output["marc_record"].first)).first
+      assert_equal @record, roundtrip_record
     end
 
     it "serializes binary UUEncoded" do

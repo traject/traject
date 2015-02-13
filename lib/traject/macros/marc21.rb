@@ -3,6 +3,7 @@ require 'traject/translation_map'
 require 'traject/util'
 require 'base64'
 require 'json'
+require 'marc/fastxmlwriter'
 
 module Traject::Macros
   # Some of these may be generic for any MARC, but we haven't done
@@ -140,9 +141,7 @@ module Traject::Macros
           binary = Base64.encode64(binary) if binary_escape
           accumulator << binary
         when "xml"
-          # ruby-marc #to_xml returns a REXML object at time of this writing, bah!@
-          # call #to_s on it. Hopefully that'll be forward compatible.
-          accumulator << record.to_xml.to_s
+          accumulator << MARC::FastXMLWriter.encode(record)
         when "json"
           accumulator << JSON.dump(record.to_hash)
         end

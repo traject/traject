@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "yell"                        # logging
   spec.add_dependency "dot-properties", ">= 0.1.1"  # reading java style .properties
   spec.add_dependency "httpclient", "~> 2.5"
+  spec.add_dependency 'marc-fastxmlwriter', '~>1.0' # fast marc->xml
   
   # If we're building the package under JRuby, add in the 
   # jruby-only gems and specify the platform.
