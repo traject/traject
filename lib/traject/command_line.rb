@@ -55,7 +55,7 @@ module Traject
       # with logging config.
       #####
 
-      indexer.logger.info("traject (#{Traject::Version}) executing with: `#{orig_argv.join(' ')}`")
+      indexer.logger.info("traject (#{Traject::VERSION}) executing with: `#{orig_argv.join(' ')}`")
 
       # Okay, actual command process! All command_ methods should return true
       # on success, or false on failure.
