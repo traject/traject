@@ -343,7 +343,7 @@ module Traject::Macros
         # the FIRST date then, the earliest. That's just what we're doing.
         if found_date.nil? && date_type != 'n' && date_type != 'q'
           # in date_type 'r', second date is original publication date, use that I think?
-          date_str = (date_type == 'r' && date2_str.to_i != 0) ? date2_str : date1_str
+          date_str = ((date_type == 'r' || date_type == 'p') && date2_str.to_i != 0) ? date2_str : date1_str
           # Deal with stupid 'u's, which end up meaning a range too,
           # find midpoint and make sure our tolerance is okay.
           ucount = 0
