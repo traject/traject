@@ -161,7 +161,7 @@ class Traject::Indexer
   # to be called for each record, and generate values for a particular
   # output field.
   def to_field(field_name, aLambda = nil, &block)
-    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
+    @index_steps << ToFieldStep.new(field_name.freeze, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
   end
 
   # Part of DSL, register logic to be called for each record
@@ -568,15 +568,19 @@ class Traject::Indexer
 
     def execute(context)
       accumulator = []
-      [@lambda, @block].each do |aProc|
-        next unless aProc
-
-        if aProc.arity == 2
-          aProc.call(context.source_record, accumulator)
+      if @lambda
+        if @lambda.arity == 2
+          @lambda.call(context.source_record, accumulator)
         else
-          aProc.call(context.source_record, accumulator, context)
+          @lambda.call(context.source_record, accumulator, context)
         end
-
+      end
+      if @block
+        if @block.arity == 2
+          @block.call(context.source_record, accumulator)
+        else
+          @block.call(context.source_record, accumulator, context)
+        end
       end
       return accumulator
     end
