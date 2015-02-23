@@ -10,6 +10,12 @@ module Traject::Macros
   # the analytical work to think it through, some of this is
   # def specific to Marc21.
   module Marc21
+    # constant values
+    TRAIL_COMMA = / *[ ,\/;:] *\Z/
+    TRAIL_PERIOD = /( *\w\w\w)\. *\Z/
+    ORPHAN_BRACKETS = /\A\[?([^\[\]]+)\]?\Z/
+    EMPTY = ''.freeze
+    GROUP1 = '\1'.freeze
 
     # A combo function macro that will extract data from marc according to a string
     # field/substring specification, then apply various optional post-processing to it too.
@@ -198,19 +204,18 @@ module Traject::Macros
     #
     # Returns altered string, doesn't change original arg.
     def self.trim_punctuation(str)
-      
       # If something went wrong and we got a nil, just return it
       return str unless str
       
       # trailing: comma, slash, semicolon, colon (possibly preceded and followed by whitespace)
-      str = str.sub(/ *[ ,\/;:] *\Z/, '')
+      str = str.sub(TRAIL_COMMA, EMPTY)
 
       # trailing period if it is preceded by at least three letters (possibly preceded and followed by whitespace)
-      str = str.sub(/( *\w\w\w)\. *\Z/, '\1')
+      str.sub!(TRAIL_PERIOD, GROUP1)
 
       # single square bracket characters if they are the start and/or end
       #   chars and there are no internal square brackets.
-      str = str.sub(/\A\[?([^\[\]]+)\]?\Z/, '\1')
+      str.sub!(ORPHAN_BRACKETS, GROUP1)
       return str
     end
 
