@@ -537,11 +537,14 @@ class Traject::Indexer
   # field.
   class ToFieldStep
     attr_accessor :field_name, :lambda, :block, :source_location
+
     def initialize(fieldname, lambda, block, source_location)
       self.field_name = fieldname
       self.lambda = lambda
       self.block = block
       self.source_location = source_location
+      @lambda_arity_is_two = (lambda and lambda.arity == 2)
+      @block_arity_is_two =  (block  and  block.arity == 2)
 
       validate!
     end
@@ -568,16 +571,22 @@ class Traject::Indexer
 
     def execute(context)
       accumulator = []
-      [@lambda, @block].each do |aProc|
-        next unless aProc
-
-        if aProc.arity == 2
-          aProc.call(context.source_record, accumulator)
+      if @lambda
+        if @lambda_arity_is_two
+          @lambda.call(context.source_record, accumulator)
         else
-          aProc.call(context.source_record, accumulator, context)
+          @lambda.call(context.source_record, accumulator, context)
         end
-
       end
+
+      if @block
+        if @block_arity_is_two
+          @block.call(context.source_record, accumulator)
+        else
+          @block.call(context.source_record, accumulator, context)
+        end
+      end
+
       return accumulator
     end
 
