@@ -282,7 +282,7 @@ class Traject::Indexer
     begin
       yield
     rescue Exception => e
-      msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
+      msg =  "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
       msg += "    while executing #{index_step.inspect}\n"
       msg += Traject::Util.exception_to_log_message(e)
 
@@ -297,11 +297,6 @@ class Traject::Indexer
     end
   end
 
-  # get a printable id from record for error logging.
-  # Maybe override this for a future XML version.
-  def id_string(record)
-    record && record['001'] && record['001'].value.to_s
-  end
 
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
@@ -343,20 +338,24 @@ class Traject::Indexer
         $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
       end
 
+      context = Context.new(
+        :source_record => record,
+        :settings => settings,
+        :position => position,
+        :logger => logger
+      )
+
       if log_batch_size && (count % log_batch_size == 0)
         batch_rps = log_batch_size / (Time.now - batch_start_time)
         overall_rps = count / (Time.now - start_time)
-        logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
+        logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{context.source_record_id}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
         batch_start_time = Time.now
       end
 
-      # we have to use this weird lambda to properly "capture" the count, instead
-      # of having it be bound to the original variable in a non-threadsafe way.
-      # This is confusing, I might not be understanding things properly, but that's where i am.
-      #thread_pool.maybe_in_thread_pool &make_lambda(count, record, writer)
-      thread_pool.maybe_in_thread_pool(record, settings, position) do |record, settings, position|
-        context = Context.new(:source_record => record, :settings => settings, :position => position)
-        context.logger = logger
+      # We pass context in a block arg to properly 'capture' it, so
+      # we don't accidentally share the local var under closure between
+      # threads.
+      thread_pool.maybe_in_thread_pool(context) do |context|
         map_to_context!(context)
         if context.skip?
           log_skip(context)
@@ -465,6 +464,26 @@ class Traject::Indexer
     # Should we skip this record?
     def skip?
       @skip
+    end
+
+    # Useful for describing a record in a log or especially
+    # error message. May be useful to combine with #position
+    # in output messages, especially since this method may sometimes
+    # return empty string if info on record id is not available.
+    #
+    # Returns MARC 001, then a slash, then output_hash["id"] -- if both
+    # are present. Otherwise may return just one, or even an empty string.
+    #
+    # Likely override this for a future XML or other source format version.
+    def source_record_id
+      marc_id = if self.source_record &&
+                   self.source_record.kind_of?(MARC::Record) &&
+                   self.source_record['001']
+        self.source_record['001'].value
+      end
+      output_id = self.output_hash["id"]
+
+      return [marc_id, output_id].compact.join("/")
     end
 
   end
