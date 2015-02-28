@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Jonathan Rochkind", "Bill Dueber"]
   spec.email         = ["none@nowhere.org"]
   spec.summary       = %q{Index MARC to Solr; or generally process source records to hash-like structures}
-  spec.homepage      = "http://github.com/traject-project/traject"
+  spec.homepage      = "http://github.com/traject/traject"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)

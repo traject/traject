@@ -11,7 +11,7 @@ for debugging by a human.
 **Traject is stable, mature software, that is already being used in production by its authors.**
 
 [![Gem Version](https://badge.fury.io/rb/traject.png)](http://badge.fury.io/rb/traject)
-[![Build Status](https://travis-ci.org/traject-project/traject.png)](https://travis-ci.org/traject-project/traject)
+[![Build Status](https://travis-ci.org/traject/traject.png)](https://travis-ci.org/traject/traject)
 
 
 ## Background/Goals
@@ -324,7 +324,7 @@ Several other writers are also built-in:
 You set which writer is being used in settings (`provide "writer_class_name", "Traject::DebugWriter"`),
 or with the shortcut command line argument  `-w Traject::DebugWriter`.
 
-The [SolrJWriter](https://github.com/traject-project/traject-solrj_writer) is packaged separately,
+The [SolrJWriter](https://github.com/traject/traject-solrj_writer) is packaged separately,
 and will be useful if you need to index to Solr's older than version 3.2. It requires Jruby.  
 
 You can easily write your own Readers and Writers if you'd like, see comments at top
@@ -413,11 +413,11 @@ Own Code](./doc/extending.md)
 * [Other traject commands](./doc/other_commands.md) including `marcout`, and `commit`
 * [Hints for batch and cronjob use](./doc/batch_execution.md) of  traject.
 * Plugin extensions: Gems that add functionality to traject
-  * [traject_alephsequential_reader](https://github.com/traject-project/traject_alephsequential_reader/): read MARC files serialized in the AlephSequential format, as output by Ex Libris's Alpeh ILS.
+  * [traject_alephsequential_reader](https://github.com/traject/traject_alephsequential_reader/): read MARC files serialized in the AlephSequential format, as output by Ex Libris's Alpeh ILS.
   * [traject_horizon](https://github.com/jrochkind/traject_horizon): Export MARC records directly from a Horizon ILS rdbms, as serialized MARC or to  index into Solr.
   * [traject_umich_format](https://github.com/billdueber/traject_umich_format/): opinionated code and associated macros to extract format (book, audio file, etc.) and types (bibliography, conference report, etc.) from a MARC record. Code mirrors that used by the University of Michigan, and is an alternate approach to that taken by the `marc_formats` macro in `Traject::Macros::MarcFormatClassifier`.
-  * [traject-solrj_writer](https://github.com/traject-project/traject-solrj_writer): a jruby-only writer that uses the solrj .jar to talk directly to solr. Your only option for speaking to a solr version < 3.2, which is when the json handler was added to solr.
-  * [traject_marc4j_reader](https://github.com/billdueber/traject_marc4j_reader): Packaged with traject automatically on jruby. A JRuby-only reader for
+  * [traject-solrj_writer](https://github.com/traject/traject-solrj_writer): a jruby-only writer that uses the solrj .jar to talk directly to solr. Your only option for speaking to a solr version < 3.2, which is when the json handler was added to solr.
+  * [traject_marc4j_reader](https://github.com/traject/traject-marc4j_reader): Packaged with traject automatically on jruby. A JRuby-only reader for
   reading marc records using the Marc4J library, fastest MARC reading on JRuby. 
 
 # Development
