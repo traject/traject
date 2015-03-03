@@ -94,17 +94,14 @@ end
 # on disk is that these config files could also be used with the standard
 # traject command line.
 #
-#      File.open(path_to_config) do |file|
-#        indexer.instance_eval(file_read.read, path_to_config)
-#      end
+#      indexer.load_config_file(path_to_config)
 #
-# That second argument repeating path_to_config ensures that stack traces
-# from config files will properly include config file locations.
-# The instance_eval may raise virtually any exception that is raised when
-# evaluating the config file. It might be wise to rescue both StandardError and
-# SyntaxError exception superclasses, to catch problems evaluating the config file.
+# This may raise if the file is not readable. Or if the config file
+# can't be evaluated, it will raise a Traject::Indexer::ConfigLoadError
+# with a bunch of contextual information useful to reporting to developer. 
 #
-# You can also instead, or in addition, write configuration inline:
+# You can also instead, or in addition, write configuration inline using
+# standard ruby `instance_eval`:
 #
 #     indexer.instance_eval do
 #        to_field "something", literal("something")
@@ -187,8 +184,8 @@ class Traject::Indexer
   #
   # Can raise:
   # * Errno::ENOENT or Errno::EACCES if file path is not accessible
-  # * Traject::Indexer::LoadConfigError if exception is raised evaluating
-  #   the config. A LoadConfigError has information in it about original
+  # * Traject::Indexer::ConfigLoadError if exception is raised evaluating
+  #   the config. A ConfigLoadError has information in it about original
   #   exception, and exactly what config file and line number triggered it.  
   def load_config_file(file_path)
     File.open(file_path) do |file|
