@@ -182,6 +182,24 @@ class Traject::Indexer
     @after_processing_steps = []
   end
 
+  # Pass a string file path, or a File object, for
+  # a config file to load into indexer. 
+  #
+  # Can raise:
+  # * Errno::ENOENT or Errno::EACCES if file path is not accessible
+  # * Traject::Indexer::LoadConfigError if exception is raised evaluating
+  #   the config. A LoadConfigError has information in it about original
+  #   exception, and exactly what config file and line number triggered it.  
+  def load_config_file(file_path)
+    File.open(file_path) do |file|
+      begin
+        self.instance_eval(file.read, file_path)
+      rescue ScriptError, StandardError => e
+        raise ConfigLoadError.new(file_path, e)
+      end
+    end
+  end
+
   # Part of the config file DSL, for writing settings values.
   #
   # The Indexer's settings consist of a hash-like Traject::Settings
@@ -669,6 +687,30 @@ class Traject::Indexer
     end
   end
 
+  # Raised by #load_config_file when config file can not
+  # be processed. 
+  #
+  # Original exception raised when processing config file
+  # can be found in #original. Original exception should ordinarily
+  # have a good stack trace, including the file path of the config
+  # file in question. 
+  #
+  # Original config path in #config_file, and line number in config
+  # file that triggered the exception in #config_file_lineno (may be nil)
+  class ConfigLoadError < StandardError
+    # We'd have #cause in ruby 2.1, filled out for us, but we want
+    # to work before then, so we use our own 'original'
+    attr_reader :original, :config_file, :config_file_lineno
+    def initialize(config_file_path, original_exception)
+      @original           = original_exception
+      @config_file        = config_file_path
+      @config_file_lineno = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
+
+      message = "Error processing configuration file #{self.config_file}:#{self.config_file_lineno} : #{original_exception.class}, #{original_exception.message}"
+
+      super(message)
+    end
+  end
 
 
 

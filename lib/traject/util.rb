@@ -26,6 +26,49 @@ module Traject
       str.split(':in `').first
     end
 
+    # Provide a config source file path, and an exception.
+    # 
+    # Returns the line number from the first line in the stack
+    # trace of the exception that matches your file path. 
+    # of the first line in the backtrace matching that file_path.
+    # 
+    # Returns `nil` if no suitable backtrace line can be found. 
+    #
+    # Has special logic to try and grep the info out of a SyntaxError, bah. 
+    def self.backtrace_lineno_for_config(file_path, exception)
+      # For a SyntaxError, we really need to grep it from the
+      # exception message, it really appears to be nowhere else. Ugh. 
+      if exception.kind_of? SyntaxError
+        if exception.message =~ /:(\d+):/
+          return $1.to_i
+        end
+      end
+
+      # Otherwise we try to fish it out of the backtrace, first
+      # line matching the config file path. 
+
+      # exception.backtrace_locations exists in MRI 2.1+, which makes
+      # our task a lot easier. But not yet in JRuby 1.7.x, so we got to
+      # handle the old way of having to parse the strings in backtrace too. 
+      if ( exception.respond_to?(:backtrace_locations) && 
+           exception.backtrace_locations && 
+           exception.backtrace_locations.length > 0 )
+        location = exception.backtrace_locations.find do |bt|
+          bt.path == file_path
+        end
+        return location ? location.lineno : nil
+      else # have to parse string backtrace
+        exception.backtrace.each do |line|
+          if line.start_with?(file_path)
+            return $1.to_i if line =~ /\A.*\:(\d+)\:in/
+            break
+          end
+        end
+        # if we got here, we have nothing
+        return nil
+      end
+    end
+
 
 
     # Ruby stdlib queue lacks a 'drain' function, we write one.
