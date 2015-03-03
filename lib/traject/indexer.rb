@@ -697,15 +697,19 @@ class Traject::Indexer
   #
   # Original config path in #config_file, and line number in config
   # file that triggered the exception in #config_file_lineno (may be nil)
+  #
+  # A filtered backtrace just DOWN from config file (not including trace
+  # from traject loading config file itself) can be found in
+  # #config_file_backtrace
   class ConfigLoadError < StandardError
     # We'd have #cause in ruby 2.1, filled out for us, but we want
     # to work before then, so we use our own 'original'
-    attr_reader :original, :config_file, :config_file_lineno
+    attr_reader :original, :config_file, :config_file_lineno, :config_file_backtrace
     def initialize(config_file_path, original_exception)
-      @original           = original_exception
-      @config_file        = config_file_path
-      @config_file_lineno = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
-
+      @original               = original_exception
+      @config_file            = config_file_path
+      @config_file_lineno     = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
+      @config_file_backtrace  = Traject::Util.backtrace_from_config(config_file_path, original_exception)
       message = "Error processing configuration file #{self.config_file}:#{self.config_file_lineno} : #{original_exception.class}, #{original_exception.message}"
 
       super(message)
