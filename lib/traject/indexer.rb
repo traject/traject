@@ -23,7 +23,7 @@ end
 # Traject config files are `instance_eval`d in an Indexer object, so `self` in
 # a config file is an Indexer, and any Indexer methods can be called.
 #
-# However, certain Indexer methods exist almost entirely for the purpose of
+# However, certain Indexer methods exist mainly for the purpose of
 # being called in config files; these methods are part of the expected
 # Domain-Specific Language ("DSL") for config files, and will ordinarily
 # form the bulk or entirety of config files:
@@ -33,18 +33,6 @@ end
 # * #each_record
 # * #after_procesing
 # * #logger (rarely used in config files, but in some cases to set up custom logging config)
-#
-# If accessing a Traject::Indexer programmatically (instead of via command line with
-# config files), additional methods of note include:
-#
-#     # to process a stream of input records from configured Reader,
-#     # to configured Writer:
-#     indexer.process(io_stream)
-#
-#     # To map a single input record manually to an ouput_hash,
-#     # ignoring Readers and Writers
-#     hash = indexer.map_record(record)
-#
 #
 #  ## Readers and Writers
 #
@@ -92,6 +80,80 @@ end
 #    each line consists of the id, field, and value(s).
 #  * traject/delimited_writer and traject/csv_writer -- write character-delimited files
 #    (default is tab-delimited) or comma-separated-value files.
+#
+# ## Creating and Using an Indexer programmatically
+#
+# Normally the Traject::Indexer is created and used by a Traject::Command object.
+# However, you can also create and use a Traject::Indexer programmatically, for embeddeding
+# in your own ruby software. (Note, you will get best performance under Jruby only)
+#
+#      indexer = Traject::Indexer.new
+#
+# You can load a config file from disk, using standard ruby `instance_eval`.
+# One benefit of loading one or more ordinary traject config files saved separately
+# on disk is that these config files could also be used with the standard
+# traject command line.
+#
+#      File.open(path_to_config) do |file|
+#        indexer.instance_eval(file_read.read, path_to_config)
+#      end
+#
+# That second argument repeating path_to_config ensures that stack traces
+# from config files will properly include config file locations.
+# The instance_eval may raise virtually any exception that is raised when
+# evaluating the config file. It might be wise to rescue both StandardError and
+# SyntaxError exception superclasses, to catch problems evaluating the config file.
+#
+# You can also instead, or in addition, write configuration inline:
+#
+#     indexer.instance_eval do
+#        to_field "something", literal("something")
+#        # etc
+#     end
+#
+# Or even load configuration from an existing lambda/proc object:
+#
+#     config = proc do
+#       to_field "something", literal("something")
+#     end
+#     indexer.instance_eval &config
+#
+# It is least confusing to provide settings after you load
+# config files, so you can determine if your settings should
+# be defaults (taking effect only if not provided in earlier config),
+# or should force themselves, potentially overwriting earlier config:
+#
+#      indexer.settings do
+#         # default, won't overwrite if already set by earlier config
+#         provide "solr.url", "http://example.org/solr"
+#         provide "reader", "Traject::MarcReader"
+#
+#         # or force over any previous config
+#         store "solr.url", "http://example.org/solr"
+#      end
+#
+# Once your indexer is set up, you could use it to transform individual
+# input records to output hashes. This method will ignore any readers
+# and writers, and won't use thread pools, it just maps. Under
+# standard MARC setup, `record` should be a `MARC::Record`:
+#
+#      output_hash = indexer.map_record(record)
+#
+# Or you could process an entire stream of input records from the
+# configured reader, to the configured writer, as the traject command line
+# does:
+#
+#      indexer.process(io_stream)
+#      # or, eg:
+#      File.open("path/to/input") do |file|
+#        indexer.process(file)
+#      end
+#
+# At present, you can only call #process _once_ on an indexer,
+# but let us know if that's a problem, we could enhance.
+#
+# Please do let us know if there is some part of this API that is
+# inconveient for you, we'd like to know your use case and improve things.
 #
 class Traject::Indexer
 
