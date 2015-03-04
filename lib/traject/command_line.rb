@@ -176,8 +176,11 @@ module Traject
           self.console.puts "Could not read configuration file '#{conf_path}', exiting..."
           exit 2
         rescue Traject::Indexer::ConfigLoadError => e
+          self.console.puts "\n"
           self.console.puts e.message
           self.console.puts e.config_file_backtrace
+          self.console.puts "\n"
+          self.console.puts "Exiting..."
           exit 3
         end
       end

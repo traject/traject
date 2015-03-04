@@ -687,6 +687,9 @@ class Traject::Indexer
   # Raised by #load_config_file when config file can not
   # be processed. 
   #
+  # The exception #message includes an error message formatted
+  # for good display to the developer, in the console. 
+  #
   # Original exception raised when processing config file
   # can be found in #original. Original exception should ordinarily
   # have a good stack trace, including the file path of the config
@@ -707,7 +710,7 @@ class Traject::Indexer
       @config_file            = config_file_path
       @config_file_lineno     = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
       @config_file_backtrace  = Traject::Util.backtrace_from_config(config_file_path, original_exception)
-      message = "Error processing configuration file #{self.config_file}:#{self.config_file_lineno} : #{original_exception.class}, #{original_exception.message}"
+      message = "Error loading configuration file #{self.config_file}:#{self.config_file_lineno} #{original_exception.class}:#{original_exception.message}"
 
       super(message)
     end
