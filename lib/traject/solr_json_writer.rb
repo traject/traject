@@ -148,7 +148,7 @@ class Traject::SolrJsonWriter
       else
         msg = "Solr error response: #{resp.status}: #{resp.body}"
       end
-      logger.error "Could not add record #{record_id_from_context c} at source file position #{c.position}: #{msg}"
+      logger.error "Could not add record #{c.source_record_id} at source file position #{c.position}: #{msg}"
       logger.debug(c.source_record.to_s)
 
       @skipped_record_incrementer.increment
@@ -165,20 +165,6 @@ class Traject::SolrJsonWriter
   def logger
     settings["logger"] ||= Yell.new(STDERR, :level => "gt.fatal") # null logger
   end
-
-  # Returns MARC 001, then a slash, then output_hash["id"] -- if both
-  # are present. Otherwise may return just one, or even an empty string.
-  def record_id_from_context(context)
-    marc_id = if context.source_record &&
-                 context.source_record.kind_of?(MARC::Record) &&
-                 context.source_record['001']
-      context.source_record['001'].value
-    end
-    output_id = context.output_hash["id"]
-
-    return [marc_id, output_id].compact.join("/")
-  end
-
 
   # On close, we need to (a) raise any exceptions we might have, (b) send off
   # the last (possibly empty) batch, and (c) commit if instructed to do so
