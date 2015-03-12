@@ -94,17 +94,14 @@ end
 # on disk is that these config files could also be used with the standard
 # traject command line.
 #
-#      File.open(path_to_config) do |file|
-#        indexer.instance_eval(file_read.read, path_to_config)
-#      end
+#      indexer.load_config_file(path_to_config)
 #
-# That second argument repeating path_to_config ensures that stack traces
-# from config files will properly include config file locations.
-# The instance_eval may raise virtually any exception that is raised when
-# evaluating the config file. It might be wise to rescue both StandardError and
-# SyntaxError exception superclasses, to catch problems evaluating the config file.
+# This may raise if the file is not readable. Or if the config file
+# can't be evaluated, it will raise a Traject::Indexer::ConfigLoadError
+# with a bunch of contextual information useful to reporting to developer. 
 #
-# You can also instead, or in addition, write configuration inline:
+# You can also instead, or in addition, write configuration inline using
+# standard ruby `instance_eval`:
 #
 #     indexer.instance_eval do
 #        to_field "something", literal("something")
@@ -180,6 +177,24 @@ class Traject::Indexer
     @settings = Settings.new(arg_settings)
     @index_steps = []
     @after_processing_steps = []
+  end
+
+  # Pass a string file path, or a File object, for
+  # a config file to load into indexer. 
+  #
+  # Can raise:
+  # * Errno::ENOENT or Errno::EACCES if file path is not accessible
+  # * Traject::Indexer::ConfigLoadError if exception is raised evaluating
+  #   the config. A ConfigLoadError has information in it about original
+  #   exception, and exactly what config file and line number triggered it.  
+  def load_config_file(file_path)
+    File.open(file_path) do |file|
+      begin
+        self.instance_eval(file.read, file_path)
+      rescue ScriptError, StandardError => e
+        raise ConfigLoadError.new(file_path, e)
+      end
+    end
   end
 
   # Part of the config file DSL, for writing settings values.
@@ -688,6 +703,37 @@ class Traject::Indexer
     end
   end
 
+  # Raised by #load_config_file when config file can not
+  # be processed. 
+  #
+  # The exception #message includes an error message formatted
+  # for good display to the developer, in the console. 
+  #
+  # Original exception raised when processing config file
+  # can be found in #original. Original exception should ordinarily
+  # have a good stack trace, including the file path of the config
+  # file in question. 
+  #
+  # Original config path in #config_file, and line number in config
+  # file that triggered the exception in #config_file_lineno (may be nil)
+  #
+  # A filtered backtrace just DOWN from config file (not including trace
+  # from traject loading config file itself) can be found in
+  # #config_file_backtrace
+  class ConfigLoadError < StandardError
+    # We'd have #cause in ruby 2.1, filled out for us, but we want
+    # to work before then, so we use our own 'original'
+    attr_reader :original, :config_file, :config_file_lineno, :config_file_backtrace
+    def initialize(config_file_path, original_exception)
+      @original               = original_exception
+      @config_file            = config_file_path
+      @config_file_lineno     = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
+      @config_file_backtrace  = Traject::Util.backtrace_from_config(config_file_path, original_exception)
+      message = "Error loading configuration file #{self.config_file}:#{self.config_file_lineno} #{original_exception.class}:#{original_exception.message}"
+
+      super(message)
+    end
+  end
 
 
 
