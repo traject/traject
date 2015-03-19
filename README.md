@@ -454,7 +454,7 @@ a gemspec dependency on the Marc4JReader gem.
     on Settings.
 
 * CommandLine class isn't covered by tests -- it's written using functionality
-from Indexer and other classes taht are well-covered, but the CommandLine itself
+from Indexer and other classes that are well-covered, but the CommandLine itself
 probably needs some tests -- especially covering error handling, which probably
 needs a bit more attention and using exceptions instead of exits, etc.
 
