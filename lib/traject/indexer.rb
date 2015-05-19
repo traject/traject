@@ -377,7 +377,8 @@ class Traject::Indexer
 
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
-  # to configured Writer.
+  # to configured Writer. If a block is provided, the mapped record is also
+  # yielded to that block.
   #
   # returns 'false' as a signal to command line to return non-zero exit code
   # for some reason (reason found in logs, presumably). This particular mechanism
@@ -437,6 +438,7 @@ class Traject::Indexer
         if context.skip?
           log_skip(context)
         else
+          yield context if block_given?
           writer.put context
         end
 
