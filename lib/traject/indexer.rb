@@ -164,6 +164,12 @@ class Traject::Indexer
 
   attr_writer :reader_class, :writer_class
 
+  # People can set the reader and writer "by hand" if they'd like
+  # The reader is just an enumerable (responds to #each) and the writer
+  # must implement #puts(context)
+
+  attr_accessor :reader, :writer
+
   # For now we hard-code these basic macro's included
   # TODO, make these added with extend per-indexer,
   # added by default but easily turned off (or have other
@@ -384,14 +390,19 @@ class Traject::Indexer
   # is open to complexification, starting simple. We do need SOME way to return
   # non-zero to command line.
   #
-  def process(io_stream)
+  def process(io_stream = nil)
     settings.fill_in_defaults!
 
     count      =       0
     start_time = batch_start_time = Time.now
     logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
 
-    reader = self.reader!(io_stream)
+    # Set the reader to:
+    #  * Whatever it was explicitly set to via #reader=
+    #  * The settings["reader"] value
+    #  * A reader created from the reader class and the given io_stream
+    @reader ||=  settings['reader'] || create_reader(io_stream)
+
     writer = self.writer!
 
 
@@ -497,7 +508,7 @@ class Traject::Indexer
 
   # Instantiate a Traject Reader, using class set
   # in #reader_class, initialized with io_stream passed in
-  def reader!(io_stream)
+  def create_reader(io_stream)
     return reader_class.new(io_stream, settings.merge("logger" => logger))
   end
 

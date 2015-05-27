@@ -5,8 +5,12 @@ require 'test_helper'
 memory_writer_class = Class.new do
     def initialize(settings)
       # store them in a class variable so we can test em later
+      # Suppress the "class variable access from top level" warning, too
+      old_verbose = $VERBOSE
+      $VERBOSE = nil
       @@last_writer_settings = @settings = settings
       @settings["memory_writer.added"] = []
+      $VERBOSE = old_verbose
     end
 
     def put(hash)
@@ -25,6 +29,7 @@ describe "Traject::Indexer#process" do
     @indexer.writer_class = memory_writer_class
     @file = File.open(support_file_path "test_data.utf8.mrc")
   end
+
 
   it "works" do
     # oops, this times_called counter isn't thread-safe under multi-threading
@@ -60,6 +65,35 @@ describe "Traject::Indexer#process" do
     assert writer_settings["logger"]
 
     assert writer_settings["memory_writer.closed"]
+  end
+
+  it "allows using an external reader" do
+    @indexer.reader = 1..10
+    @indexer.to_field('count') do |rec, acc, context|
+      acc << rec
+    end
+    return_value = @indexer.process
+    assert return_value, "Returns `true` on success"
+    writer_settings = memory_writer_class.class_variable_get("@@last_writer_settings")
+
+    assert writer_settings["memory_writer.added"]
+    assert_equal 10, writer_settings["memory_writer.added"].length
+
+  end
+
+  it "allows setting an external reader in the settings" do
+    indexer = Traject::Indexer.new("processing_thread_pool" => nil, "reader" => 1..10)
+    indexer.writer_class = memory_writer_class
+    indexer.to_field('count') do |rec, acc, context|
+      acc << rec
+    end
+    return_value = indexer.process
+    assert return_value, "Returns `true` on success"
+    writer_settings = memory_writer_class.class_variable_get("@@last_writer_settings")
+
+    assert writer_settings["memory_writer.added"]
+    assert_equal 10, writer_settings["memory_writer.added"].length
+
   end
 
   require 'traject/null_writer'
