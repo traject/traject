@@ -64,7 +64,7 @@ module Traject
         when "process"
           (io, filename) = get_input_io(self.remaining_argv)
           indexer.settings['command_line.filename'] = filename if filename
-          indexer.process(io)
+          indexer.process
         when "marcout"
            (io, filename) = get_input_io(self.remaining_argv)
           indexer.settings['command_line.filename'] = filename if filename
@@ -124,7 +124,7 @@ module Traject
         raise ArgumentError.new("traject marcout unrecognized marcout.type: #{output_type}")
       end
 
-      reader      = indexer.reader!(io)
+      reader      = indexer.create_reader(io)
 
       reader.each do |record|
         writer.write record
@@ -157,8 +157,10 @@ module Traject
         self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
         exit 1
       elsif argv.length == 0
-        io = File.open(File::NULL, 'r')
-        indexer.logger.info("Warning, no file input given. Use command-line argument '--stdin' to use standard input ")
+        #io = File.open(File::NULL, 'r')
+        #indexer.logger.info("Warning, no file input given. Use command-line argument '--stdin' to use standard input ")
+        io = null
+        indexer.logger.info("Warning, no file input given: assuming reader being set by hand. Use command-line argument '--stdin' to use standard input ")
       else
         io = File.open(argv.first, 'r')
         filename = argv.first
