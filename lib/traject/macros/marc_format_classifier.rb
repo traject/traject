@@ -2,10 +2,10 @@ module Traject
   module Macros
     # To use the marc_format macro, in your configuration file:
     #
-    #     require 'traject/macros/marc_formats
+    #     require 'traject/macros/marc_format_classifier'
     #     extend Traject::Macros::MarcFormats
     #
-    #     to_field("format_s") marc_formats
+    #     to_field "format", marc_formats
     #
     # See also MarcClassifier which can be used directly for a bit more
     # control.
