@@ -162,7 +162,7 @@ class Traject::Indexer
 
   include Traject::QualifiedConstGet
 
-  attr_writer :reader_class, :writer_class
+  attr_writer :reader_class, :writer_class, :writer
 
   # For now we hard-code these basic macro's included
   # TODO, make these added with extend per-indexer,
@@ -180,13 +180,13 @@ class Traject::Indexer
   end
 
   # Pass a string file path, or a File object, for
-  # a config file to load into indexer. 
+  # a config file to load into indexer.
   #
   # Can raise:
   # * Errno::ENOENT or Errno::EACCES if file path is not accessible
   # * Traject::Indexer::ConfigLoadError if exception is raised evaluating
   #   the config. A ConfigLoadError has information in it about original
-  #   exception, and exactly what config file and line number triggered it.  
+  #   exception, and exactly what config file and line number triggered it.
   def load_config_file(file_path)
     File.open(file_path) do |file|
       begin
@@ -392,8 +392,6 @@ class Traject::Indexer
     logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
 
     reader = self.reader!(io_stream)
-    writer = self.writer!
-
 
     processing_threads = settings["processing_thread_pool"].to_i
     thread_pool = Traject::ThreadPool.new(processing_threads)
@@ -503,7 +501,11 @@ class Traject::Indexer
 
   # Instantiate a Traject Writer, suing class set in #writer_class
   def writer!
-    return writer_class.new(settings.merge("logger" => logger))
+    writer_class.new(settings.merge("logger" => logger))
+  end
+
+  def writer
+    @writer ||= writer!
   end
 
   # Represents the context of a specific record being indexed, passed
