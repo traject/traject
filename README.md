@@ -137,7 +137,7 @@ data out of a MARC record according to a tag/subfield specification.
 
     # For MARC Control ('fixed') fields, you can optionally
     # use square brackets to take a byte offset.
-    to_field "langauge_code", extract_marc("008[35-37]")
+    to_field "language_code", extract_marc("008[35-37]")
 ~~~
 
 `extract_marc` by default includes all 'alternate script' linked fields correspoinding
