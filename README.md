@@ -189,7 +189,7 @@ The current record serialized back out as MARC, in binary, XML, or json:
 Text of all fields in a range:
 
 ~~~ruby
-    to_field "text", extract_all_marc_values(:from => 100, :to => 899)
+    to_field "text", extract_all_marc_values(:from => "100", :to => "899")
 ~~~
 
 All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
