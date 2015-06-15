@@ -505,7 +505,7 @@ class Traject::Indexer
   end
 
   def writer
-    @writer ||= writer!
+    @writer ||= settings["writer"] || writer!
   end
 
   # Represents the context of a specific record being indexed, passed
