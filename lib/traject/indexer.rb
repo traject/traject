@@ -487,10 +487,7 @@ class Traject::Indexer
   end
 
   def writer_class
-    unless defined? @writer_class
-      @writer_class = qualified_const_get(settings["writer_class_name"])
-    end
-    return @writer_class
+    writer.class
   end
 
   # Instantiate a Traject Reader, using class set
@@ -501,6 +498,7 @@ class Traject::Indexer
 
   # Instantiate a Traject Writer, suing class set in #writer_class
   def writer!
+    writer_class = @writer_class || qualified_const_get(settings["writer_class_name"])
     writer_class.new(settings.merge("logger" => logger))
   end
 

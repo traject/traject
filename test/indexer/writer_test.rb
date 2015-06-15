@@ -6,6 +6,7 @@ describe "The writer on Traject::Indexer" do
 
   it "has a default" do
     assert_instance_of Traject::SolrJsonWriter, indexer.writer
+    assert_equal Traject::SolrJsonWriter, indexer.writer_class
   end
 
   describe "when the writer is set in config" do    
@@ -19,6 +20,20 @@ describe "The writer on Traject::Indexer" do
 
     it "uses writer from config" do
       assert_equal writer, indexer.writer
+      assert_equal writer.class, indexer.writer_class
+    end
+  end
+
+  describe "when writer_class is set directly" do
+    let(:writer_class) { Traject::YamlWriter }
+
+    before do
+      indexer.writer_class = writer_class
+    end
+
+    it "uses writer_class set directly" do
+      assert_kind_of writer_class, indexer.writer
+      assert_equal writer_class, indexer.writer_class
     end
 
   end
@@ -32,6 +47,7 @@ describe "The writer on Traject::Indexer" do
 
     it "uses the set value" do
       assert_equal writer, indexer.writer
+      assert_equal writer.class, indexer.writer_class
     end
   end
 
