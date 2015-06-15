@@ -98,4 +98,7 @@ settings are applied first of all. It's recommended you use `provide`.
                                     Note that processing_thread_pool threads can end up submitting
                                     to solr too, if solr_json_writer.thread_pool is full.
 
-* `writer_class_name`: a Traject Writer class, used by indexer to send processed dictionaries off. Default Traject::SolrJsonWriter, other writers for debugging or writing to files are also available. See Traject::Indexer for more info. Command line shortcut `-w`
+* `writer`: An object that implements the Traject Writer interface. If set, takes precedence
+            over `writer_class_name`. 
+
+* `writer_class_name`: a Traject Writer class, used by indexer to send processed dictionaries off. Will be used if no explicit `writer` setting or `#writer=` is set. Default Traject::SolrJsonWriter, other writers for debugging or writing to files are also available. See Traject::Indexer for more info. Command line shortcut `-w`
