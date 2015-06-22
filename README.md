@@ -137,7 +137,7 @@ data out of a MARC record according to a tag/subfield specification.
 
     # For MARC Control ('fixed') fields, you can optionally
     # use square brackets to take a byte offset.
-    to_field "langauge_code", extract_marc("008[35-37]")
+    to_field "language_code", extract_marc("008[35-37]")
 ~~~
 
 `extract_marc` by default includes all 'alternate script' linked fields correspoinding
@@ -189,7 +189,7 @@ The current record serialized back out as MARC, in binary, XML, or json:
 Text of all fields in a range:
 
 ~~~ruby
-    to_field "text", extract_all_marc_values(:from => 100, :to => 899)
+    to_field "text", extract_all_marc_values(:from => "100", :to => "899")
 ~~~
 
 All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
@@ -454,7 +454,7 @@ a gemspec dependency on the Marc4JReader gem.
     on Settings.
 
 * CommandLine class isn't covered by tests -- it's written using functionality
-from Indexer and other classes taht are well-covered, but the CommandLine itself
+from Indexer and other classes that are well-covered, but the CommandLine itself
 probably needs some tests -- especially covering error handling, which probably
 needs a bit more attention and using exceptions instead of exits, etc.
 

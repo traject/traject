@@ -94,17 +94,14 @@ end
 # on disk is that these config files could also be used with the standard
 # traject command line.
 #
-#      File.open(path_to_config) do |file|
-#        indexer.instance_eval(file_read.read, path_to_config)
-#      end
+#      indexer.load_config_file(path_to_config)
 #
-# That second argument repeating path_to_config ensures that stack traces
-# from config files will properly include config file locations.
-# The instance_eval may raise virtually any exception that is raised when
-# evaluating the config file. It might be wise to rescue both StandardError and
-# SyntaxError exception superclasses, to catch problems evaluating the config file.
+# This may raise if the file is not readable. Or if the config file
+# can't be evaluated, it will raise a Traject::Indexer::ConfigLoadError
+# with a bunch of contextual information useful to reporting to developer. 
 #
-# You can also instead, or in addition, write configuration inline:
+# You can also instead, or in addition, write configuration inline using
+# standard ruby `instance_eval`:
 #
 #     indexer.instance_eval do
 #        to_field "something", literal("something")
@@ -165,7 +162,7 @@ class Traject::Indexer
 
   include Traject::QualifiedConstGet
 
-  attr_writer :reader_class, :writer_class
+  attr_writer :reader_class, :writer_class, :writer
 
   # For now we hard-code these basic macro's included
   # TODO, make these added with extend per-indexer,
@@ -180,6 +177,24 @@ class Traject::Indexer
     @settings = Settings.new(arg_settings)
     @index_steps = []
     @after_processing_steps = []
+  end
+
+  # Pass a string file path, or a File object, for
+  # a config file to load into indexer.
+  #
+  # Can raise:
+  # * Errno::ENOENT or Errno::EACCES if file path is not accessible
+  # * Traject::Indexer::ConfigLoadError if exception is raised evaluating
+  #   the config. A ConfigLoadError has information in it about original
+  #   exception, and exactly what config file and line number triggered it.
+  def load_config_file(file_path)
+    File.open(file_path) do |file|
+      begin
+        self.instance_eval(file.read, file_path)
+      rescue ScriptError, StandardError => e
+        raise ConfigLoadError.new(file_path, e)
+      end
+    end
   end
 
   # Part of the config file DSL, for writing settings values.
@@ -344,7 +359,7 @@ class Traject::Indexer
     begin
       yield
     rescue Exception => e
-      msg =  "Unexpected error on record id `#{id_string(context.source_record)}` at file position #{context.position}\n"
+      msg =  "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
       msg += "    while executing #{index_step.inspect}\n"
       msg += Traject::Util.exception_to_log_message(e)
 
@@ -359,11 +374,6 @@ class Traject::Indexer
     end
   end
 
-  # get a printable id from record for error logging.
-  # Maybe override this for a future XML version.
-  def id_string(record)
-    record && record['001'] && record['001'].value.to_s
-  end
 
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
@@ -382,8 +392,6 @@ class Traject::Indexer
     logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
 
     reader = self.reader!(io_stream)
-    writer = self.writer!
-
 
     processing_threads = settings["processing_thread_pool"].to_i
     thread_pool = Traject::ThreadPool.new(processing_threads)
@@ -405,20 +413,24 @@ class Traject::Indexer
         $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
       end
 
+      context = Context.new(
+        :source_record => record,
+        :settings => settings,
+        :position => position,
+        :logger => logger
+      )
+
       if log_batch_size && (count % log_batch_size == 0)
         batch_rps = log_batch_size / (Time.now - batch_start_time)
         overall_rps = count / (Time.now - start_time)
-        logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{id_string(record)}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
+        logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{context.source_record_id}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
         batch_start_time = Time.now
       end
 
-      # we have to use this weird lambda to properly "capture" the count, instead
-      # of having it be bound to the original variable in a non-threadsafe way.
-      # This is confusing, I might not be understanding things properly, but that's where i am.
-      #thread_pool.maybe_in_thread_pool &make_lambda(count, record, writer)
-      thread_pool.maybe_in_thread_pool(record, settings, position) do |record, settings, position|
-        context = Context.new(:source_record => record, :settings => settings, :position => position)
-        context.logger = logger
+      # We pass context in a block arg to properly 'capture' it, so
+      # we don't accidentally share the local var under closure between
+      # threads.
+      thread_pool.maybe_in_thread_pool(context) do |context|
         map_to_context!(context)
         if context.skip?
           log_skip(context)
@@ -475,10 +487,7 @@ class Traject::Indexer
   end
 
   def writer_class
-    unless defined? @writer_class
-      @writer_class = qualified_const_get(settings["writer_class_name"])
-    end
-    return @writer_class
+    writer.class
   end
 
   # Instantiate a Traject Reader, using class set
@@ -489,7 +498,12 @@ class Traject::Indexer
 
   # Instantiate a Traject Writer, suing class set in #writer_class
   def writer!
-    return writer_class.new(settings.merge("logger" => logger))
+    writer_class = @writer_class || qualified_const_get(settings["writer_class_name"])
+    writer_class.new(settings.merge("logger" => logger))
+  end
+
+  def writer
+    @writer ||= settings["writer"] || writer!
   end
 
   # Represents the context of a specific record being indexed, passed
@@ -527,6 +541,26 @@ class Traject::Indexer
     # Should we skip this record?
     def skip?
       @skip
+    end
+
+    # Useful for describing a record in a log or especially
+    # error message. May be useful to combine with #position
+    # in output messages, especially since this method may sometimes
+    # return empty string if info on record id is not available.
+    #
+    # Returns MARC 001, then a slash, then output_hash["id"] -- if both
+    # are present. Otherwise may return just one, or even an empty string.
+    #
+    # Likely override this for a future XML or other source format version.
+    def source_record_id
+      marc_id = if self.source_record &&
+                   self.source_record.kind_of?(MARC::Record) &&
+                   self.source_record['001']
+        self.source_record['001'].value
+      end
+      output_id = self.output_hash["id"]
+
+      return [marc_id, output_id].compact.join("/")
     end
 
   end
@@ -669,6 +703,37 @@ class Traject::Indexer
     end
   end
 
+  # Raised by #load_config_file when config file can not
+  # be processed. 
+  #
+  # The exception #message includes an error message formatted
+  # for good display to the developer, in the console. 
+  #
+  # Original exception raised when processing config file
+  # can be found in #original. Original exception should ordinarily
+  # have a good stack trace, including the file path of the config
+  # file in question. 
+  #
+  # Original config path in #config_file, and line number in config
+  # file that triggered the exception in #config_file_lineno (may be nil)
+  #
+  # A filtered backtrace just DOWN from config file (not including trace
+  # from traject loading config file itself) can be found in
+  # #config_file_backtrace
+  class ConfigLoadError < StandardError
+    # We'd have #cause in ruby 2.1, filled out for us, but we want
+    # to work before then, so we use our own 'original'
+    attr_reader :original, :config_file, :config_file_lineno, :config_file_backtrace
+    def initialize(config_file_path, original_exception)
+      @original               = original_exception
+      @config_file            = config_file_path
+      @config_file_lineno     = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
+      @config_file_backtrace  = Traject::Util.backtrace_from_config(config_file_path, original_exception)
+      message = "Error loading configuration file #{self.config_file}:#{self.config_file_lineno} #{original_exception.class}:#{original_exception.message}"
+
+      super(message)
+    end
+  end
 
 
 

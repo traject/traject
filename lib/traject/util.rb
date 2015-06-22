@@ -26,6 +26,81 @@ module Traject
       str.split(':in `').first
     end
 
+    # Provide a config source file path, and an exception.
+    # 
+    # Returns the line number from the first line in the stack
+    # trace of the exception that matches your file path. 
+    # of the first line in the backtrace matching that file_path.
+    # 
+    # Returns `nil` if no suitable backtrace line can be found. 
+    #
+    # Has special logic to try and grep the info out of a SyntaxError, bah. 
+    def self.backtrace_lineno_for_config(file_path, exception)
+      # For a SyntaxError, we really need to grep it from the
+      # exception message, it really appears to be nowhere else. Ugh. 
+      if exception.kind_of? SyntaxError
+        if exception.message =~ /:(\d+):/
+          return $1.to_i
+        end
+      end
+
+      # Otherwise we try to fish it out of the backtrace, first
+      # line matching the config file path. 
+
+      # exception.backtrace_locations exists in MRI 2.1+, which makes
+      # our task a lot easier. But not yet in JRuby 1.7.x, so we got to
+      # handle the old way of having to parse the strings in backtrace too. 
+      if ( exception.respond_to?(:backtrace_locations) && 
+           exception.backtrace_locations && 
+           exception.backtrace_locations.length > 0 )
+        location = exception.backtrace_locations.find do |bt|
+          bt.path == file_path
+        end
+        return location ? location.lineno : nil
+      else # have to parse string backtrace
+        exception.backtrace.each do |line|
+          if line.start_with?(file_path)
+            return $1.to_i if line =~ /\A.*\:(\d+)\:in/
+            break
+          end
+        end
+        # if we got here, we have nothing
+        return nil
+      end
+    end
+
+    # Extract just the part of the backtrace that is "below"
+    # the config file mentioned. If we can't find the config file
+    # in the stack trace, we might return empty array. 
+    #
+    # If the ruby supports Exception#backtrace_locations, the
+    # returned array will actually be of Thread::Backtrace::Location elements. 
+    def self.backtrace_from_config(file_path, exception)
+      filtered_trace = []
+      found = false
+
+      # MRI 2.1+ has exception.backtrace_locations which makes
+      # this a lot easier, but JRuby 1.7.x doesn't yet, so we 
+      # need to do it both ways. 
+      if ( exception.respond_to?(:backtrace_locations) && 
+           exception.backtrace_locations && 
+           exception.backtrace_locations.length > 0 )
+
+        exception.backtrace_locations.each do |location|
+          filtered_trace << location
+          (found=true and break) if location.path == file_path
+        end
+      else
+        filtered_trace = []
+        exception.backtrace.each do |line|
+          filtered_trace << line
+          (found=true and break) if line.start_with?(file_path)
+        end
+      end
+
+      return found ? filtered_trace : []
+    end
+
 
 
     # Ruby stdlib queue lacks a 'drain' function, we write one.
