@@ -144,7 +144,7 @@ class Traject::SolrJsonWriter
 
     if exception || resp.status != 200
       if exception
-        msg = Traject::Util.exception_to_log_message(e)
+        msg = Traject::Util.exception_to_log_message(exception)
       else
         msg = "Solr error response: #{resp.status}: #{resp.body}"
       end
