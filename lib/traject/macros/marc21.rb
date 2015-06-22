@@ -39,6 +39,9 @@ module Traject::Macros
     #     to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
     #     to_field("id"),    extract_marc("001", :first => true)
     #     to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
+    #
+    # If you'd like extract_marc functionality but you're not creating an indexer
+    # step, see Traject::Macros::Marc21.extract_marc_from module method. 
     def extract_marc(spec, options = {})
 
       # Raise an error if there are any invalid options, indicating a
@@ -69,6 +72,26 @@ module Traject::Macros
         accumulator.concat extractor.extract(record)
         Marc21.apply_extraction_options(accumulator, options, translation_map)
       end
+    end
+    module_function :extract_marc
+
+    # Convenience method when you want extract_marc behavior, but NOT
+    # to create a lambda for an Indexer step, but instead just give
+    # it a record directly and get back an array of values. 
+    #
+    #     array = Traject::Indexer::Marc21.extract_marc_from(record, "245ab", :trim_punctuation => true)
+    #
+    # If you have a Traject::Indexer::Context and want to pass it in, you can:
+    #
+    #    array = Traject::Indexer::Marc21.extract_marc_from(record, "245ab", :trim_punctuation => true, :context => existing_context)    
+    def self.extract_marc_from(record, spec, options = {})
+      output  = []
+      # Nil context works, but if caller wants to pass one in
+      # for better error reporting that's cool too. 
+      context = options.delete(:context) || nil
+
+      extract_marc(spec, options).call(record, output, context)
+      return output
     end
     
     # Side-effect the accumulator with the options
