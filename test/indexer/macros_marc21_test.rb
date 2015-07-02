@@ -118,6 +118,11 @@ describe "Traject::Macros::Marc21" do
     end
   end
 
+  it "supports #extract_marc_from module method" do
+    output_arr = ::Traject::Macros::Marc21.extract_marc_from(@record, "245ab", :trim_punctuation => true)
+    assert_equal ["Manufacturing consent : the political economy of the mass media"], output_arr
+  end
+
   describe "serialized_marc" do
     it "serializes xml" do
       @indexer.instance_eval do
