@@ -419,6 +419,7 @@ Own Code](./doc/extending.md)
   * [traject-solrj_writer](https://github.com/traject/traject-solrj_writer): a jruby-only writer that uses the solrj .jar to talk directly to solr. Your only option for speaking to a solr version < 3.2, which is when the json handler was added to solr.
   * [traject_marc4j_reader](https://github.com/traject/traject-marc4j_reader): Packaged with traject automatically on jruby. A JRuby-only reader for
   reading marc records using the Marc4J library, fastest MARC reading on JRuby. 
+  * [traject_sequel_writer](https://github.com/traject/traject_sequel_writer) A writer for sending to an rdbms via [Sequel](https://github.com/jeremyevans/sequel)
 
 # Development
 
