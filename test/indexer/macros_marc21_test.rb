@@ -62,6 +62,14 @@ describe "Traject::Macros::Marc21" do
       assert_equal ["DEFAULT VALUE"], output["only_default"]
     end
 
+    it "allows a nil default" do
+      @indexer.instance_eval do
+        to_field 'default_nil', extract_marc('9999', :default=>nil)
+      end
+      output = @indexer.map_record(@record)
+      assert_equal [nil], output['default_nil']
+    end
+
     it "de-duplicates by default, respects :allow_duplicates" do
       # Add a second 008
       f = @record.fields('008').first
