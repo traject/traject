@@ -1,5 +1,7 @@
 # Traject
 
+[![Join the chat at https://gitter.im/traject/traject](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/traject/traject?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 An easy to use, high-performance, flexible and extensible MARC to Solr indexer. 
 
 You might use traject to index MARC data for a Solr-based discovery product like [Blacklight](https://github.com/projectblacklight/blacklight) or [VUFind](http://vufind.org/).
