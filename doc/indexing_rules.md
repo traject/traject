@@ -16,7 +16,7 @@ That `do` is just ruby `block` syntax, whereby we can pass a block of ruby code 
 
 The block is then stored by the Traject::Indexer, and called for each record indexed, with three arguments provided. 
 
-#### record argument
+### record argument
 
 The record that gets passed to your block is a MARC::Record object (or, theoretically, any object that gets returned by a traject Reader). Your logic will usually examine the record to calculate the desired output. 
 

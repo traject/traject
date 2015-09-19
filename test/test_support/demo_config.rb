@@ -1,4 +1,4 @@
-# A sample traject configration, save as say `traject_config.rb`, then
+# A sample traject configuration, save as say `traject_config.rb`, then
 # run `traject -c traject_config.rb marc_file.marc` to index to
 # solr specified in config file, according to rules specified in
 # config file
