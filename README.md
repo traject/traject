@@ -1,12 +1,10 @@
 # Traject
 
-An easy to use, high-performance, flexible and extensible MARC to Solr indexer. 
+An easy to use, high-performance, flexible and extensible MARC to Solr indexer.
 
-You might use traject to index MARC data for a Solr-based discovery product like [Blacklight](https://github.com/projectblacklight/blacklight) or [VUFind](http://vufind.org/).
+You might use [traject](https://github.com/traject/traject) to index MARC data for a Solr-based discovery product like [Blacklight](https://github.com/projectblacklight/blacklight) or [VUFind](http://vufind.org/).
 
-Traject can also be generalized to a set of tools for getting structured data from a source, and transforming it to a hash-like object to send to a destination. In addition to sending data
-to solr, Traject can produce json or yaml files, tab-delimited files, CSV files, and output suitable
-for debugging by a human.
+Traject can also be generalized to a set of tools for getting structured data from a source, and transforming it to a hash-like object to send to a destination. In addition to sending data to Solr, Traject can produce json or yaml files, tab-delimited files, CSV files, and output suitable for debugging by a human.
 
 **Traject is stable, mature software, that is already being used in production by its authors.**
 
@@ -23,7 +21,7 @@ Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (Univer
 * Fast. Traject by default indexes using multiple threads, on multiple cpu cores, when the underlying
 ruby implementation (i.e., JRuby) allows it, and can use a separate thread for communication with
 solr even under MRI.
-* Composed of decoupled components, for flexibility and extensibility. 
+* Composed of decoupled components, for flexibility and extensibility.
 * Designed to support local code and configuration that's maintainable and testable, and can be shared between projects as ruby gems.
 * Easy to split configuration between multiple files, for simple "pick-and-choose" command line options
 that can combine to deal with any of your local needs.
@@ -33,28 +31,23 @@ that can combine to deal with any of your local needs.
 
 Traject runs under jruby (1.7.x or higher), MRI ruby (1.9.3 or higher), or probably any other ruby platform.
 
-**Traject runs much faster on JRuby** where it can use multi-core parallelism, and the Java
-Marc4J marc reader. If performance is a concern, you should run traject on JRuby. 
+**Traject runs much faster on JRuby** where it can use multi-core parallelism, and the Java Marc4J marc reader. If performance is a concern, you should run traject on JRuby.
 
 Some options for installing a ruby other than your system-provided one are [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme).
 
 Once you have ruby, just `$ gem install traject`.
 
-( **Note**: We might in the future provide an all-in-one .jar distribution, which does not require you to install jruby  on your system, for those who want the multi-threading of jruby without having to actually install it. Let us know if interested.).
+(**Note**: We might in the future provide an all-in-one .jar distribution, which will not require you to install jruby on your system, for those who want the multi-threading of jruby without having to actually install it. Let us know if interested.)
 
 
 ## Configuration files
 
-traject is configured using configuration files. To get a sense of what they look like, you can
-take a look at our sample basic configuration file,
-[demo_config.rb](./test/test_support/demo_config.rb). You could run traject with that configuration file
-as: `traject -c path/to/demo_config.rb marc_file.marc`.
+traject is configured using configuration files. To get a sense of what they look like, you can take a look at our sample basic configuration file,
+[demo_config.rb](./test/test_support/demo_config.rb). You could run traject with that configuration file as: `traject -c path/to/demo_config.rb marc_file.marc`.
 
 Configuration files are actually just ruby -- so by convention they end in `.rb`.
 
-We hope you can write basic useful configuration files without much ruby experience, since
-traject gives you some easy functions to use for common directives. But the full power
-of ruby is available to you if needed.
+We hope you can write basic useful configuration files without much ruby experience, since traject gives you some easy functions to use for common directives. But the full power of ruby is available to you if needed.
 
 **rubyist tip**: Technically, config files are executed with `instance_eval` in a Traject::Indexer instance, so the special commands you see are just methods on Traject::Indexer (or mixed into it). But you can
 call ordinary ruby `require` in config files, etc., too, to load
@@ -67,8 +60,7 @@ There are two main categories of directives in your configuration files: _Settin
 
 ## Settings
 
-Settings are a flat list of key/value pairs, where the keys are always strings and the values usually are. They look like this
-in a config file:
+Settings are a flat list of key/value pairs, where the keys are always strings and the values usually are too. They look like this in a config file:
 
 ~~~ruby
 # configuration_file.rb
@@ -98,20 +90,17 @@ end
 
 `provide` will only set the key if it was previously unset, so first
 setting wins, and command-line comes first of all and overrides everything.
-You can also use `store` if you want to force-set, last set wins.
+You can also use `store` if you want to force-set: last set wins.
 
 See, docs page on [Settings](./doc/settings.md) for list
 of all standardized settings.
 
 
-## Indexing rules: Let's start with 'to_field' and 'extract_marc'
+## Indexing rules: 'to_field' and 'extract_marc'
 
-There are a few methods that can be used to create indexing rules, but the
-one you'll most common is called `to_field`, and establishes a rule
-to extract content to a particular named output field.
+There are a few methods that can be used to create indexing rules.  We will touch on the two most commonly used methods here.  More information is available in [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md)
 
-A `to_field` extraction rule can use built-in 'macros', or, as we'll see later,
-entirely custom logic.
+`to_field` establishes a rule to extract content to a particular named output field.  A `to_field` extraction rule can use built-in 'macros', or, as we'll see later, entirely custom logic.
 
 The built-in macro you'll use the most is `extract_marc`, to extract
 data out of a MARC record according to a tag/subfield specification.
@@ -140,24 +129,18 @@ data out of a MARC record according to a tag/subfield specification.
     to_field "language_code", extract_marc("008[35-37]")
 ~~~
 
-`extract_marc` by default includes all 'alternate script' linked fields correspoinding
-to matched specifications, but you can turn that off, or extract *only* corresponding
-880s.
+`extract_marc` by default includes all 'alternate script' linked fields correspoinding to matched specifications, but you can turn that off, or extract *only* corresponding 880s.
 
 ~~~ruby
     to_field "title", extract_marc("245abc", :alternate_script => false)
     to_field "title_vernacular", extract_marc("245abc", :alternate_script => :only)
 ~~~
 
-By default, specifications with multiple subfields (like "240abc") will produce one single string of output per field (for each '240'), with the concatenation of each matched subfield. Specifications with single subfields (like "020a") will split subfields and produce an output string for each matching subfield.
+By default, specifications with multiple subfields (e.g. "240abc") will produce one single string of output per field (for each '240' field in the record), with the concatenation of each matched subfield. Specifications with single subfields (like "020a") will split subfields and produce an output string for each matching subfield (i.e. two output strings for a single '020' with two subfield 'a').
 
-For the syntax and complete possibilities of the specification
-string argument to extract_marc, see docs at the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/MarcExtractor)).
+For the syntax and complete possibilities of the specification string argument to extract_marc, see docs at the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/MarcExtractor)).
 
-`extract_marc` also supports `translation maps` similar
-to SolrMarc's. There are some translation maps provided by traject,
-and you can also define your own, in yaml or ruby. Translation maps are especially useful
-for mapping form MARC codes to user-displayable strings:
+`extract_marc` also supports `translation maps` similar to SolrMarc's. There are some translation maps provided by traject, and you can also define your own, in yaml or ruby. Translation maps are especially useful for mapping form MARC codes to user-displayable strings:
 
 ~~~ruby
     # "translation_map" will be passed to Traject::TranslationMap.new
@@ -165,18 +148,19 @@ for mapping form MARC codes to user-displayable strings:
     to_field "language", extract_marc("008[35-37]:041a:041d", :translation_map => "marc_language_code")
 ~~~
 
-To see all options for `extract_marc`, see the [method documentation](http://rdoc.info/gems/traject/Traject/Macros/Marc21:extract_marc)
+To see all options for `extract_marc`, see the [extract_marc](http://rdoc.info/gems/traject/Traject/Macros/Marc21:extract_marc) method documentation.
 
-## other built-in utility macros
+## Other built-in utility macros
 
-Other built-in methods that can be used with `to_field` include a hard-coded
-literal string:
+Other built-in methods that can be used with `to_field` include:
+
+a hard-coded literal string:
 
 ~~~ruby
     to_field "source", literal("LIB_CATALOG")
 ~~~
 
-The current record serialized back out as MARC, in binary, XML, or json:
+the current record serialized back out as MARC, in binary, XML, or json:
 
 ~~~ruby
     # or :format => "json" for marc-in-json
@@ -186,7 +170,7 @@ The current record serialized back out as MARC, in binary, XML, or json:
     to_field "marc_record_raw", serialized_marc(:format => "binary", :binary_escape => false, :allow_oversized => true)
 ~~~
 
-Text of all fields in a range:
+text of all fields in a range:
 
 ~~~ruby
     to_field "text", extract_all_marc_values(:from => "100", :to => "899")
@@ -194,11 +178,9 @@ Text of all fields in a range:
 
 All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
 
-## more complex canned MARC semantic logic
+## More complex canned MARC semantic logic
 
-Some more complex (and opinionated/subjective) algorithms for deriving semantics
-from Marc are also packaged with Traject, but not available by default. To make
-them available to your indexing, you just need to use ruby `require` and `extend`.
+Some more complex (and opinionated/subjective) algorithms for deriving semantics from Marc are also packaged with Traject, but not available by default. To make them available to your indexing, you just need to use ruby `require` and `extend`.
 
 A number of methods are in [Traject::Macros::Marc21Semantics](./lib/traject/macros/marc21_semantics.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21Semantics))
 
@@ -283,10 +265,10 @@ additional documentation page on [Indexing Rules: Macros and Custom Logic](./doc
 
 In addition to `to_field`, an `each_record` method is available, which,
 like `to_field`, is executed for every record, but without being tied
-to a specific field.
+to a specific output field.
 
-`each_record` can be used for logging or notifiying; computing intermediate
-results; or writing to more than one field at once.
+`each_record` can be used for logging or notifiying, computing intermediate
+results, or writing to more than one field at once.
 
 ~~~ruby
   each_record do |record|
@@ -294,12 +276,9 @@ results; or writing to more than one field at once.
   end
 ~~~
 
-For more on `each_record`, see documentation page on [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md).
+For more on `each_record`, see [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md).
 
-There is also an `after_processing` method that can be used to register
-logic that will be called after the entire has been processed. You can use it for whatever custom
-ruby code you might want for your app (send an email? Clean up a log file? Trigger
-a Solr replication?)
+There is also an `after_processing` method that can be used to register logic that will be called after the entire has been processed. You can use it for whatever custom ruby code you might want for your app (send an email? Clean up a log file? Trigger a Solr replication?)
 
 ~~~ruby
 after_processing do
@@ -310,8 +289,7 @@ end
 
 ## Readers and Writers
 
-Traject uses modular 'Writer' classes to take the output hashes from transformation, and
-send them somewhere or do something useful with them.
+Traject uses modular 'Writer' classes to take the output hashes from transformation and send them somewhere or do something useful with them.
 
 By default traject uses the [Traject::SolrJsonWriter](lib/traject/solr_json_writer.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/SolrJsonWriter)) to send to Solr for indexing.
 Several other writers are also built-in:
