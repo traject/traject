@@ -13,13 +13,12 @@ of a couple traject features meant to make it easier.
 
 ## Expert Summary
 
-* Traject `-I` argument command line can be used to list directories to
+* Load Path options:
+  * Traject `-I` argument command line can be used to list directories to
   add to the load path, similar to the `ruby -I` argument. You
   can then 'require' local project files from the load path.
-  * Or modify the ruby `$LOAD_PATH` manually at the top of a traject config file you are loading. 
-  * translation map files found in a
-    "./translation_maps" subdir on the load path will be found
-    for Traject translation maps.
+  * Modify the ruby `$LOAD_PATH` manually at the top of a traject config file you are loading. 
+  * NOTE: translation map files in a "./translation_maps" subdir on the load path will be available for to traject.
 * You can use Bundler with traject simply by creating a Gemfile with `bundler init`,
   and then running command line with `bundle exec traject` or 
   even `BUNDLE_GEMFILE=path/to/Gemfile bundle exec traject`
@@ -114,11 +113,11 @@ a skeleton of your gem
 This will also make available rake commands to install your gem locally
 (`rake install`), or release it to the rubygems server (`rake release`).
 
-There are two main methods to use a gem in your traject project,
-with straight rubygems, or with bundler.
+There are two main methods to use a gem in your traject project: with straight rubygems, or with bundler.
 
-Without bundler is simpler. Simply `gem install some_gem` from the
-command line, and now you can `require` that gem in your traject
+### without bundler (straight rubygems):
+
+Without bundler may be simpler, at least at first. Simply `gem install some_gem` from the command line, and now you can `require` that gem in your traject
 config file, and use what it provides:
 
 ~~~ruby
@@ -129,25 +128,20 @@ require 'some_gem'
 SomeGem.whatever!
 ~~~
 
-A gem can provide traject translation map definitions
-in a `lib/translation_maps` sub-directory, and traject will be able to find those
-translation maps when the gem is loaded. (Because gems'
-`./lib` directories are by default added to the ruby load path.)
+A gem can provide traject translation map definitions in a `lib/translation_maps` sub-directory, and traject will be able to find those translation maps when the gem is loaded (because gems' `./lib` directories are by default added to the ruby load path).
 
-### Or, with bundler:
+### with bundler:
 
-However, if you then move your traject project to another system,
+If you move your traject project to another system,
 where you haven't yet installed the `some_gem`, then running
-traject with this config file will, of course, fail. Or if you
+traject with the above config file will, of course, fail. Or if you
 move your traject project to another system with a slightly
 different version of `some_gem`, your traject indexing could
 behave differently in confusing ways. As the number of gems
-you are using increases, managing this gets increasingly
+you are using increases, managing the gems and gem versions gets increasingly
 confusing.
 
-[bundler](http://bundler.io/) was invented to make this kind of dependency management
-more straightforward and reliable. We recommend you consider using
-bundler, especially for traject installations where traject will
+[bundler](http://bundler.io/) was invented to make this kind of dependency management in ruby more straightforward and reliable. We recommend you consider using bundler, especially for traject installations where traject will
 be run via automated batch jobs on production servers.
 
 Bundler's behavior is based on a `Gemfile` that lists your
@@ -156,15 +150,14 @@ by running `bundler init`, probably in the directory
 right next to your traject config files.
 
 Then specify what gems your traject project will use,
-possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemfile.html) -- 
-**do** include `gem 'traject'` in the Gemfile. 
+possibly with version restrictions, in the [Gemfile](http://bundler.io/v1.3/gemfile.html)
+
+Be sure to include `gem 'traject'` in the Gemfile.
 
 Run `bundle install` from the directory with the Gemfile, on any system
-at any time, to make sure specified gems are installed.
+at any time, to make sure specified gems are installed.  (The bundler gem must be already installed on the system.)
 
-**Run traject** with `bundle exec` to have bundler set up the environment
-from your Gemfile. You can `cd` into the directory containing the Gemfile, 
-so bundler can find it: 
+**Run traject** with `bundle exec` to have bundler set up the traject environment from your Gemfile. You can `cd` into the directory containing the Gemfile, so bundler can find it: 
 
     $ cd /some/where
     $ bundle exec traject -c some_traject_config.rb ...
@@ -178,7 +171,7 @@ Bundler will make sure the specified versions of all gems are used by
 traject, and also make sure no gems except those specified in the gemfile
 are available to the program, for a reliable reproducible environment. 
 
-You should still `require` the gem in your traject config file,
+You still need to `require` the gem in your traject config file;
 then just refer to what it provides in your config code as usual. 
 
 You should check both the `Gemfile` and the `Gemfile.lock`
