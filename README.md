@@ -54,7 +54,7 @@ call ordinary ruby `require` in config files, etc., too, to load
 external functionality. See more at Extending Logic below.
 
 You can keep your settings and indexing rules in one config file,
-or split them accross multiple config files however you like. (Connection details vs indexing? Common things vs environmental specific things?)
+or split them across multiple config files however you like. (Connection details vs indexing? Common things vs environmental specific things?)
 
 There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
