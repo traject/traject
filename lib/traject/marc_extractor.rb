@@ -105,6 +105,11 @@ module Traject
   # lazily create and then re-use a MarcExtractor object with
   # particular initialization arguments.
   class MarcExtractor
+    # constant values
+    EMPTY = []
+    FIELD_880 = '880'.freeze
+    SUBFIELD_6 = '6'.freeze
+
     attr_accessor :options, :spec_hash
 
     # First arg is a specification for extraction of data from a MARC record.
@@ -146,7 +151,7 @@ module Traject
       if options[:alternate_script] != false
         @interesting_tags_hash['880'] = true
       end
-
+      @interesting_tags = @interesting_tags_hash.keys
       self.freeze
     end
 
@@ -243,18 +248,16 @@ module Traject
 
 
     # Returns array of strings, extracted values. Maybe empty array.
-    def extract(marc_record)
+    def extract(marc_record,tags=nil)
       results = []
-
-      self.each_matching_line(marc_record) do |field, spec|
+      self.each_matching_line(marc_record,tags) do |field, spec|
         if control_field?(field)
           results << (spec.bytes ? field.value.byteslice(spec.bytes) : field.value)
         else
-          results.concat collect_subfields(field, spec)
+          each_subfield(field, spec) {|v| results << v}
         end
       end
-
-      return results
+      results
     end
 
     # Yields a block for every line in source record that matches
@@ -264,17 +267,17 @@ module Traject
     #
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
-    def each_matching_line(marc_record)
-      marc_record.fields(@interesting_tags_hash.keys).each do |field|
+    def each_matching_line(marc_record,tags=nil)
+      tags ||= @interesting_tags
+      marc_record.each_by_tag(tags) do |field|
 
         # Make sure it matches indicators too, specs_covering_field
         # doesn't check that.
-        specs_covering_field(field).each do |spec|
+        each_spec_covering_field(field) do |spec|
           if spec.matches_indicators?(field)
             yield(field, spec, self)
           end
         end
-
       end
     end
 
@@ -300,20 +303,27 @@ module Traject
     #
     # Always returns array, sometimes empty array.
     def collect_subfields(field, spec)
-      subfields = field.subfields.collect do |subfield|
-        subfield.value if spec.includes_subfield_code?(subfield.code)
-      end.compact
-
-      return subfields if subfields.empty? # empty array, just return it.
-
-      if options[:separator] && spec.joinable?
-        subfields = [subfields.join(options[:separator])]
-      end
-
-      return subfields
+      subfields = []
+      each_subfield(field, spec) {|subfield| subfields << subfield}
+      subfields
     end
 
-
+    def each_subfield(field, spec)
+      iter = field.subfields.select {|sf|spec.includes_subfield_code?(sf.code)}
+      if options[:separator] && spec.joinable?
+        val = nil
+        iter.each do |x|
+          if val
+            val << options[:separator] << x.value
+          else
+            val = x.value.dup
+          end
+        end
+        yield val if val
+      else
+        iter.each {|x| yield x.value}
+      end    
+    end
 
     # Find Spec objects, if any, covering extraction from this field.
     # Returns an array of 0 or more MarcExtractor::Spec objects
@@ -322,23 +332,30 @@ module Traject
     # we have a $6 and we want the alternate script.
     #
     # Returns an empty array in case of no matching extraction specs.
-    def specs_covering_field(field)
+    def specs_covering_field(field,vetted=false)
+      specs = []
+      # Short-circuit the uninteresting stuff
+      if interesting_tag?(field.tag)
+        each_spec_covering_field(field) {|s| specs << s}
+      end
+      specs
+    end
+
+    def each_spec_covering_field(field)
       tag = field.tag
 
-      # Short-circuit the unintersting stuff
-      return [] unless interesting_tag?(tag)
-
-      # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
-      # to do this weird encode gymnastics, which fixes it for mysterious reasons.
-
-      if tag == "880" && field['6']
-        tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
+      if (tag == FIELD_880)
+        if field[SUBFIELD_6]
+          #tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
+          # assuming this bug is fixed https://github.com/jruby/jruby/issues/886
+          tag = field[SUBFIELD_6].byteslice(0,3)
+        end
       end
 
       # Take the resulting tag and get the spec from it (or the default nil if there isn't a spec for this tag)
-      spec = self.spec_hash[tag] || []
+      spec = self.spec_hash.fetch(tag, EMPTY)
+      spec.each {|x| yield x}
     end
-
 
     def control_field?(field)
       # should the MARC gem have a more efficient way to do this,
