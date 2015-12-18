@@ -9,14 +9,14 @@ describe "Traject::MarcExtractor" do
   it "is frozen read-only" do
     extractor = Traject::MarcExtractor.new("100abcde", :seperator => ";")
     assert extractor.frozen?
-    assert extractor.spec_hash.frozen?
+    assert extractor.spec_set.frozen?
     assert extractor.options.frozen?
   end
 
 
   describe "#parse_marc_spec" do
     it "parses single spec with all elements" do
-      parsed = Traject::MarcExtractor.parse_string_spec("245|1*|abcg")
+      parsed = Traject::MarcExtractor::Spec.hash_from_string("245|1*|abcg")
 
       assert_kind_of Hash, parsed
       assert_equal 1, parsed.keys.length
@@ -30,7 +30,7 @@ describe "Traject::MarcExtractor" do
     end
 
     it "parses a mixed bag" do
-      parsed = Traject::MarcExtractor.parse_string_spec("245abcde:810:700|*4|bcd")
+      parsed  = Traject::MarcExtractor::Spec.hash_from_string("245abcde:810:700|*4|bcd")
       spec245 = parsed['245'].first
       spec810 = parsed['810'].first
       spec700 = parsed['700'].first
@@ -57,14 +57,14 @@ describe "Traject::MarcExtractor" do
     end
 
     it "parses fixed field byte offsets" do
-      parsed = Traject::MarcExtractor.parse_string_spec("005[5]:008[7-10]")
+      parsed = Traject::MarcExtractor::Spec.hash_from_string("005[5]:008[7-10]")
 
       assert_equal 5, parsed["005"].first.bytes
       assert_equal 7..10, parsed["008"].first.bytes
     end
 
     it "allows arrays of specs" do
-      parsed = Traject::MarcExtractor.parse_string_spec %w(
+      parsed = Traject::MarcExtractor::Spec.hash_from_string %w(
         245abcde
         810
         700|*4|bcd
@@ -73,7 +73,7 @@ describe "Traject::MarcExtractor" do
     end
 
     it "allows mixture of array and colon-delimited specs" do
-      parsed = Traject::MarcExtractor.parse_string_spec %w(
+      parsed = Traject::MarcExtractor::Spec.hash_from_string %w(
         245abcde
         100:110:111
         810
@@ -127,13 +127,13 @@ describe "Traject::MarcExtractor" do
 
   describe "#extract_by_spec" do
     before do
-      @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+      @record = MARC::Reader.new(support_file_path "manufacturing_consent.marc").first
     end
 
     describe "extracts a basic case" do
       before do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("700abcdef:856|*2|:505|1*|:245ba")
-        @values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
+        @parsed_spec = Traject::MarcExtractor::Spec.hash_from_string("700abcdef:856|*2|:505|1*|:245ba")
+        @values      = Traject::MarcExtractor.new(@parsed_spec).extract(@record)
       end
 
       it "returns an array" do
@@ -150,7 +150,7 @@ describe "Traject::MarcExtractor" do
       end
 
       it "does not have 505, due to non-matching indicators" do
-        assert ! @values.find {|s| s.include? "propaganda model"}
+        assert !@values.find { |s| s.include? "propaganda model" }, @values
       end
 
 
@@ -166,20 +166,20 @@ describe "Traject::MarcExtractor" do
 
     describe "extracts fixed fields" do
       it ", complete" do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("001")
-        values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
+        parsed_spec = Traject::MarcExtractor::Spec.hash_from_string("001")
+        values      = Traject::MarcExtractor.new(parsed_spec).extract(@record)
 
         assert_equal ["2710183"], values
       end
       it ", single byte offset" do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("008[5]")
-        values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
+        parsed_spec = Traject::MarcExtractor::Spec.hash_from_string("008[5]")
+        values      = Traject::MarcExtractor.new(parsed_spec).extract(@record)
 
         assert_equal ["1"], values
       end
       it ", byte range" do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("008[7-10]")
-        values = Traject::MarcExtractor.new(parsed_spec).extract(@record)
+        parsed_spec = Traject::MarcExtractor::Spec.hash_from_string("008[7-10]")
+        values      = Traject::MarcExtractor.new(parsed_spec).extract(@record)
 
         assert_equal ["2002"], values
       end
@@ -187,15 +187,15 @@ describe "Traject::MarcExtractor" do
 
     describe "separator argument" do
       it "causes non-join when nil" do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
-        values = Traject::MarcExtractor.new(parsed_spec, :separator => nil).extract(@record)
+        parsed_spec = Traject::MarcExtractor::Spec.hash_from_string("245")
+        values      = Traject::MarcExtractor.new(parsed_spec, :separator => nil).extract(@record)
 
         assert_length 3, values
       end
 
       it "can be non-default" do
-        parsed_spec = Traject::MarcExtractor.parse_string_spec("245")
-        values = Traject::MarcExtractor.new(parsed_spec, :separator => "!! ").extract(@record)
+        parsed_spec = Traject::MarcExtractor::Spec.hash_from_string("245")
+        values      = Traject::MarcExtractor.new(parsed_spec, :separator => "!! ").extract(@record)
 
         assert_length 1, values
         assert_equal "Manufacturing consent :!! the political economy of the mass media /!! Edward S. Herman and Noam Chomsky ; with a new introduction by the authors.", values.first
@@ -204,8 +204,8 @@ describe "Traject::MarcExtractor" do
 
     describe "extracts alternate script" do
       before do
-        @record = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
-        @parsed_spec = Traject::MarcExtractor.parse_string_spec("245b")
+        @record      = MARC::Reader.new(support_file_path  "hebrew880s.marc").to_a.first
+        @parsed_spec = Traject::MarcExtractor::Spec.hash_from_string("245b")
       end
       it "from default :include" do
 
@@ -301,10 +301,10 @@ describe "Traject::MarcExtractor" do
   describe "MarcExtractor.cached" do
     it "creates" do
       extractor = Traject::MarcExtractor.cached("245abc", :separator => nil)
-      spec_hash = extractor.spec_hash
+      spec_set  = extractor.spec_set
 
       assert extractor.options[:separator].nil?, "extractor options[:separator] is nil"
-      assert_equal({"245"=>[Traject::MarcExtractor::Spec.new(:tag => "245", :subfields=>["a", "b", "c"])]}, spec_hash)
+      assert_equal([Traject::MarcExtractor::Spec.new(:tag => "245", :subfields => ["a", "b", "c"])], spec_set.specs_for_tag('245'))
     end
     it "caches" do
       ext1 = Traject::MarcExtractor.cached("245abc", :separator => nil)

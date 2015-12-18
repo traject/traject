@@ -1,3 +1,5 @@
+require 'traject/marc_extractor_spec'
+
 module Traject
   # MarcExtractor is a class for extracting lists of strings from a MARC::Record,
   # according to specifications. See #parse_string_spec for description of string
@@ -36,7 +38,7 @@ module Traject
   # and includes a tag and a a byte slice specification.
   #
   #      "008[35-37]:007[5]""
-  #      => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007 
+  #      => bytes 35-37 inclusive of any field 008, and byte 5 of any field 007
   #
   # * subfields and indicators can only be provided for marc data/variable fields
   # * byte slice can only be provided for marc control fields (generally tags less than 010)
@@ -105,7 +107,9 @@ module Traject
   # lazily create and then re-use a MarcExtractor object with
   # particular initialization arguments.
   class MarcExtractor
-    attr_accessor :options, :spec_hash
+    attr_accessor :options, :spec_set
+
+    ALTERNATE_SCRIPT_TAG = '880'
 
     # First arg is a specification for extraction of data from a MARC record.
     # Specification can be given in two forms:
@@ -126,29 +130,47 @@ module Traject
     #                     * :only => only include linked 880s, not original
     def initialize(spec, options = {})
       self.options = {
-        :separator => ' ',
-        :alternate_script => :include
+          :separator        => ' ',
+          :alternate_script => :include
       }.merge(options)
 
-      self.spec_hash = spec.kind_of?(Hash) ? spec : self.class.parse_string_spec(spec)
+      self.spec_set = SpecSet.new(spec)
 
 
       # Tags are "interesting" if we have a spec that might cover it
-      @interesting_tags_hash = {}
-
       # By default, interesting tags are those represented by keys in spec_hash.
       # Add them unless we only care about alternate scripts.
       unless options[:alternate_script] == :only
-        self.spec_hash.keys.each {|tag| @interesting_tags_hash[tag] = true}
+        self.spec_set.tags.each { |tag| show_interest_in_tag(tag) }
       end
 
       # If we *are* interested in alternate scripts, add the 880
       if options[:alternate_script] != false
-        @interesting_tags_hash['880'] = true
+        @fetch_alternate_script = true
+        show_interest_in_tag(ALTERNATE_SCRIPT_TAG)
       end
 
       self.freeze
     end
+
+
+    # Declare that we're interested in a tag
+    def show_interest_in_tag(tag)
+      @interesting_tags_hash      ||= {}
+      @interesting_tags_hash[tag] = true
+    end
+
+    # Check to see if a tag is interesting (meaning it may be covered by a spec
+    # and the passed-in options about alternate scripts)
+    def interesting_tag?(tag)
+      return @interesting_tags_hash.include?(tag)
+    end
+
+    # All the "interesting" tags
+    def interesting_tags
+      @interesting_tags_hash.keys
+    end
+
 
     # Takes the same arguments as MarcExtractor.new, but will re-use an existing
     # cached MarcExtractor already created with given initialization arguments,
@@ -169,80 +191,11 @@ module Traject
     #     extractor = MarcExtractor.cached("245abc:700a", :separator => nil)
     def self.cached(*args)
       cache = (Thread.current[:marc_extractor_cached] ||= Hash.new)
-      return ( cache[args] ||= Traject::MarcExtractor.new(*args).freeze )
-    end
-
-    # Check to see if a tag is interesting (meaning it may be covered by a spec
-    # and the passed-in options about alternate scripts)
-    def interesting_tag?(tag)
-      return @interesting_tags_hash.include?(tag)
+      return (cache[args] ||= Traject::MarcExtractor.new(*args).freeze)
     end
 
 
-    # Converts from a string marc spec like "008[35]:245abc:700a" to a hash used internally
-    # to represent the specification. See comments at head of class for
-    # documentation of string specification format.
-    #
-    #
-    # ## Return value
-    #
-    # The hash returned is keyed by tag, and has as values an array of 0 or
-    # or more MarcExtractor::Spec objects representing the specified extraction
-    # operations for that tag.
-    #
-    # It's an array of possibly more than one, because you can specify
-    # multiple extractions on the same tag: for instance "245a:245abc"
-    #
-    # See tests for more examples.
-    def self.parse_string_spec(spec_string)
-      # hash defaults to []
-      hash = Hash.new
-
-      spec_strings = spec_string.is_a?(Array) ? spec_string.map{|s| s.split(/\s*:\s*/)}.flatten : spec_string.split(/s*:\s*/)
-
-      spec_strings.each do |part|
-        if (part =~ /\A([a-zA-Z0-9]{3})(\|([a-z0-9\ \*]{2})\|)?([a-z0-9]*)?\Z/)
-          # variable field
-          tag, indicators, subfields = $1, $3, $4
-
-          spec = Spec.new(:tag => tag)
-
-          if subfields and !subfields.empty?
-            spec.subfields = subfields.split('')
-          end
-
-          if indicators
-           # if specified as '*', leave nil
-           spec.indicator1 = indicators[0] if indicators[0] != "*"
-           spec.indicator2 = indicators[1] if indicators[1] != "*"
-          end
-
-          hash[spec.tag] ||= []
-          hash[spec.tag] << spec
-
-        elsif (part =~ /\A([a-zA-Z0-9]{3})(\[(\d+)(-(\d+))?\])\Z/) # control field, "005[4-5]"
-          tag, byte1, byte2 = $1, $3, $5
-
-          spec = Spec.new(:tag => tag)
-
-          if byte1 && byte2
-            spec.bytes = ((byte1.to_i)..(byte2.to_i))
-          elsif byte1
-           spec.bytes = byte1.to_i
-          end
-
-          hash[spec.tag] ||= []
-          hash[spec.tag] << spec
-        else
-          raise ArgumentError.new("Unrecognized marc extract specification: #{part}")
-        end
-      end
-
-      return hash
-    end
-
-
-    # Returns array of strings, extracted values. Maybe empty array.
+    # Returns array of strings from a MARC::Record, extracted values. May be empty array.
     def extract(marc_record)
       results = []
 
@@ -265,14 +218,10 @@ module Traject
     # Third (optional) arg to block is self, the MarcExtractor object, useful for custom
     # implementations.
     def each_matching_line(marc_record)
-      marc_record.fields(@interesting_tags_hash.keys).each do |field|
+      marc_record.fields(interesting_tags).each do |field|
 
-        # Make sure it matches indicators too, specs_covering_field
-        # doesn't check that.
         specs_covering_field(field).each do |spec|
-          if spec.matches_indicators?(field)
             yield(field, spec, self)
-          end
         end
 
       end
@@ -314,29 +263,13 @@ module Traject
     end
 
 
-
     # Find Spec objects, if any, covering extraction from this field.
     # Returns an array of 0 or more MarcExtractor::Spec objects
     #
-    # When given an 880, will return the spec (if any) for the linked tag iff
-    # we have a $6 and we want the alternate script.
-    #
     # Returns an empty array in case of no matching extraction specs.
     def specs_covering_field(field)
-      tag = field.tag
-
-      # Short-circuit the unintersting stuff
-      return [] unless interesting_tag?(tag)
-
-      # Due to bug in jruby https://github.com/jruby/jruby/issues/886 , we need
-      # to do this weird encode gymnastics, which fixes it for mysterious reasons.
-
-      if tag == "880" && field['6']
-        tag = field["6"].encode(field["6"].encoding).byteslice(0,3)
-      end
-
-      # Take the resulting tag and get the spec from it (or the default nil if there isn't a spec for this tag)
-      spec = self.spec_hash[tag] || []
+      return [] unless interesting_tag?(field.tag)
+      self.spec_set.specs_matching_field(field, @fetch_alternate_script)
     end
 
 
@@ -348,63 +281,10 @@ module Traject
 
     def freeze
       self.options.freeze
-      self.spec_hash.freeze
+      self.spec_set.freeze
       super
     end
 
-
-    # Represents a single specification for extracting data
-    # from a marc field, like "600abc" or "600|1*|x".
-    #
-    # Includes the tag for reference, although this is redundant and not actually used
-    # in logic, since the tag is also implicit in the overall spec_hash
-    # with tag => [spec1, spec2]
-    class Spec
-      attr_accessor :tag, :subfields, :indicator1, :indicator2, :bytes
-
-      def initialize(hash = {})
-        hash.each_pair do |key, value|
-          self.send("#{key}=", value)
-        end
-      end
-
-
-      #  Should subfields extracted by joined, if we have a seperator?
-      #  * '630' no subfields specified => join all subfields
-      #  * '630abc' multiple subfields specified = join all subfields
-      #  * '633a' one subfield => do not join, return one value for each $a in the field
-      #  * '633aa' one subfield, doubled => do join after all, will return a single string joining all the values of all the $a's.
-      #
-      # Last case is handled implicitly at the moment when subfields == ['a', 'a']
-      def joinable?
-        (self.subfields.nil? || self.subfields.size != 1)
-      end
-
-      # Pass in a MARC field, do it's indicators match indicators
-      # in this spec? nil indicators in spec mean we don't care, everything
-      # matches.
-      def matches_indicators?(field)
-        return (self.indicator1.nil? || self.indicator1 == field.indicator1) &&
-          (self.indicator2.nil? || self.indicator2 == field.indicator2)
-      end
-
-      # Pass in a string subfield code like 'a'; does this
-      # spec include it?
-      def includes_subfield_code?(code)
-        # subfields nil means include them all
-        self.subfields.nil? || self.subfields.include?(code)
-      end
-
-      def ==(spec)
-        return false unless spec.kind_of?(Spec)
-
-        return (self.tag == spec.tag) &&
-          (self.subfields == spec.subfields) &&
-          (self.indicator1 == spec.indicator1) &&
-          (self.indicator1 == spec.indicator2) &&
-          (self.bytes == spec.bytes)
-      end
-    end
 
   end
 end
