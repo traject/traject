@@ -1,5 +1,13 @@
 # Changes
 
+## 2.1.0
+  * update some docs (typos)
+  * Make the indexer's `writer` r/w so it can be set at runtime (#110)
+  * Allow `extract_marc` to be callable from anywhere (#111)
+  * Add doc instructions/examples for programmatic Indexer use
+  * _Much_ better error reporting; easier to find which record went wrong
+
+
 ## 2.0.2
 
 * Guard against assumption of MARC data when indexing using SolrJsonWriter ([#94](https://github.com/traject-project/traject/issues/94))

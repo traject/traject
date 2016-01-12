@@ -1,28 +1,15 @@
 language: ruby
+cache: bundler
+sudo: false
 rvm:
   - jruby-19mode
-  - jruby-9.0.0.0
-  - jruby-head
+  - jruby-9.0.4.0
   - 1.9
-  - 2.1
   - 2.2
+  - 2.3.0
   - rbx-2
+before_install:
+  - gem update --system
+  - gem install bundler
 jdk:
-  - openjdk7
   - oraclejdk8
-matrix:
-  exclude:
-    - rvm: 1.9
-      jdk: openjdk7
-    - rvm: 2.1
-      jdk: openjdk7
-    - rvm: rbx-2
-      jdk: openjdk7
-    - rvm: jruby-head
-      jdk: openjdk7
-    - rvm: 2.2
-      jdk: openjdk7
-  allow_failures:
-    - rvm: jruby-head
-
-bundler_args: --without debug
