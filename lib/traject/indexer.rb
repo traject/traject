@@ -8,6 +8,8 @@ require 'traject/indexer/settings'
 require 'traject/marc_reader'
 require 'traject/json_writer'
 require 'traject/solr_json_writer'
+require 'traject/debug_writer'
+
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
@@ -98,7 +100,7 @@ end
 #
 # This may raise if the file is not readable. Or if the config file
 # can't be evaluated, it will raise a Traject::Indexer::ConfigLoadError
-# with a bunch of contextual information useful to reporting to developer. 
+# with a bunch of contextual information useful to reporting to developer.
 #
 # You can also instead, or in addition, write configuration inline using
 # standard ruby `instance_eval`:
@@ -704,15 +706,15 @@ class Traject::Indexer
   end
 
   # Raised by #load_config_file when config file can not
-  # be processed. 
+  # be processed.
   #
   # The exception #message includes an error message formatted
-  # for good display to the developer, in the console. 
+  # for good display to the developer, in the console.
   #
   # Original exception raised when processing config file
   # can be found in #original. Original exception should ordinarily
   # have a good stack trace, including the file path of the config
-  # file in question. 
+  # file in question.
   #
   # Original config path in #config_file, and line number in config
   # file that triggered the exception in #config_file_lineno (may be nil)
