@@ -32,14 +32,40 @@ require 'traject/line_writer'
 #       provide "output_file", "out.txt"
 #     end
 class Traject::DebugWriter < Traject::LineWriter
-  DEFAULT_FORMAT = '%-12s %-25s %s'
   DEFAULT_IDFIELD = 'id'
+  DEFAULT_FORMAT  = '%-12s %-25s %s'
+
+  def initialize(*)
+    super
+    @idfield = settings["debug_writer.idfield"] || DEFAULT_IDFIELD
+    @format  = settings['debug_writer.format'] || DEFAULT_FORMAT
+
+    if @idfield == 'record_position' then
+      @use_position = true
+    end
+
+    @already_threw_warning_about_missing_id = false
+
+  end
+
+  def record_number(context)
+    return context.position if @use_position
+    if context.output_hash.has_key?(@idfield)
+      context.output_hash[@idfield].first
+    else
+      unless @already_threw_warning_about_missing_id
+        context.logger.warn "At least one record (##{context.position}) doesn't define field '#{@idfield}'.
+All records are assumed to have a unique id. You can set which field to look in via the setting 'debug_writer.idfield'"
+        @already_threw_warning_about_missing_id = true
+      end
+      "record_num_#{context.position}"
+    end
+  end
 
   def serialize(context)
-    idfield = settings["debug_writer.idfield"] || DEFAULT_IDFIELD
-    format  = settings['debug_writer.format']  || DEFAULT_FORMAT
-    h = context.output_hash
-    lines = h.keys.sort.map {|k| format % [h[idfield].first, k, h[k].join(' | ')] }
+    h       = context.output_hash
+    rec_key = record_number(context)
+    lines   = h.keys.sort.map { |k| @format % [rec_key, k, h[k].join(' | ')] }
     lines.push "\n"
     lines.join("\n")
   end

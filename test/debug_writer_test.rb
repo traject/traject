@@ -32,6 +32,47 @@ describe 'Simple output' do
 
   end
 
+  it "deals ok with a missing ID" do
+    context      = Traject::Indexer::Context.new(:output_hash => @indexer.map_record(@record))
+    logger_strio = StringIO.new
+    idfield      = 'id'
+
+    context.logger   = Logger.new(logger_strio)
+    context.position = 1
+
+    context.output_hash.delete(idfield)
+    @writer.put context
+    expected = [
+        "record_num_1 title #{@title}",
+    ]
+    assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
+    assert_match /At least one record \(\#1\) doesn't define field 'id'/, logger_strio.string
+    @writer.close
+
+  end
+
+  it "sets the idfield correctly" do
+    bad_rec_id_field = 'iden'
+    writer           = Traject::DebugWriter.new("output_stream" => @io, "debug_writer.idfield" => bad_rec_id_field)
+
+    context = Traject::Indexer::Context.new(:output_hash => @indexer.map_record(@record))
+
+    logger_strio = StringIO.new
+
+    context.logger   = Logger.new(logger_strio)
+    context.position = 1
+
+    writer.put context
+    expected = [
+        "record_num_1 id #{@id }",
+        "record_num_1 title #{@title}",
+    ]
+    assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
+    assert_match /At least one record \(\#1\) doesn't define field 'iden'/, logger_strio.string
+    writer.close
+
+  end
+
 end
 
 
