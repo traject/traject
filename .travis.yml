@@ -3,10 +3,10 @@ cache: bundler
 sudo: false
 rvm:
   - jruby-19mode
-  - jruby
+  - jruby-9.0.4.0
   - 1.9
   - 2.2
-  - 2.3
+  - 2.3.0
   - rbx-2
 before_install:
   - gem update --system
