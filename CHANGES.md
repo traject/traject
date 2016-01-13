@@ -1,5 +1,11 @@
 # Changes
 
+## 2.2.0
+  * Change DebugWriter to be more forgiving (and informative) about missing record-id fields
+  * Automatically require DebugWriter for easier use on the command line
+  * Refactor MarcExtractor to be easier to read
+  * Fix .travis file to actually work, and target more recent rubies.
+
 ## 2.1.0
   * update some docs (typos)
   * Make the indexer's `writer` r/w so it can be set at runtime (#110)
