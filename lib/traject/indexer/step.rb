@@ -23,7 +23,7 @@ class Traject::Indexer
     # Set the arity of the lambda expression just once, when we define it
     def lambda=(lam)
       @lambda = lam
-      @lambda_arity = @lambda.arity
+      @lambda_arity = @lambda ?  @lambda.arity : 0
     end
 
     # raises if bad data
@@ -91,7 +91,7 @@ class Traject::Indexer
 
     def lambda=(lam)
       @lambda = lam
-      @lambda_arity = @lambda.arity
+      @lambda_arity = @lambda ?  @lambda.arity : 0
     end
 
     def validate!

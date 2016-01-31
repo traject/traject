@@ -176,7 +176,7 @@ class Traject::IndexerOrig
 
   # optional hash or Traject::Indexer::Settings object of settings.
   def initialize(arg_settings = {})
-    @settings = Settings.new(arg_settings)
+    @settings = Traject::Indexer::Settings.new(arg_settings)
     @index_steps = []
     @after_processing_steps = []
   end
