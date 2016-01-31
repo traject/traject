@@ -6,7 +6,7 @@ require 'benchmark/ips'
 
 require 'marc'
 
-marc_records = MARC::Reader.new('./batch.dat').to_a
+marc_records = MARC::Reader.new('./batch.dat').to_a.take(10)
 
 
 indexer_orig = Traject::IndexerOrig.new
@@ -18,9 +18,21 @@ indexer.load_config_file('./common.rb')
 indexer_orig.load_config_file('./common.rb')
 
 
+puts RUBY_DESCRIPTION
 Benchmark.ips do |x|
-  x.warmup = 10
+  if defined? JRUBY_VERSION
+    x.warmup = 10
+  else
+    x.warmup = 2
+  end
+  
   x.time = 10
+
+  x.report('new') do
+    marc_records.each do |marc_record|
+      indexer.map_record(marc_record)
+    end
+  end
 
   x.report('orig') do
     marc_records.each do |marc_record|
@@ -28,14 +40,6 @@ Benchmark.ips do |x|
     end
   end
   
-  x.report('new') do
-    marc_records.each do |marc_record|
-      indexer.map_record(marc_record)
-    end
-  end
-
-
-
 
   x.compare!
 
