@@ -9,7 +9,8 @@
 
 class Traject::Indexer
   class EachRecordStep
-    attr_accessor :source_location, :lambda, :block
+    attr_accessor :source_location, :block
+    attr_reader :lambda
 
     def initialize(lambda, block, source_location)
       self.lambda          = lambda
@@ -17,6 +18,12 @@ class Traject::Indexer
       self.source_location = source_location
 
       self.validate!
+    end
+
+    # Set the arity of the lambda expression just once, when we define it
+    def lambda=(lam)
+      @lambda = lam
+      @lambda_arity = @lambda.arity
     end
 
     # raises if bad data
@@ -41,14 +48,19 @@ class Traject::Indexer
 
     # For each_record, always return an empty array as the
     # accumulator, since it doesn't have those kinds of side effects
-    def execute(context)
-      [@lambda, @block].each do |aProc|
-        next unless aProc
 
-        if aProc.arity == 1
-          aProc.call(context.source_record)
+    def execute(context)
+      sr = context.source_record
+
+      if @block
+        @block.call(sr, context)
+      end
+
+      if @lambda
+        if @lambda_arity == 1
+          @lambda.call(sr)
         else
-          aProc.call(context.source_record, context)
+          @lambda.call(sr, context)
         end
 
       end
@@ -65,7 +77,8 @@ class Traject::Indexer
 # An indexing step definition for a "to_field" step to specific
 # field.
   class ToFieldStep
-    attr_accessor :field_name, :lambda, :block, :source_location
+    attr_accessor :field_name, :block, :source_location
+    attr_reader :lambda
 
     def initialize(fieldname, lambda, block, source_location)
       self.field_name      = fieldname
@@ -74,6 +87,11 @@ class Traject::Indexer
       self.source_location = source_location
 
       validate!
+    end
+
+    def lambda=(lam)
+      @lambda = lam
+      @lambda_arity = @lambda.arity
     end
 
     def validate!
@@ -98,16 +116,20 @@ class Traject::Indexer
 
     def execute(context)
       accumulator = []
-      [@lambda, @block].each do |aProc|
-        next unless aProc
+      sr = context.source_record
 
-        if aProc.arity == 2
-          aProc.call(context.source_record, accumulator)
-        else
-          aProc.call(context.source_record, accumulator, context)
-        end
-
+      if @block
+        @block.call(sr, accumulator, context)
       end
+
+      if @lambda
+        if @lambda_arity == 2
+          @lambda.call(sr, accumulator)
+        else
+          @lambda.call(sr, accumulator, context)
+        end
+      end
+
       return accumulator
     end
 
@@ -127,10 +149,8 @@ class Traject::Indexer
     # after_processing steps get no args yielded to
     # their blocks, they just are what they are.
     def execute
-      [lambda, block].each do |aProc|
-        next unless aProc
-        aProc.call
-      end
+      @block.call if @block
+      @lambda.call if @lambda
     end
 
     def inspect
