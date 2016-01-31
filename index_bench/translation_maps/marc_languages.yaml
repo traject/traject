@@ -1,0 +1,516 @@
+---
+abk: Abkhaz
+ace: Achinese
+ach: Acoli
+ada: Adangme
+ady: Adygei
+aar: Afar
+afh: Afrihili (Artificial language)
+afr: Afrikaans
+afa: Afroasiatic (Other)
+ain: Ainu
+aka: Akan
+akk: Akkadian
+alb: Albanian
+ale: Aleut
+alg: Algonquian (Other)
+ajm: Aljamía
+alt: Altai
+tut: Altaic (Other)
+amh: Amharic
+anp: Angika
+apa: Apache languages
+ara: Arabic
+arg: Aragonese
+arc: Aramaic
+arp: Arapaho
+arw: Arawak
+arm: Armenian
+rup: Aromanian
+art: Artificial (Other)
+asm: Assamese
+ath: Athapascan (Other)
+aus: Australian languages
+map: Austronesian (Other)
+ava: Avaric
+ave: Avestan
+awa: Awadhi
+aym: Aymara
+aze: Azerbaijani
+ast: Bable
+ban: Balinese
+bat: Baltic (Other)
+bal: Baluchi
+bam: Bambara
+bai: Bamileke languages
+bad: Banda languages
+bnt: Bantu (Other)
+bas: Basa
+bak: Bashkir
+baq: Basque
+btk: Batak
+bej: Beja
+bel: Belarusian
+bem: Bemba
+ben: Bengali
+ber: Berber (Other)
+bho: Bhojpuri
+bih: Bihari (Other)
+bik: Bikol
+byn: Bilin
+bis: Bislama
+zbl: Blissymbolics
+bos: Bosnian
+bra: Braj
+bre: Breton
+bug: Bugis
+bul: Bulgarian
+bua: Buriat
+bur: Burmese
+cad: Caddo
+car: Carib
+cat: Catalan
+cau: Caucasian (Other)
+ceb: Cebuano
+cel: Celtic (Other)
+cai: Central American Indian (Other)
+chg: Chagatai
+cmc: Chamic languages
+cha: Chamorro
+che: Chechen
+chr: Cherokee
+chy: Cheyenne
+chb: Chibcha
+chi: Chinese
+chn: Chinook jargon
+chp: Chipewyan
+cho: Choctaw
+chu: Church Slavic
+chk: Chuukese
+chv: Chuvash
+cop: Coptic
+cor: Cornish
+cos: Corsican
+cre: Cree
+mus: Creek
+crp: Creoles and Pidgins (Other)
+cpe: "Creoles and Pidgins, English-based (Other)"
+cpf: "Creoles and Pidgins, French-based (Other)"
+cpp: "Creoles and Pidgins, Portuguese-based (Other)"
+crh: Crimean Tatar
+hrv: Croatian
+scr: Croatian
+cus: Cushitic (Other)
+cze: Czech
+dak: Dakota
+dan: Danish
+dar: Dargwa
+day: Dayak
+del: Delaware
+din: Dinka
+div: Divehi
+doi: Dogri
+dgr: Dogrib
+dra: Dravidian (Other)
+dua: Duala
+dut: Dutch
+dum: "Dutch, Middle (ca. 1050-1350)"
+dyu: Dyula
+dzo: Dzongkha
+frs: East Frisian
+bin: Edo
+efi: Efik
+egy: Egyptian
+eka: Ekajuk
+elx: Elamite
+eng: English
+enm: "English, Middle (1100-1500)"
+ang: "English, Old (ca. 450-1100)"
+myv: Erzya
+esk: Eskimo languages
+epo: Esperanto
+esp: Esperanto
+est: Estonian
+gez: Ethiopic
+eth: Ethiopic
+ewe: Ewe
+ewo: Ewondo
+fan: Fang
+fat: Fanti
+fao: Faroese
+far: Faroese
+fij: Fijian
+fil: Filipino
+fin: Finnish
+fiu: Finno-Ugrian (Other)
+fon: Fon
+fre: French
+frm: "French, Middle (ca. 1300-1600)"
+fro: "French, Old (ca. 842-1300)"
+fry: Frisian
+fri: Frisian
+fur: Friulian
+ful: Fula
+gaa: Gã
+glg: Galician
+gag: Galician
+lug: Ganda
+gay: Gayo
+gba: Gbaya
+geo: Georgian
+ger: German
+gmh: "German, Middle High (ca. 1050-1500)"
+goh: "German, Old High (ca. 750-1050)"
+gem: Germanic (Other)
+gil: Gilbertese
+gon: Gondi
+gor: Gorontalo
+got: Gothic
+grb: Grebo
+grc: "Greek, Ancient (to 1453)"
+gre: "Greek, Modern (1453- )"
+grn: Guarani
+gua: Guarani
+guj: Gujarati
+gwi: Gwich'in
+hai: Haida
+hat: Haitian French Creole
+hau: Hausa
+haw: Hawaiian
+heb: Hebrew
+her: Herero
+hil: Hiligaynon
+hin: Hindi
+hmo: Hiri Motu
+hit: Hittite
+hmn: Hmong
+hun: Hungarian
+hup: Hupa
+iba: Iban
+ice: Icelandic
+ido: Ido
+ibo: Igbo
+ijo: Ijo
+ilo: Iloko
+smn: Inari Sami
+inc: Indic (Other)
+ine: Indo-European (Other)
+ind: Indonesian
+inh: Ingush
+ina: Interlingua (International Auxiliary Language Association)
+int: Interlingua (International Auxiliary Language Association)
+ile: Interlingue
+iku: Inuktitut
+ipk: Inupiaq
+ira: Iranian (Other)
+gle: Irish
+iri: Irish
+mga: "Irish, Middle (ca. 1100-1550)"
+sga: "Irish, Old (to 1100)"
+iro: Iroquoian (Other)
+ita: Italian
+jpn: Japanese
+jav: Javanese
+jrb: Judeo-Arabic
+jpr: Judeo-Persian
+kbd: Kabardian
+kab: Kabyle
+kac: Kachin
+kal: Kalâtdlisut
+kam: Kamba
+kan: Kannada
+kau: Kanuri
+krc: Karachay-Balkar
+kaa: Kara-Kalpak
+krl: Karelian
+kar: Karen languages
+kas: Kashmiri
+csb: Kashubian
+kaw: Kawi
+kaz: Kazakh
+kha: Khasi
+khm: Khmer
+cam: Khmer
+khi: Khoisan (Other)
+kho: Khotanese
+kik: Kikuyu
+kmb: Kimbundu
+kin: Kinyarwanda
+tlh: Klingon (Artificial language)
+kom: Komi
+kon: Kongo
+kok: Konkani
+kut: Kootenai
+kor: Korean
+kos: Kosraean
+kpe: Kpelle
+kro: Kru (Other)
+kua: Kuanyama
+kum: Kumyk
+kur: Kurdish
+kru: Kurukh
+kus: Kusaie
+kir: Kyrgyz
+lad: Ladino
+lah: Lahndā
+lam: Lamba (Zambia and Congo)
+lao: Lao
+lat: Latin
+lav: Latvian
+lez: Lezgian
+lim: Limburgish
+lin: Lingala
+lit: Lithuanian
+jbo: Lojban (Artificial language)
+nds: Low German
+dsb: Lower Sorbian
+loz: Lozi
+lub: Luba-Katanga
+lua: Luba-Lulua
+lui: Luiseño
+smj: Lule Sami
+lun: Lunda
+luo: Luo (Kenya and Tanzania)
+lus: Lushai
+ltz: Luxembourgish
+mac: Macedonian
+mad: Madurese
+mag: Magahi
+mai: Maithili
+mak: Makasar
+mlg: Malagasy
+mla: Malagasy
+may: Malay
+mal: Malayalam
+mlt: Maltese
+mnc: Manchu
+mdr: Mandar
+man: Mandingo
+mni: Manipuri
+mno: Manobo languages
+glv: Manx
+max: Manx
+mao: Maori
+arn: Mapuche
+mar: Marathi
+chm: Mari
+mah: Marshallese
+mwr: Marwari
+mas: Maasai
+myn: Mayan languages
+men: Mende
+mic: Micmac
+min: Minangkabau
+mwl: Mirandese
+mis: Miscellaneous languages
+moh: Mohawk
+mdf: Moksha
+mol: Moldavian
+mkh: Mon-Khmer (Other)
+lol: Mongo-Nkundu
+mon: Mongolian
+mos: Mooré
+mul: Multiple languages
+mun: Munda (Other)
+nah: Nahuatl
+nau: Nauru
+nav: Navajo
+nbl: Ndebele (South Africa)
+nde: Ndebele (Zimbabwe)
+ndo: Ndonga
+nap: Neapolitan Italian
+nep: Nepali
+new: Newari
+nwc: "Newari, Old"
+nia: Nias
+nic: Niger-Kordofanian (Other)
+ssa: Nilo-Saharan (Other)
+niu: Niuean
+nqo: N'Ko
+nog: Nogai
+zxx: No linguistic content
+nai: North American Indian (Other)
+frr: North Frisian
+sme: Northern Sami
+nso: Northern Sotho
+nor: Norwegian
+nob: Norwegian (Bokmål)
+nno: Norwegian (Nynorsk)
+nub: Nubian languages
+nym: Nyamwezi
+nya: Nyanja
+nyn: Nyankole
+nyo: Nyoro
+nzi: Nzima
+oci: Occitan (post-1500)
+lan: Occitan (post 1500)
+xal: Oirat
+oji: Ojibwa
+non: Old Norse
+peo: Old Persian (ca. 600-400 B.C.)
+ori: Oriya
+orm: Oromo
+gal: Oromo
+osa: Osage
+oss: Ossetic
+oto: Otomian languages
+pal: Pahlavi
+pau: Palauan
+pli: Pali
+pam: Pampanga
+pag: Pangasinan
+pan: Panjabi
+pap: Papiamento
+paa: Papuan (Other)
+per: Persian
+phi: Philippine (Other)
+phn: Phoenician
+pon: Pohnpeian
+pol: Polish
+por: Portuguese
+pra: Prakrit languages
+pro: Provençal (to 1500)
+pus: Pushto
+que: Quechua
+roh: Raeto-Romance
+raj: Rajasthani
+rap: Rapanui
+rar: Rarotongan
+roa: Romance (Other)
+rom: Romani
+rum: Romanian
+run: Rundi
+rus: Russian
+sal: Salishan languages
+sam: Samaritan Aramaic
+smi: Sami
+lap: Sami
+smo: Samoan
+sao: Samoan
+sad: Sandawe
+sag: Sango (Ubangi Creole)
+san: Sanskrit
+sat: Santali
+srd: Sardinian
+sas: Sasak
+sco: Scots
+gla: Scottish Gaelic
+gae: Scottish Gaelix
+sel: Selkup
+sem: Semitic (Other)
+srp: Serbian
+scc: Serbian
+srr: Serer
+shn: Shan
+sna: Shona
+sho: Shona
+iii: Sichuan Yi
+scn: Sicilian Italian
+sid: Sidamo
+sgn: Sign languages
+bla: Siksika
+snd: Sindhi
+sin: Sinhalese
+snh: Sinhalese
+sit: Sino-Tibetan (Other)
+sio: Siouan (Other)
+sms: Skolt Sami
+den: Slavey
+sla: Slavic (Other)
+slo: Slovak
+slv: Slovenian
+sog: Sogdian
+som: Somali
+son: Songhai
+snk: Soninke
+wen: Sorbian (Other)
+sot: Sotho
+sso: Sotho
+sai: South American Indian (Other)
+sma: Southern Sami
+spa: Spanish
+srn: Sranan
+suk: Sukuma
+sux: Sumerian
+sun: Sundanese
+sus: Susu
+swa: Swahili
+ssw: Swazi
+swz: Swazi
+swe: Swedish
+gsw: Swiss German
+syc: Syriac
+syr: "Syriac, Modern"
+tgl: Tagalog
+tag: Tagalog
+tah: Tahitian
+tai: Tai (Other)
+tgk: Tajik
+taj: Tajik
+tmh: Tamashek
+tam: Tamil
+tat: Tatar
+tar: Tatar
+tel: Telugu
+tem: Temne
+ter: Terena
+tet: Tetum
+tha: Thai
+tib: Tibetan
+tig: Tigré
+tir: Tigrinya
+tiv: Tiv
+tli: Tlingit
+tpi: Tok Pisin
+tkl: Tokelauan
+tog: Tonga (Nyasa)
+ton: Tongan
+tru: Truk
+tsi: Tsimshian
+tso: Tsonga
+tsn: Tswana
+tsw: Tswana
+tum: Tumbuka
+tup: Tupi languages
+tur: Turkish
+ota: "Turkish, Ottoman"
+tuk: Turkmen
+tvl: Tuvaluan
+tyv: Tuvinian
+twi: Twi
+udm: Udmurt
+uga: Ugaritic
+uig: Uighur
+ukr: Ukrainian
+umb: Umbundu
+und: Undetermined
+hsb: Upper Sorbian
+urd: Urdu
+uzb: Uzbek
+vai: Vai
+ven: Venda
+vie: Vietnamese
+vol: Volapük
+vot: Votic
+wak: Wakashan languages
+wln: Walloon
+war: Waray
+was: Washoe
+wel: Welsh
+him: Western Pahari languages
+wal: Wolayta
+wol: Wolof
+xho: Xhosa
+sah: Yakut
+yao: Yao (Africa)
+yap: Yapese
+yid: Yiddish
+yor: Yoruba
+ypk: Yupik languages
+znd: Zande languages
+zap: Zapotec
+zza: Zaza
+zen: Zenaga
+zha: Zhuang
+zul: Zulu
+zun: Zuni

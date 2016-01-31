@@ -109,7 +109,10 @@ module Traject
   class MarcExtractor
     attr_accessor :options, :spec_set
 
-    ALTERNATE_SCRIPT_TAG = '880'
+    ALTERNATE_SCRIPT_TAG = '880'.freeze
+    SUBFIELD_6 = '6'.freeze
+    EMPTY = [].freeze
+    SPACE = ' '.freeze
 
     # First arg is a specification for extraction of data from a MARC record.
     # Specification can be given in two forms:
@@ -130,7 +133,7 @@ module Traject
     #                     * :only => only include linked 880s, not original
     def initialize(spec, options = {})
       self.options = {
-          :separator        => ' ',
+          :separator        => SPACE,
           :alternate_script => :include
       }.merge(options)
 
@@ -150,6 +153,8 @@ module Traject
         show_interest_in_tag(ALTERNATE_SCRIPT_TAG)
       end
 
+      @interesting_tags_list = @interesting_tags_hash.keys
+
       self.freeze
     end
 
@@ -157,7 +162,7 @@ module Traject
     # Declare that we're interested in a tag
     def show_interest_in_tag(tag)
       @interesting_tags_hash      ||= {}
-      @interesting_tags_hash[tag] = true
+      @interesting_tags_hash[tag.freeze] = true
     end
 
     # Check to see if a tag is interesting (meaning it may be covered by a spec
@@ -168,7 +173,7 @@ module Traject
 
     # All the "interesting" tags
     def interesting_tags
-      @interesting_tags_hash.keys
+      @interesting_tags_list
     end
 
 

@@ -1,0 +1,16 @@
+---
+dept : Department
+USAD : United States Department of Agriculture
+"U.S. G.P.O." : United States. Government Printing Office
+"U.S. Govt. Print. Off.," : United States. Government Printing Office
+U.S. : United States
+US   : United States
+"(U.S.)" : United States
+G.P.O : Government Printing Office
+"Government Printing Office," : "United States. Government Printing Office"
+"United States. United States. Government Printing Office," : "United States. Government Printing Office"
+"Gov't. print. off." : "United States. Government Printing Office"
+"United States Government Printing Office," : "United States. Government Printing Office"
+"National Institute of Health" : National Institutes of Health
+"NIH" : National Institutes of Health
+"USAID" : U.S. Agency for International Development

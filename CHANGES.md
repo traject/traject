@@ -1,5 +1,8 @@
 # Changes
 
+## 2.2.1
+  * Had inadverntantly broken use of arrays as extract_marc specifications. Fixed.
+  
 ## 2.2.0
   * Change DebugWriter to be more forgiving (and informative) about missing record-id fields
   * Automatically require DebugWriter for easier use on the command line

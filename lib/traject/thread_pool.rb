@@ -102,8 +102,6 @@ module Traject
     #  Note, that just makes block-local variables, it doesn't
     #  help you with whether a data structure itself is thread safe.
     def maybe_in_thread_pool(*args)
-      start_t = Time.now
-
       if @thread_pool
         @thread_pool.post do
           begin

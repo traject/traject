@@ -17,7 +17,7 @@ module Traject
       def self.new(seedset = {})
 
         case seedset
-          when String
+          when String, Array
             s      = allocate
             s.hash = Spec.hash_from_string(seedset)
             s
@@ -49,20 +49,20 @@ module Traject
       end
 
       def specs_matching_field(field, use_alternate_script = false)
-
-        tag = if use_alternate_script
-                effective_tag(field)
-              else
-                field.tag
-              end
-        specs_for_tag(tag).select { |s| s.matches_indicators?(field) }
+        field_tag = field.tag
+        if use_alternate_script and (field_tag == ALTERNATE_SCRIPT_TAG)
+          field_tag = effective_tag(field)
+        end
+        specs_for_tag(field_tag).select { |s| s.matches_indicators?(field) }
       end
 
+
       def effective_tag(field)
-        if field.tag == ALTERNATE_SCRIPT_TAG and field['6']
-          field["6"].encode(field["6"].encoding).byteslice(0, 3)
+        six = field[SUBFIELD_6]
+        if six
+          six.encode(six.encoding).byteslice(0, 3)
         else
-          field.tag
+          ALTERNATE_SCRIPT_TAG
         end
       end
 
@@ -94,11 +94,11 @@ module Traject
       end
 
       def indicator1=(ind1)
-        ind1 == '*' ? @indicator1 = nil : @indicator1 = ind1
+        ind1 == '*' ? @indicator1 = nil : @indicator1 = ind1.freeze
       end
 
       def indicator2=(ind2)
-        ind2 == '*' ? @indicator2 = nil : @indicator2 = ind2
+        ind2 == '*' ? @indicator2 = nil : @indicator2 = ind2.freeze
       end
 
       def byte1=(byte1)
@@ -203,8 +203,8 @@ module Traject
 
       def self.create_datafield_spec(tag, ind1, ind2, subfields)
         spec            = Spec.new(:tag => tag)
-        spec.indicator1 = ind1
-        spec.indicator2 = ind2
+        spec.indicator1 = ind1.freeze
+        spec.indicator2 = ind2.freeze
 
         if subfields and !subfields.empty?
           spec.subfields = subfields.split('')
@@ -216,8 +216,8 @@ module Traject
 
       # Create a new controlfield spec
       def self.create_controlfield_spec(tag, byte1, byte2)
-        spec = Spec.new(:tag => tag)
-        spec.set_bytes(byte1, byte2)
+        spec = Spec.new(:tag => tag.freeze)
+        spec.set_bytes(byte1.freeze, byte2.freeze)
         spec
       end
 
