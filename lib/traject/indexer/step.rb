@@ -52,18 +52,18 @@ class Traject::Indexer
     def execute(context)
       sr = context.source_record
 
-      if @block
-        @block.call(sr, context)
-      end
-
       if @lambda
         if @lambda_arity == 1
           @lambda.call(sr)
         else
           @lambda.call(sr, context)
         end
-
       end
+
+      if @block
+        @block.call(sr, context)
+      end
+
       return [] # empty -- no accumulator for each_record
     end
 
@@ -118,10 +118,6 @@ class Traject::Indexer
       accumulator = []
       sr = context.source_record
 
-      if @block
-        @block.call(sr, accumulator, context)
-      end
-
       if @lambda
         if @lambda_arity == 2
           @lambda.call(sr, accumulator)
@@ -129,6 +125,11 @@ class Traject::Indexer
           @lambda.call(sr, accumulator, context)
         end
       end
+
+      if @block
+        @block.call(sr, accumulator, context)
+      end
+
 
       return accumulator
     end
