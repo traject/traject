@@ -17,7 +17,7 @@ module Traject
       def self.new(seedset = {})
 
         case seedset
-          when String
+          when String, Array
             s      = allocate
             s.hash = Spec.hash_from_string(seedset)
             s

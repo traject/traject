@@ -28,6 +28,11 @@ describe "Traject::MarcExtractor" do
 
       assert_kind_of Array, spec.subfields
     end
+    
+    it "parses specset from an array" do
+      parsed  = Traject::MarcExtractor::SpecSet.new(%w[245abcde 810 700|*4|bcd])
+      assert_equal parsed.tags, %w[245 810 700]
+    end
 
     it "parses a mixed bag" do
       parsed  = Traject::MarcExtractor::Spec.hash_from_string("245abcde:810:700|*4|bcd")
@@ -55,6 +60,17 @@ describe "Traject::MarcExtractor" do
       assert_equal "4", spec700.indicator2
       assert_equal %w{b c d}, spec700.subfields
     end
+    
+    it "parses from an array" do
+      parsed  = Traject::MarcExtractor::Spec.hash_from_string(%w[245abcde 810 700|*4|bcd])
+      spec245 = parsed['245'].first
+      spec810 = parsed['810'].first
+      spec700 = parsed['700'].first
+
+      assert_length 3, parsed
+    end
+      
+      
 
     it "parses fixed field byte offsets" do
       parsed = Traject::MarcExtractor::Spec.hash_from_string("005[5]:008[7-10]")
