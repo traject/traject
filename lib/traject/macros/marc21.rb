@@ -41,7 +41,7 @@ module Traject::Macros
     #     to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
     #
     # If you'd like extract_marc functionality but you're not creating an indexer
-    # step, see Traject::Macros::Marc21.extract_marc_from module method. 
+    # step, see Traject::Macros::Marc21.extract_marc_from module method.
     def extract_marc(spec, options = {})
 
       # Raise an error if there are any invalid options, indicating a
@@ -77,23 +77,23 @@ module Traject::Macros
 
     # Convenience method when you want extract_marc behavior, but NOT
     # to create a lambda for an Indexer step, but instead just give
-    # it a record directly and get back an array of values. 
+    # it a record directly and get back an array of values.
     #
     #     array = Traject::Indexer::Marc21.extract_marc_from(record, "245ab", :trim_punctuation => true)
     #
     # If you have a Traject::Indexer::Context and want to pass it in, you can:
     #
-    #    array = Traject::Indexer::Marc21.extract_marc_from(record, "245ab", :trim_punctuation => true, :context => existing_context)    
+    #    array = Traject::Indexer::Marc21.extract_marc_from(record, "245ab", :trim_punctuation => true, :context => existing_context)
     def self.extract_marc_from(record, spec, options = {})
       output  = []
       # Nil context works, but if caller wants to pass one in
-      # for better error reporting that's cool too. 
+      # for better error reporting that's cool too.
       context = options.delete(:context) || nil
 
       extract_marc(spec, options).call(record, output, context)
       return output
     end
-    
+
     # Side-effect the accumulator with the options
     def self.apply_extraction_options(accumulator, options, translation_map=nil)
       only_first              = options[:first]
@@ -121,8 +121,8 @@ module Traject::Macros
         accumulator << default_value
       end
     end
-      
-    
+
+
     #  A list of symbols that are valid keys in the options hash
     EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default,
                                   :allow_duplicates, :separator, :translation_map,
@@ -177,8 +177,8 @@ module Traject::Macros
     # joined by space by default.
     #
     # options
-    # [:from] default 100, only tags >= lexicographically
-    # [:to]   default 899, only tags <= lexicographically
+    # [:from] default '100', only tags >= lexicographically
+    # [:to]   default '899', only tags <= lexicographically
     # [:separator] how to join subfields, default space, nil means don't join
     #
     # All fields in from-to must be marc DATA (not control fields), or weirdness
@@ -190,6 +190,10 @@ module Traject::Macros
         raise RuntimeError.new("Illegal/Unknown argument '#{(options.keys - EXTRACT_ALL_MARC_VALID_OPTIONS).join(', ')}' in extract_all_marc at #{Traject::Util.extract_caller_location(caller.first)}")
       end
       options = {:from => "100", :to => "899", :separator => ' '}.merge(options)
+
+      if [options[:from], options[:to]].map{|x| x.is_a? String}.any?{|x| x == false}
+        raise ArgumentError.new("from/to options to extract_all_marc_values must be strings")
+      end
 
       lambda do |record, accumulator, context|
         record.each do |field|
@@ -221,10 +225,10 @@ module Traject::Macros
     #
     # Returns altered string, doesn't change original arg.
     def self.trim_punctuation(str)
-      
+
       # If something went wrong and we got a nil, just return it
       return str unless str
-      
+
       # trailing: comma, slash, semicolon, colon (possibly preceded and followed by whitespace)
       str = str.sub(/ *[ ,\/;:] *\Z/, '')
 
