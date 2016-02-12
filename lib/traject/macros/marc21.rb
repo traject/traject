@@ -117,7 +117,7 @@ module Traject::Macros
         accumulator.uniq!
       end
 
-      if default_value && accumulator.empty?
+      if options.has_key?(:default) && accumulator.empty?
         accumulator << default_value
       end
     end

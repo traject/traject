@@ -286,6 +286,29 @@ after_processing do
 end
 ~~~
 
+## Allowing/disallowing repeating duplicate values
+
+By default, `traject` allows the same value to be added to the same field without
+restriction. You can use the setting `allow_duplicate_values = false` to
+disallow duplicate values (i.e., call `uniq!` on the set of values associated with
+a given field).
+
+## Keeping nil values
+
+`traject` defaults to throwing away any `nil`s that make it into your accumulator
+of values. The setting `allow_nil_values = true` will let `nil` values
+pass through.
+
+# Dealing with  empty fields
+
+Similary, by default `traject` completely ignores empty fields. You can
+change this with the setting `allow_empty_fields = true`, which will result
+in the output hash having a key for every field mentioned in a `to_field`
+statement, whether or not it has any values in it.
+
+Fields that are empty will have a value sent to the writer of an empty
+array (`[]`). Writers that need to special-case empty fields should do so in the
+writer class in question.
 
 ## Readers and Writers
 
