@@ -13,6 +13,7 @@ class Traject::Indexer
     attr_reader :lambda
 
     EMPTY_ACCUMULATOR = [].freeze
+
     def initialize(lambda, block, source_location)
       self.lambda          = lambda
       self.block           = block
@@ -23,8 +24,16 @@ class Traject::Indexer
 
     # Set the arity of the lambda expression just once, when we define it
     def lambda=(lam)
+      @lambda_arity = 0 # assume
+      return unless lam
+
       @lambda = lam
-      @lambda_arity = @lambda ?  @lambda.arity : 0
+      if @lambda.is_a?(Proc)
+        @lambda_arity = @lambda.arity
+      else
+        raise NamingError.new("argument to each_record must be a block/lambda, not a #{lam.class} #{self.inspect}")
+      end
+
     end
 
     # raises if bad data
@@ -91,8 +100,8 @@ class Traject::Indexer
     end
 
     def lambda=(lam)
-      @lambda = lam
-      @lambda_arity = @lambda ?  @lambda.arity : 0
+      @lambda       = lam
+      @lambda_arity = @lambda ? @lambda.arity : 0
     end
 
     def validate!
@@ -117,7 +126,7 @@ class Traject::Indexer
 
     def execute(context)
       accumulator = []
-      sr = context.source_record
+      sr          = context.source_record
 
       if @lambda
         if @lambda_arity == 2
