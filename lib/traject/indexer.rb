@@ -340,16 +340,28 @@ class Traject::Indexer
         index_step.execute(context) # will always return [] for an each_record step
       end
 
-      if accumulator.size > 0
-        accumulator.compact!
-        (context.output_hash[index_step.field_name] ||= []).concat accumulator
-      end
+      add_accumulator_to_context!(accumulator, context)
+
 
       context.index_step = nil
     end
 
     return context
   end
+
+
+  def add_accumulator_to_context!(accumulator, context)
+    if accumulator.size > 0
+      accumulator.compact!
+      (context.output_hash[context.index_step.field_name] ||= []).concat accumulator
+    end
+  end
+
+  # Do post-processing on the accumulator (remove nil values, allow empty
+  # fields, etc)
+
+
+
 
   # just a wrapper that captures and records any unexpected
   # errors raised in mapping, along with contextual information

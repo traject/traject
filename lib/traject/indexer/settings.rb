@@ -67,7 +67,7 @@ class Traject::Indexer
 
           # Writer defaults
           "writer_class_name"       => "Traject::SolrJsonWriter",
-          "solr_writer.batch_size"  => 200,
+          "solr_writer.batch_size"  => 100,
           "solr_writer.thread_pool" => 1,
 
           # Threading and logging
