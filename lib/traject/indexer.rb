@@ -341,7 +341,7 @@ class Traject::Indexer
       end
 
       if accumulator.size > 0
-        accumulator.compact!
+        # accumulator.compact!
         (context.output_hash[index_step.field_name] ||= []).concat accumulator
       end
 
