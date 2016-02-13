@@ -373,7 +373,6 @@ class Traject::Indexer
 
   ALLOW_NIL_VALUES       = "allow_nil_values".freeze
   ALLOW_EMPTY_FIELDS     = "allow_empty_fields".freeze
-  EMPTY_FIELD_VALUE      = "empty_field_value".freeze
   ALLOW_DUPLICATE_VALUES = "allow_duplicate_values".freeze
 
   def post_process_accumulator(accumulator)
