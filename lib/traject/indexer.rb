@@ -160,9 +160,10 @@ end
 class Traject::Indexer
 
   # Arity error on a passed block
-  class ArityError < ArgumentError; end
-  class NamingError < ArgumentError; end
-
+  class ArityError < ArgumentError;
+  end
+  class NamingError < ArgumentError;
+  end
 
 
   include Traject::QualifiedConstGet
@@ -179,8 +180,8 @@ class Traject::Indexer
 
   # optional hash or Traject::Indexer::Settings object of settings.
   def initialize(arg_settings = {})
-    @settings = Settings.new(arg_settings)
-    @index_steps = []
+    @settings               = Settings.new(arg_settings)
+    @index_steps            = []
     @after_processing_steps = []
   end
 
@@ -243,12 +244,12 @@ class Traject::Indexer
   # to be called for each record, and generate values for a particular
   # output field.
   def to_field(field_name, aLambda = nil, &block)
-    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first) )
+    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first))
   end
 
   # Part of DSL, register logic to be called for each record
   def each_record(aLambda = nil, &block)
-    @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first) )
+    @index_steps << EachRecordStep.new(aLambda, block, Traject::Util.extract_caller_location(caller.first))
   end
 
   # Part of DSL, register logic to be called once at the end
@@ -260,16 +261,20 @@ class Traject::Indexer
   def logger
     @logger ||= create_logger
   end
+
   attr_writer :logger
 
 
   def logger_format
     format = settings["log.format"] || "%d %5L %m"
     format = case format
-      when "false" then false
-      when "" then nil
-      else format
-    end
+               when "false" then
+                 false
+               when "" then
+                 nil
+               else
+                 format
+             end
   end
 
   # Create logger according to settings
@@ -278,7 +283,7 @@ class Traject::Indexer
     logger_level  = settings["log.level"] || "info"
 
     # log everything to STDERR or specified logfile
-    logger = Yell::Logger.new(:null)
+    logger        = Yell::Logger.new(:null)
     logger.format = logger_format
     logger.level  = logger_level
 
@@ -287,12 +292,12 @@ class Traject::Indexer
     # on the adapter, so it will stay there if overall level
     # is changed.
     case logger_destination
-    when "STDERR"
-      logger.adapter :stderr, level: logger_level, format: logger_format
-    when "STDOUT"
-      logger.adapter :stdout, level: logger_level, format: logger_format
-    else
-      logger.adapter :file, logger_destination, level: logger_level, format: logger_format
+      when "STDERR"
+        logger.adapter :stderr, level: logger_level, format: logger_format
+      when "STDOUT"
+        logger.adapter :stdout, level: logger_level, format: logger_format
+      else
+        logger.adapter :file, logger_destination, level: logger_level, format: logger_format
     end
 
 
@@ -338,7 +343,7 @@ class Traject::Indexer
 
       # Set the index step for error reporting
       context.index_step = index_step
-      accumulator = log_mapping_errors(context, index_step) do
+      accumulator        = log_mapping_errors(context, index_step) do
         index_step.execute(context) # will always return [] for an each_record step
       end
 
@@ -366,16 +371,15 @@ class Traject::Indexer
   # Note that this is all about the side effects; we change the
   # accumulator in situ to save creating extraneous objects
 
-  ALLOW_NIL_VALUES = "allow_nil_values".freeze
-  ALLOW_EMPTY_FIELDS = "allow_empty_fields".freeze
-  EMPTY_FIELD_VALUE = "empty_field_value".freeze
+  ALLOW_NIL_VALUES       = "allow_nil_values".freeze
+  ALLOW_EMPTY_FIELDS     = "allow_empty_fields".freeze
+  EMPTY_FIELD_VALUE      = "empty_field_value".freeze
   ALLOW_DUPLICATE_VALUES = "allow_duplicate_values".freeze
 
   def post_process_accumulator(accumulator)
     accumulator.compact! unless settings[ALLOW_NIL_VALUES]
     accumulator.uniq! unless settings[ALLOW_DUPLICATE_VALUES]
   end
-
 
 
   # just a wrapper that captures and records any unexpected
@@ -391,7 +395,7 @@ class Traject::Indexer
     begin
       yield
     rescue Exception => e
-      msg =  "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
+      msg = "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
       msg += "    while executing #{index_step.inspect}\n"
       msg += Traject::Util.exception_to_log_message(e)
 
@@ -419,21 +423,21 @@ class Traject::Indexer
   def process(io_stream)
     settings.fill_in_defaults!
 
-    count      =       0
+    count      = 0
     start_time = batch_start_time = Time.now
     logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
 
     reader = self.reader!(io_stream)
 
     processing_threads = settings["processing_thread_pool"].to_i
-    thread_pool = Traject::ThreadPool.new(processing_threads)
+    thread_pool        = Traject::ThreadPool.new(processing_threads)
 
     logger.info "   Indexer with #{processing_threads} processing threads, reader: #{reader.class.name} and writer: #{writer.class.name}"
 
     log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
 
-    reader.each do |record; position|
-      count += 1
+    reader.each do |record; position |
+      count    += 1
 
       # have to use a block local var, so the changing `count` one
       # doesn't get caught in the closure. Weird, yeah.
@@ -446,14 +450,14 @@ class Traject::Indexer
       end
 
       context = Context.new(
-        :source_record => record,
-        :settings => settings,
-        :position => position,
-        :logger => logger
+          :source_record => record,
+          :settings      => settings,
+          :position      => position,
+          :logger        => logger
       )
 
       if log_batch_size && (count % log_batch_size == 0)
-        batch_rps = log_batch_size / (Time.now - batch_start_time)
+        batch_rps   = log_batch_size / (Time.now - batch_start_time)
         overall_rps = count / (Time.now - start_time)
         logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{context.source_record_id}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
         batch_start_time = Time.now
@@ -493,8 +497,8 @@ class Traject::Indexer
       end
     end
 
-    elapsed        = Time.now - start_time
-    avg_rps        = (count / elapsed)
+    elapsed = Time.now - start_time
+    avg_rps = (count / elapsed)
     logger.info "finished Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
 
     if writer.respond_to?(:skipped_record_count) && writer.skipped_record_count > 0
@@ -560,17 +564,17 @@ class Traject::Indexer
     # We'd have #cause in ruby 2.1, filled out for us, but we want
     # to work before then, so we use our own 'original'
     attr_reader :original, :config_file, :config_file_lineno, :config_file_backtrace
+
     def initialize(config_file_path, original_exception)
-      @original               = original_exception
-      @config_file            = config_file_path
-      @config_file_lineno     = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
-      @config_file_backtrace  = Traject::Util.backtrace_from_config(config_file_path, original_exception)
-      message = "Error loading configuration file #{self.config_file}:#{self.config_file_lineno} #{original_exception.class}:#{original_exception.message}"
+      @original              = original_exception
+      @config_file           = config_file_path
+      @config_file_lineno    = Traject::Util.backtrace_lineno_for_config(config_file_path, original_exception)
+      @config_file_backtrace = Traject::Util.backtrace_from_config(config_file_path, original_exception)
+      message                = "Error loading configuration file #{self.config_file}:#{self.config_file_lineno} #{original_exception.class}:#{original_exception.message}"
 
       super(message)
     end
   end
-
 
 
 end
