@@ -204,6 +204,38 @@ describe "Traject::Indexer#map_record" do
       assert_nil output['afterSkip']
     end
 
+    it "allows duplicate values if they come up" do
+      testval = 'just a string'
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+      # Same things again so we get a duplicate
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+
+      output = @indexer.map_record(@record)
+      assert_equal [testval, testval], output['title']
+    end
+
+
+    it "disallows duplicate values if settings['allow_duplicate_values'] is false" do
+      testval = 'just a string'
+      @indexer.settings do |s|
+        s['allow_duplicate_values'] = false
+      end
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+      # Same things again so we get a duplicate
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+
+      output = @indexer.map_record(@record)
+      assert_equal [testval], output['title']
+    end
+
   end
 
 end

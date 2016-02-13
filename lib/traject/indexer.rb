@@ -234,7 +234,7 @@ class Traject::Indexer
   def settings(new_settings = nil, &block)
     @settings.merge!(new_settings) if new_settings
 
-    @settings.instance_eval &block if block
+    @settings.instance_eval &block if block_given?
 
     return @settings
   end
@@ -304,6 +304,7 @@ class Traject::Indexer
     return logger
   end
 
+
   # Processes a single record according to indexing rules set up in
   # this indexer. Returns the output hash (a hash whose keys are
   # string fields, and values are arrays of one or more values in that field)
@@ -335,6 +336,7 @@ class Traject::Indexer
       # Don't bother if we're skipping this record
       break if context.skip?
 
+      # Set the index step for error reporting
       context.index_step = index_step
       accumulator = log_mapping_errors(context, index_step) do
         index_step.execute(context) # will always return [] for an each_record step
@@ -342,7 +344,7 @@ class Traject::Indexer
 
       add_accumulator_to_context!(accumulator, context)
 
-
+      # And unset the index step now that we're finished
       context.index_step = nil
     end
 
@@ -351,15 +353,28 @@ class Traject::Indexer
 
 
   def add_accumulator_to_context!(accumulator, context)
-    if accumulator.size > 0
-      accumulator.compact!
-      (context.output_hash[context.index_step.field_name] ||= []).concat accumulator
+    if accumulator.size > 0 # acc.size will always be zero for an each_record step
+      field_name = context.index_step.field_name
+      (context.output_hash[field_name] ||= []).concat accumulator
+      post_process_accumulator(context.output_hash[field_name])
     end
   end
 
   # Do post-processing on the accumulator (remove nil values, allow empty
   # fields, etc)
 
+  # Note that this is all about the side effects; we change the
+  # accumulator in situ to save creating extraneous objects
+
+  ALLOW_NIL_VALUES = "allow_nil_values".freeze
+  ALLOW_EMPTY_FIELDS = "allow_empty_fields".freeze
+  EMPTY_FIELD_VALUE = "empty_field_value".freeze
+  ALLOW_DUPLICATE_VALUES = "allow_duplicate_values".freeze
+
+  def post_process_accumulator(accumulator)
+    accumulator.compact! unless settings[ALLOW_NIL_VALUES]
+    accumulator.uniq! unless settings[ALLOW_DUPLICATE_VALUES]
+  end
 
 
 

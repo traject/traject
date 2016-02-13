@@ -76,8 +76,8 @@ class Traject::Indexer
 
           # how to post-process the accumulator
           "allow_nil_values"        => false,
-          "empty_field_value"       => nil,
-          "allow_empty_fields"      => false
+          "allow_empty_fields"      => false,
+          "allow_duplicate_values"  => true
       }
     end
 
