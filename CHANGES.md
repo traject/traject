@@ -10,7 +10,7 @@
       force only unique values.
     * `allow_empty_fields` (default: false). Default behavior is that the output hash
       doesn't even contain keys for a `to_field` which doesn't produce any values.
-      Set to `true` to pass empty fields on (with the value being an empty array)
+      Set to `true` to pass empty fields on to the writer (with the value being an empty array)
 
 ## 2.2.1
   * Had inadverntantly broken use of arrays as extract_marc specifications. Fixed.
