@@ -1,5 +1,17 @@
 # Changes
 
+## 2.3.0
+  * Allow nil values, empty fields, and deduplication
+
+    This adds three new settings (all of whose defaults reflect current behavior)
+
+    * `allow_nil_values` (default: false). Allow nil values to be sent on to the writer
+    * `allow_duplicate_values` (default: true). Allow duplicate values. Set to false to
+      force only unique values.
+    * `allow_empty_fields` (default: false). Default behavior is that the output hash
+      doesn't even contain keys for a `to_field` which doesn't produce any values.
+      Set to `true` to pass empty fields on (with the value being an empty array)
+
 ## 2.2.1
   * Had inadverntantly broken use of arrays as extract_marc specifications. Fixed.
   
