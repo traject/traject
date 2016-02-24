@@ -286,30 +286,6 @@ after_processing do
 end
 ~~~
 
-## Allowing/disallowing repeating duplicate values
-
-By default, `traject` allows the same value to be added to the same field without
-restriction. You can use the setting `allow_duplicate_values = false` to
-disallow duplicate values (i.e., call `uniq!` on the set of values associated with
-a given field).
-
-## Keeping nil values
-
-`traject` defaults to throwing away any `nil`s that make it into your accumulator
-of values. The setting `allow_nil_values = true` will let `nil` values
-pass through.
-
-# Dealing with  empty fields
-
-Similary, by default `traject` completely ignores empty fields. You can
-change this with the setting `allow_empty_fields = true`, which will result
-in the output hash having a key for every field mentioned in a `to_field`
-statement, whether or not it has any values in it.
-
-Fields that are empty will have a value sent to the writer of an empty
-array (`[]`). Writers that need to special-case empty fields should do so in the
-writer class in question.
-
 ## Readers and Writers
 
 Traject uses modular 'Writer' classes to take the output hashes from transformation and send them somewhere or do something useful with them.
@@ -331,6 +307,60 @@ and will be useful if you need to index to Solr's older than version 3.2. It req
 You can easily write your own Readers and Writers if you'd like, see comments at top
 
 of [Traject::Indexer](lib/traject/indexer.rb).
+
+
+
+## Duplicate, `nil`, and empty values
+
+A `traject` [settings configuration](./doc/settings.md) can be used to control
+how you want to deal with duplicate values, fields that have *no* values,
+and fields that you want to be explicitly set to the value `nil`.
+
+This allows different writers to get what they expect without having
+to manually post-process every single field. For
+example, if you're indexing into Solr you want to ignore empty fields and
+fields with empty/nil values (which is reflected in the defaults).
+When working with an RDBMS, though, you may
+ want to send explicit `nil` values in order to set a column to SQL `NULL`.
+
+The settings, and their default values, are:
+
+```ruby
+settings do
+  provide "allow_duplicate_values",  true  # default is for dups to remain
+  provide "allow_nil_values",        false # default is to remove nil values
+  provide "allow_empty_fields",      false # default is to ignore empty fields
+end
+
+```
+
+The defaults should be fine for most uses covered by the included writers.
+
+Each is further explained below.
+
+### Allowing/disallowing repeating duplicate values
+
+By default, `traject` allows the same value to be added to the same field without
+restriction. You can use the setting `allow_duplicate_values = false` to
+disallow duplicate values (i.e., call `uniq!` on the set of values associated with
+a given field).
+
+### Keeping nil values
+
+`traject` defaults to throwing away any `nil`s that make it into your accumulator
+of values. The setting `allow_nil_values = true` will let `nil` values
+pass through.
+
+### Dealing with empty fields
+
+Similary, by default `traject` completely ignores empty fields. You can
+change this with the setting `allow_empty_fields = true`, which will result
+in the output hash having a key for every field mentioned in a `to_field`
+statement, whether or not it has any values in it.
+
+Fields that are empty will have a value sent to the writer of an empty
+array (`[]`). Writers that need to special-case empty fields should do so in the
+writer class in question.
 
 ## The traject command Line
 
