@@ -14,7 +14,7 @@ describe "Traject::Macros::Marc21" do
 
   before do
     @indexer = Traject::Indexer.new
-    @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
+    @record  = MARC::Reader.new(support_file_path "manufacturing_consent.marc").to_a.first
   end
 
   describe "extract_marc" do
@@ -27,7 +27,7 @@ describe "Traject::Macros::Marc21" do
 
       assert_equal ["Manufacturing consent : the political economy of the mass media /"], output["title"]
       assert_equal({}, @indexer.map_record(empty_record))
-      
+
     end
 
     it "respects :first=>true option" do
@@ -38,7 +38,7 @@ describe "Traject::Macros::Marc21" do
       output = @indexer.map_record(@record)
 
       assert_length 1, output["other_id"]
-      
+
     end
 
     it "trims punctuation with :trim_punctuation => true" do
@@ -50,7 +50,7 @@ describe "Traject::Macros::Marc21" do
 
       assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title"]
       assert_equal({}, @indexer.map_record(empty_record))
-      
+
     end
 
     it "respects :default option" do
@@ -69,7 +69,7 @@ describe "Traject::Macros::Marc21" do
 
       @indexer.instance_eval do
         to_field "lang1", extract_marc('008[35-37]')
-        to_field "lang2", extract_marc('008[35-37]', :allow_duplicates=>true)
+        to_field "lang2", extract_marc('008[35-37]', :allow_duplicates => true)
       end
 
       output = @indexer.map_record(@record)
@@ -87,6 +87,26 @@ describe "Traject::Macros::Marc21" do
     end
 
 
+    it "throws away nil values unless settings['allow_nil_values]'" do
+      @indexer.instance_eval do
+        to_field 'default_nil', extract_marc('9999', :default => nil)
+      end
+      output = @indexer.map_record(@record)
+      assert_nil output['default_nil']
+    end
+
+    
+
+    it "allows nil values if settings['allow_nil_values]'" do
+      @indexer.settings do |s|
+        s['allow_nil_values'] = true
+      end
+      @indexer.instance_eval do
+        to_field 'default_nil', extract_marc('9999', :default => nil)
+      end
+      output = @indexer.map_record(@record)
+      assert_equal [nil], output['default_nil']
+    end
 
 
     it "Marc21::trim_punctuation class method" do
@@ -145,7 +165,7 @@ describe "Traject::Macros::Marc21" do
       assert_length 1, output["marc_record"]
       assert_kind_of String, output["marc_record"].first
 
-      decoded = Base64.decode64( output["marc_record"].first )
+      decoded = Base64.decode64(output["marc_record"].first)
 
       # just check the marc header for now
       assert_start_with "02067cam a2200469", decoded
@@ -174,7 +194,7 @@ describe "Traject::Macros::Marc21" do
 
       # okay, let's actually deserialize it, why not
 
-      hash = JSON.parse( output["marc_record"].first )
+      hash = JSON.parse(output["marc_record"].first)
 
       deserialized = MARC::Record.new_from_hash(hash)
 

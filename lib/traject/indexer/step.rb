@@ -22,6 +22,11 @@ class Traject::Indexer
       self.validate!
     end
 
+    def to_field_step?
+      false
+    end
+
+
     # Set the arity of the lambda expression just once, when we define it
     def lambda=(lam)
       @lambda_arity = 0 # assume
@@ -99,6 +104,10 @@ class Traject::Indexer
       validate!
     end
 
+    def to_field_step?
+      true
+    end
+
     def lambda=(lam)
       @lambda       = lam
       @lambda_arity = @lambda ? @lambda.arity : 0
@@ -155,6 +164,11 @@ class Traject::Indexer
       self.lambda          = lambda
       self.block           = block
       self.source_location = source_location
+    end
+
+
+    def to_field_step?
+      false
     end
 
     # after_processing steps get no args yielded to

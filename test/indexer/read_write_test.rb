@@ -5,7 +5,11 @@ require 'test_helper'
 memory_writer_class = Class.new do
     def initialize(settings)
       # store them in a class variable so we can test em later
+      # Supress the warning message
+      original_verbose, $VERBOSE = $VERBOSE, nil
       @@last_writer_settings = @settings = settings
+      # Activate warning messages again.
+      $VERBOSE = original_verbose
       @settings["memory_writer.added"] = []
     end
 

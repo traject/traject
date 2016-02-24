@@ -204,6 +204,74 @@ describe "Traject::Indexer#map_record" do
       assert_nil output['afterSkip']
     end
 
+
+    it "allows empty fields if settings['allow_empty_fields'" do
+      @indexer.to_field('emptyfield') do |rec, acc|
+        # do nothing; acc remains empty
+      end
+      output = @indexer.map_record(@record)
+      refute_includes(output.keys, 'emptyfield', "Output contains an empty field")
+
+
+      @indexer.settings do |s|
+        s['allow_empty_fields'] = true
+      end
+      output = @indexer.map_record(@record)
+      assert_equal [], output['emptyfield'], "Empty field should have been created"
+
+    end
+
+
+    it "allows nil values when appropriate" do
+      @indexer.settings do |s|
+        s['allow_nil_values'] = false
+      end
+      @indexer.to_field('nilfield') do |rec, acc|
+        acc << nil
+      end
+      output = @indexer.map_record(@record)
+      refute_includes(output.keys, 'nilfield', "Output contains a nil")
+
+      @indexer.settings do |s|
+        s['allow_nil_values'] = true
+      end
+      output = @indexer.map_record(@record)
+      assert_includes(output.keys, 'nilfield', "Output should contain a nil")
+
+    end
+
+    it "allows duplicate values if they come up" do
+      testval = 'just a string'
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+      # Same things again so we get a duplicate
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+
+      output = @indexer.map_record(@record)
+      assert_equal [testval, testval], output['title']
+    end
+
+
+    it "disallows duplicate values if settings['allow_duplicate_values'] is false" do
+      testval = 'just a string'
+      @indexer.settings do |s|
+        s['allow_duplicate_values'] = false
+      end
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+      # Same things again so we get a duplicate
+      @indexer.to_field('title') do |rec, acc|
+        acc << testval
+      end
+
+      output = @indexer.map_record(@record)
+      assert_equal [testval], output['title']
+    end
+
   end
 
 end
