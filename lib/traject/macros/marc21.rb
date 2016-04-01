@@ -238,6 +238,10 @@ module Traject::Macros
       # single square bracket characters if they are the start and/or end
       #   chars and there are no internal square brackets.
       str = str.sub(/\A\[?([^\[\]]+)\]?\Z/, '\1')
+
+      # trim any leading or trailing whitespace
+      str.strip!
+
       return str
     end
 

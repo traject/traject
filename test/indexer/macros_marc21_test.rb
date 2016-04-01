@@ -118,6 +118,8 @@ describe "Traject::Macros::Marc21" do
       assert_equal "one two three", Marc21.trim_punctuation("one two three:")
       assert_equal "one two three .", Marc21.trim_punctuation("one two three .")
       assert_equal "one two three", Marc21.trim_punctuation("one two three.")
+      assert_equal "one two three...", Marc21.trim_punctuation("one two three...")
+      assert_equal "one two three", Marc21.trim_punctuation(" one two three")
 
       assert_equal "one two [three]", Marc21.trim_punctuation("one two [three]")
       assert_equal "one two three", Marc21.trim_punctuation("one two three]")
