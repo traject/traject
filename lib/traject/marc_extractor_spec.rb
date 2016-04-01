@@ -170,7 +170,7 @@ module Traject
         hash         = Hash.new
 
         # Split the string(s) given on colon
-        spec_strings = spec_string.is_a?(Array) ? spec_string.map { |s| s.split(/\s*:\s*/) }.flatten : spec_string.split(/s*:\s*/)
+        spec_strings = spec_string.is_a?(Array) ? spec_string.map { |s| s.split(/\s*:\s*/) }.flatten : spec_string.split(/\s*:\s*/)
 
         spec_strings.each do |part|
           if m = DATAFIELD_PATTERN.match(part)
