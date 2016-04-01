@@ -35,7 +35,7 @@ describe "Traject::MarcExtractor" do
     end
 
     it "parses a mixed bag" do
-      parsed  = Traject::MarcExtractor::Spec.hash_from_string("245abcde:810:700|*4|bcd")
+      parsed  = Traject::MarcExtractor::Spec.hash_from_string("245abcdes:810:700|*4|bcd")
       spec245 = parsed['245'].first
       spec810 = parsed['810'].first
       spec700 = parsed['700'].first
@@ -46,7 +46,7 @@ describe "Traject::MarcExtractor" do
       assert spec245
       assert_nil spec245.indicator1
       assert_nil spec245.indicator2
-      assert_equal %w{a b c d e}, spec245.subfields
+      assert_equal %w{a b c d e s}, spec245.subfields
 
       #810
       assert spec810
