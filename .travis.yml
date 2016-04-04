@@ -10,6 +10,7 @@ rvm:
   - rbx-2
 before_install:
   - gem update --system
+  - gem uninstall bundler
   - gem install bundler --version='~>1.7'
 jdk:
   - oraclejdk8
