@@ -40,11 +40,8 @@ Gem::Specification.new do |spec|
     spec.platform = "ruby"
   end
 
-  if RUBY_VERSION =~ /1.9/
-    spec.add_development_dependency "bundler", "~> 1.7"
-  else
-    spec.add_development_dependency "bundler", "> 1.6.0"
-  end
+  spec.add_development_dependency "bundler", "~> 1.7"
+
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
 end
