@@ -4,13 +4,13 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'traject/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "traject"
-  spec.version       = Traject::VERSION
-  spec.authors       = ["Jonathan Rochkind", "Bill Dueber"]
-  spec.email         = ["none@nowhere.org"]
-  spec.summary       = %q{Index MARC to Solr; or generally process source records to hash-like structures}
-  spec.homepage      = "http://github.com/traject/traject"
-  spec.license       = "MIT"
+  spec.name     = "traject"
+  spec.version  = Traject::VERSION
+  spec.authors  = ["Jonathan Rochkind", "Bill Dueber"]
+  spec.email    = ["none@nowhere.org"]
+  spec.summary  = %q{Index MARC to Solr; or generally process source records to hash-like structures}
+  spec.homepage = "http://github.com/traject/traject"
+  spec.license  = "MIT"
 
   spec.files         = `git ls-files`.split($/)
   spec.executables   = ["traject"]
@@ -23,10 +23,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency "concurrent-ruby", ">= 0.8.0"
   spec.add_dependency "marc", "~> 1.0"
 
-  spec.add_dependency "hashie", "~> 3.1"            # used for Indexer#settings
-  spec.add_dependency "slop", ">= 3.4.5", "< 4.0"   # command line parsing
-  spec.add_dependency "yell"                        # logging
-  spec.add_dependency "dot-properties", ">= 0.1.1"  # reading java style .properties
+  spec.add_dependency "hashie", "~> 3.1" # used for Indexer#settings
+  spec.add_dependency "slop", ">= 3.4.5", "< 4.0" # command line parsing
+  spec.add_dependency "yell" # logging
+  spec.add_dependency "dot-properties", ">= 0.1.1" # reading java style .properties
   spec.add_dependency "httpclient", "~> 2.5"
   spec.add_dependency 'marc-fastxmlwriter', '~>1.0' # fast marc->xml
 
@@ -40,8 +40,11 @@ Gem::Specification.new do |spec|
     spec.platform = "ruby"
   end
 
-
-  spec.add_development_dependency "bundler", "~> 1.7"
+  if RUBY_VERSION =~ /1.9/
+    spec.add_development_dependency "bundler", "~> 1.7"
+  else
+    spec.add_development_dependency "bundler", "> 1.6.0"
+  end
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
 end
