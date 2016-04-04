@@ -1,6 +1,5 @@
 require 'yell'
 
-require 'traject'
 require 'traject/util'
 require 'traject/qualified_const_get'
 require 'traject/thread_pool'
@@ -28,21 +27,21 @@ require 'concurrent' # for atomic_fixnum
 #   My tests indicate that this setting doesn't change overall index speed by a ton.
 #
 # * solr_writer.thread_pool: How many threads to use for the writer. Default is 1.
-#   Likely useful even under MRI since thread will be waiting on Solr for some time. 
+#   Likely useful even under MRI since thread will be waiting on Solr for some time.
 #
-# * solr_writer.max_skipped: How many records skipped due to errors before we 
-#   bail out with a fatal error? Set to -1 for unlimited skips. Default 0, 
-#   raise and abort on a single record that could not be added to Solr. 
+# * solr_writer.max_skipped: How many records skipped due to errors before we
+#   bail out with a fatal error? Set to -1 for unlimited skips. Default 0,
+#   raise and abort on a single record that could not be added to Solr.
 #
 # * solr_writer.commit_on_close: Set to true (or "true") if you want to commit at the
 #   end of the indexing run. (Old "solrj_writer.commit_on_close" supported for backwards
 #   compat only.)
 #
 # * solr_writer.commit_timeout: If commit_on_close, how long to wait for Solr before
-#   giving up as a timeout. Default 10 minutes. Solr can be slow. 
+#   giving up as a timeout. Default 10 minutes. Solr can be slow.
 #
 # * solr_json_writer.http_client Mainly intended for testing, set your own HTTPClient
-#   or mock object to be used for HTTP. 
+#   or mock object to be used for HTTP.
 
 
 class Traject::SolrJsonWriter
@@ -85,7 +84,7 @@ class Traject::SolrJsonWriter
     @thread_pool = Traject::ThreadPool.new(@thread_pool_size)
 
     # old setting solrj_writer supported for backwards compat, as we make
-    # this the new default writer. 
+    # this the new default writer.
     @commit_on_close = (settings["solr_writer.commit_on_close"] || settings["solrj_writer.commit_on_close"]).to_s == "true"
 
     # Figure out where to send updates
@@ -118,12 +117,12 @@ class Traject::SolrJsonWriter
     end
 
     if exception || resp.status != 200
-      error_message = exception ? 
-        Traject::Util.exception_to_log_message(exception) : 
+      error_message = exception ?
+        Traject::Util.exception_to_log_message(exception) :
         "Solr response: #{resp.status}: #{resp.body}"
 
       logger.error "Error in Solr batch add. Will retry documents individually at performance penalty: #{error_message}"
-      
+
       batch.each do |c|
         send_single(c)
       end
@@ -138,7 +137,7 @@ class Traject::SolrJsonWriter
     begin
       resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
       # Catch Timeouts and network errors as skipped records, but otherwise
-      # allow unexpected errors to propagate up. 
+      # allow unexpected errors to propagate up.
     rescue HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED => exception
     end
 

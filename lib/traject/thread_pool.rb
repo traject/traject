@@ -13,7 +13,7 @@ module Traject
   # be created, and work sent to the Traject::ThreadPool will just be executed
   # in the caller thread. We call this a nil threadpool. One situation it can be useful
   # is if you are running under MRI, where multi-core parallelism isn't available, so
-  # an actual threadpool may not be useful. (Although in some cases a thread pool, 
+  # an actual threadpool may not be useful. (Although in some cases a thread pool,
   # especially one with size 1, can be useful in MRI for I/O blocking operations)
   #
   # 3) Use the #maybe_in_threadpool method to send blocks to thread pool for
@@ -40,7 +40,7 @@ module Traject
   #  to complete, then return.  You can not give any more work to the pool
   #  after you do this. By default it'll wait pretty much forever, which should
   #  be fine. If you never call shutdown, then queued or in-progress work
-  #  may be abandoned when the program ends, which would be bad. 
+  #  may be abandoned when the program ends, which would be bad.
   #
   # 7) We will keep track of total times a block is run in thread pool, and
   #  total elapsed (wall) time of running all blocks, so an average_execution_ms
@@ -51,24 +51,26 @@ module Traject
     attr_reader :pool_size, :queue_capacity
 
     # First arg is pool size, 0 or nil and we'll be a null/no-op pool which executes
-    # work in caller thread. 
+    # work in caller thread.
     def initialize(pool_size)
+      @thread_pool             = nil # assume we don't have one
+      @exceptions_caught_queue = [] # start off without exceptions
       unless pool_size.nil? || pool_size == 0
-        @pool_size = pool_size.to_i 
+        @pool_size      = pool_size.to_i
         @queue_capacity = pool_size * 3
 
-        @thread_pool = Concurrent::ThreadPoolExecutor.new(
-          :min_threads     => @pool_size,
-          :max_threads     => @pool_size,
-          :max_queue       => @queue_capacity,
-          :fallback_policy => :caller_runs
+        @thread_pool             = Concurrent::ThreadPoolExecutor.new(
+            :min_threads     => @pool_size,
+            :max_threads     => @pool_size,
+            :max_queue       => @queue_capacity,
+            :fallback_policy => :caller_runs
         )
 
         # A thread-safe queue to collect exceptions cross-threads.
         # We really only need to save the first exception, but a queue
         # is a convenient way to store a value concurrency-safely, and
-        # might as well store all of them. 
-        @exceptions_caught_queue   =  Queue.new
+        # might as well store all of them.
+        @exceptions_caught_queue = Queue.new
       end
     end
 
@@ -133,7 +135,7 @@ module Traject
     # as a non-functioning threadpool -- then this method is just
     # a no-op.
     def raise_collected_exception!
-      if @exceptions_caught_queue && (! @exceptions_caught_queue.empty?)
+      unless @exceptions_caught_queue.empty?
         e = @exceptions_caught_queue.pop
         raise e
       end

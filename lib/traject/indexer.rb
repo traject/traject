@@ -1,6 +1,5 @@
 require 'yell'
 
-require 'traject'
 require 'traject/qualified_const_get'
 require 'traject/thread_pool'
 
