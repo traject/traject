@@ -1,5 +1,3 @@
-require 'traject'
-
 require 'yaml'
 require 'dot-properties'
 
@@ -131,13 +129,13 @@ module Traject
           yaml_file = File.join( base, "translation_maps", "#{path}.yaml"  )
           prop_file = File.join(base, "translation_maps", "#{path}.properties" )
 
-          if File.exists? rb_file
+          if File.exist? rb_file
             found = eval( File.open(rb_file).read , binding, rb_file )
             break
-          elsif File.exists? yaml_file
+          elsif File.exist? yaml_file
             found = YAML.load_file(yaml_file)
             break
-          elsif File.exists? prop_file
+          elsif File.exist? prop_file
             found = Traject::TranslationMap.read_properties(prop_file)
             break
           end
@@ -231,21 +229,21 @@ module Traject
       array.replace( self.translate_array(array))
     end
 
-    # Return a new TranslationMap that results from merging argument on top of self. 
+    # Return a new TranslationMap that results from merging argument on top of self.
     # Can be useful for taking an existing translation map, but merging a few
-    # overrides on top. 
+    # overrides on top.
     #
     #     merged_map = TranslationMap.new(something).merge TranslationMap.new(else)
     #     #...
     #     merged_map.translate_array(something) # etc
     #
-    # If a default is set in the second map, it will merge over the first too. 
+    # If a default is set in the second map, it will merge over the first too.
     #
     # You can also pass in a plain hash as an arg, instead of an existing TranslationMap:
     #
     #     TranslationMap.new(something).merge("overridden_key" => "value", "a" => "")
     def merge(other_map)
-      default = other_map.default || self.default 
+      default = other_map.default || self.default
       TranslationMap.new(self.to_hash.merge(other_map.to_hash), :default => default)
     end
 
@@ -258,9 +256,9 @@ module Traject
     protected
 
     # We use dot-properties gem for reading .properties files,
-    # return a hash. 
-    def self.read_properties(file_name)   
-      return DotProperties.load(file_name).to_h      
+    # return a hash.
+    def self.read_properties(file_name)
+      return DotProperties.load(file_name).to_h
     end
 
   end
