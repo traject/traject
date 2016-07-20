@@ -113,7 +113,7 @@ data out of a MARC record according to a tag/subfield specification.
 
     # 245 subfields a, p, and s. 130, all subfields.
     # built-in punctuation trimming routine.
-    to_field "title_t", extract_marc("245nps:130", :trim_punctuation => true)
+    to_field "title_t", extract_marc("245aps:130", :trim_punctuation => true)
 
     # Can limit to certain indicators with || chars.
     # "*" is a wildcard in indicator spec.  So this is
@@ -129,7 +129,7 @@ data out of a MARC record according to a tag/subfield specification.
     to_field "language_code", extract_marc("008[35-37]")
 ~~~
 
-`extract_marc` by default includes all 'alternate script' linked fields correspoinding to matched specifications, but you can turn that off, or extract *only* corresponding 880s.
+`extract_marc` by default includes all 'alternate script' linked fields corresponding to matched specifications, but you can turn that off, or extract *only* corresponding 880s.
 
 ~~~ruby
     to_field "title", extract_marc("245abc", :alternate_script => false)
@@ -140,7 +140,7 @@ By default, specifications with multiple subfields (e.g. "240abc") will produce 
 
 For the syntax and complete possibilities of the specification string argument to extract_marc, see docs at the [MarcExtractor class](./lib/traject/marc_extractor.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/MarcExtractor)).
 
-`extract_marc` also supports `translation maps` similar to SolrMarc's. There are some translation maps provided by traject, and you can also define your own, in yaml or ruby. Translation maps are especially useful for mapping form MARC codes to user-displayable strings:
+`extract_marc` also supports `translation maps` similar to SolrMarc's. There are some translation maps provided by traject, and you can also define your own, in yaml or ruby. Translation maps are especially useful for mapping from MARC codes to user-displayable strings:
 
 ~~~ruby
     # "translation_map" will be passed to Traject::TranslationMap.new
@@ -278,7 +278,7 @@ results, or writing to more than one field at once.
 
 For more on `each_record`, see [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md).
 
-There is also an `after_processing` method that can be used to register logic that will be called after the entire has been processed. You can use it for whatever custom ruby code you might want for your app (send an email? Clean up a log file? Trigger a Solr replication?)
+There is also an `after_processing` method that can be used to register logic that will be called after the entire input has been processed. You can use it for whatever custom ruby code you might want for your app (send an email? Clean up a log file? Trigger a Solr replication?)
 
 ~~~ruby
 after_processing do
@@ -305,7 +305,6 @@ The [SolrJWriter](https://github.com/traject/traject-solrj_writer) is packaged s
 and will be useful if you need to index to Solr's older than version 3.2. It requires Jruby.  
 
 You can easily write your own Readers and Writers if you'd like, see comments at top
-
 of [Traject::Indexer](lib/traject/indexer.rb).
 
 
