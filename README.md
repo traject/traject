@@ -2,11 +2,13 @@
 
 An easy to use, high-performance, flexible and extensible MARC to Solr indexer.
 
+(Questions about use are welcome here or on the [google group](https://groups.google.com/forum/#!forum/traject-users))
+
 You might use [traject](https://github.com/traject/traject) to index MARC data for a Solr-based discovery product like [Blacklight](https://github.com/projectblacklight/blacklight) or [VUFind](http://vufind.org/).
 
 Traject can also be generalized to a set of tools for getting structured data from a source, and transforming it to a hash-like object to send to a destination. In addition to sending data to Solr, Traject can produce json or yaml files, tab-delimited files, CSV files, and output suitable for debugging by a human.
 
-**Traject is stable, mature software, that is already being used in production by its authors.**
+**Traject is stable, mature software, that is already being used in production by its authors and several other institutions.**
 
 [![Gem Version](https://badge.fury.io/rb/traject.png)](http://badge.fury.io/rb/traject)
 [![Build Status](https://travis-ci.org/traject/traject.png)](https://travis-ci.org/traject/traject)
