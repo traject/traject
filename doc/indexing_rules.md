@@ -67,7 +67,7 @@ created." In ruby, lambdas and blocks are closures. Method definitions
 are not, which most of us have run across much to our chagrin.
 
 Within the context of `traject`, this means you can define a variable
-outside of a `to_field` or `each_record` block and it will be avaiable
+outside of a `to_field` or `each_record` block and it will be available
 inside those blocks. And you only have to define it once.
 
 That's useful to do for any object that is even a bit expensive
@@ -190,7 +190,7 @@ to_field('foo'), macro_returning_dup_values do |rec, acc|
 end
 ```
 
-## Maniuplating `context.output_hash` directly
+## Manipulating `context.output_hash` directly
 
 If you ask for the context argument, a [Traject::Indexer::Context](./lib/traject/indexer/context.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Indexer/Context)), you have access to `context.output_hash`, which is
 the hash of already transformed output that will be sent to Solr (or any other Writer).
@@ -218,7 +218,7 @@ context.output_hash['fieldname'] = ['fuzzy_wuzzies']
 
 Thus, `each_record` blocks have no `accumulator` argument: instead they either take a single `record` argument; or both a `record` and a `context`. 
 
-`each_record` is useful for logging or notifiying, computing intermediate
+`each_record` is useful for logging or notifying, computing intermediate
 results, or writing to more than one field at once. 
 
 ~~~ruby
