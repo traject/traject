@@ -200,7 +200,9 @@ module Traject::Macros
               # sometimes multiple language codes are jammed together in one subfield, and
               # we need to separate ourselves. sigh.
               unless value.length == 3
-                value = value.scan(/.{1,3}/) # split into an array of 3-length substrs
+                # split into an array of 3-length substrs; JRuby has problems with regexes
+                # across threads, which is why we don't use String#scan here.
+                value = value.chars.each_slice(3).map(&:join)
               end
               value
             end.flatten
