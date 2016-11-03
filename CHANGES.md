@@ -1,5 +1,13 @@
 # Changes
 
+## 2.3.2
+  * Change to `extract_marc` to work around a threadsafe problem in JRuby/MRI where
+    regexps were unsafely shared between threads. (@codeforkjeff)
+  * Make trim-punctuation safe for non-just-ASCII text (thanks to @dunn and @redlibrarian)
+
+## 2.3.1
+  * Update README with more info aout new nil-related options
+
 ## 2.3.0
   * Allow nil values, empty fields, and deduplication
 
