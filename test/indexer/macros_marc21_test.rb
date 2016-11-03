@@ -128,6 +128,8 @@ describe "Traject::Macros::Marc21" do
 
       # This one was a bug before
       assert_equal "Feminism and art", Marc21.trim_punctuation("Feminism and art.")
+
+      assert_equal "Le réve", Marc21.trim_punctuation("Le réve.") # this assertion currently fails
     end
 
     it "uses :translation_map" do
