@@ -236,7 +236,7 @@ class Traject::SolrJsonWriter
 
   # If we've got a solr.update_url, make sure it's ok
   def check_solr_update_url(url)
-    unless url =~ /^#{URI::regexp}$/
+    unless /^#{URI::regexp}$/.match(url)
       raise ArgumentError.new("#{self.class.name} setting `solr.update_url` doesn't look like a URL: `#{url}`")
     end
     url
@@ -249,7 +249,7 @@ class Traject::SolrJsonWriter
     end
 
     # Not a URL? Bail
-    unless url =~ /^#{URI::regexp}$/
+    unless  /^#{URI::regexp}$/.match(url)
       raise ArgumentError.new("#{self.class.name} setting `solr.url` doesn't look like a URL: `#{url}`")
     end
 

@@ -103,7 +103,11 @@ class Traject::Indexer
     def inspect
       # Keep any key ending in password out of the inspect
       self.inject({}) do |hash, (key, value)|
-        hash[key] = (key =~ /password\Z/) ? "[hidden]" : value
+        if /password\Z/.match(key)
+          hash[key] = "[hidden]"
+        else
+          hash[key] = value
+        end
         hash
       end.inspect
     end

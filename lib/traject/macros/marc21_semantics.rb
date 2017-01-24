@@ -40,8 +40,8 @@ module Traject::Macros
          /x
          
     def self.oclcnum_extract(num)
-      if OCLCPAT.match(num)
-        return $1
+      if m = OCLCPAT.match(num)
+        return m[1]
       else
         return nil
       end
@@ -369,8 +369,8 @@ module Traject::Macros
         v260c = MarcExtractor.cached("260c", :separator => nil).extract(record).first
         # just try to take the first four digits out of there, we're not going to try
         # anything crazy.
-        if v260c =~ /(\d{4})/
-          found_date = $1.to_i
+        if m = /(\d{4})/.match(v260c)
+          found_date = m[1].to_i
         end
       end
 
@@ -408,7 +408,7 @@ module Traject::Macros
         candidates = extractor.extract(record)
 
         candidates.reject! do |candidate|
-          !(candidate =~ lcc_regex)
+          !(lcc_regex.match candidate)
         end
 
         accumulator.concat translation_map.translate_array!(candidates.collect {|a| a.lstrip.slice(0, 1)}).uniq
@@ -501,10 +501,11 @@ module Traject::Macros
         end)
 
         # weird ones
+        special_fields_regex = /\A\s*.+,\s+(ca.\s+)?\d\d\d\d?(-\d\d\d\d?)?( B\.C\.)?[.,; ]*\Z/
         extractor_special_fields.each_matching_line(record) do |field, spec, extractor|
           field.subfields.each do |sf|
             next unless sf.code == 'y'
-            if sf.value =~ /\A\s*.+,\s+(ca.\s+)?\d\d\d\d?(-\d\d\d\d?)?( B\.C\.)?[.,; ]*\Z/
+            if special_fields_regex.match(sf.value)
               # it's our pattern, add the $a in please
               accumulator << "#{field['a']}#{separator}#{sf.value.sub(/\. *\Z/, '')}"
             else
@@ -562,7 +563,7 @@ module Traject::Macros
 
       marc_field.subfields.each_with_index do |sf, i|
         # ignore non-alphabetic, like numeric control subfields
-        next unless sf.code =~ /\A[a-z]\Z/
+        next unless /\A[a-z]\Z/.match(sf.code)
 
         prefix = if subd_prefix_codes.include? sf.code
           subd_separator

@@ -7,7 +7,7 @@ describe "The writer on Traject::Indexer" do
   # TODO: fix default writer test
   # Fails in the absence of a configured
   # network interface.
-  descript "default writer from index" do
+  describe "default writer from index" do
     it "has a default" do
       # assert_instance_of Traject::SolrJsonWriter, indexer.writer
       # assert_equal Traject::SolrJsonWriter, indexer.writer_class

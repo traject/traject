@@ -40,15 +40,16 @@ module Traject
 
       this_file_iter = file_io.each_line
 
+
       while true
         line = this_file_iter.next
-        break if line =~ /^\_\_END\_\_/
+        break if /^\_\_END\_\_/.match line
       end
 
       begin
         while true
           json = this_file_iter.next
-          next unless json =~ /\S/
+          next unless /\S/.match json
           records << MARC::Record.new_from_hash(JSON.parse(json))
         end
       rescue StopIteration

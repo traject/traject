@@ -202,8 +202,8 @@ module Traject
 
       # `-s key=value` command line
       (options[:setting] || []).each do |setting_pair|
-        if setting_pair =~ /\A([^=]+)\=(.*)\Z/
-          key, value = $1, $2
+        if m  = /\A([^=]+)\=(.*)\Z/.match(setting_pair)
+          key, value = m[1], m[2]
           settings[key] = value
         else
           self.console.puts "Unrecognized setting argument '#{setting_pair}':"

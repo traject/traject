@@ -105,7 +105,8 @@ module Traject
       def proceeding?
         @proceeding_q ||= begin
           ! record.find do |field|
-            field.tag.slice(0) == '6' && field.subfields.find {|sf| sf.code == "v" && sf.value =~ /^\s*(C|c)ongresses\.?\s*$/}
+            field.tag.slice(0) == '6' &&
+                field.subfields.find {|sf| sf.code == "v" && /^\s*(C|c)ongresses\.?\s*$/.match(sf.value) }
           end.nil?
         end
       end
