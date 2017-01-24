@@ -1,6 +1,6 @@
 require 'test_helper'
 
-describe "Indexer Macros:" do
+describe "Indexer Macros#to_field" do
   before do
     @indexer = Traject::Indexer.new
     @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first

@@ -169,7 +169,7 @@ describe "Traject::Macros::Marc21Semantics" do
     # there are way too many edge cases for us to test em all, but we'll test some of em.
     
     it "works when there's no date information" do
-      assert_equal nil,  Marc21Semantics.publication_date(empty_record)
+      assert_nil Marc21Semantics.publication_date(empty_record)
     end
     
     it "uses macro correctly with no date info" do
@@ -189,7 +189,7 @@ describe "Traject::Macros::Marc21Semantics" do
     end
     it "returns nil when the records really got nothing" do
       @record = MARC::Reader.new(support_file_path  "emptyish_record.marc").to_a.first
-      assert_equal nil, Marc21Semantics.publication_date(@record)
+      assert_nil Marc21Semantics.publication_date(@record)
     end
     it "estimates with a single 'u'" do
       @record = MARC::Reader.new(support_file_path  "date_with_u.marc").to_a.first
