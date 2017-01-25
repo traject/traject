@@ -66,6 +66,11 @@ describe "Traject::Indexer#process" do
     assert writer_settings["memory_writer.closed"]
   end
 
+  it "can be transformed to an Enumerable" do
+    records = @indexer.to_enum(:process, @file).to_a
+    assert_equal 30, records.length
+  end
+
   require 'traject/null_writer'
   it "calls after_processing after processing" do
     @indexer = Traject::Indexer.new(
