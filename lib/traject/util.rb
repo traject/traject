@@ -59,7 +59,6 @@ module Traject
         exception.backtrace.each do |line|
           if line.start_with?(file_path)
             if m = /\A.*\:(\d+)\:in/.match(line)
-              ch(line)
               return m[1].to_i
               break
             end
