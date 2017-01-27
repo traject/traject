@@ -60,7 +60,6 @@ module Traject
           if line.start_with?(file_path)
             if m = /\A.*\:(\d+)\:in/.match(line)
               return m[1].to_i
-              break
             end
           end
         end

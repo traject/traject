@@ -248,8 +248,8 @@ class Traject::SolrJsonWriter
       raise ArgumentError.new("#{self.class.name}: Neither solr.update_url nor solr.url set; need at least one")
     end
 
-    # Not a URL? Bail
-    unless  /^#{URI::regexp}$/.match(url)
+    # Not obviously an http(s) URL? bail
+    unless  /^https?:\/\//.match(url)
       raise ArgumentError.new("#{self.class.name} setting `solr.url` doesn't look like a URL: `#{url}`")
     end
 

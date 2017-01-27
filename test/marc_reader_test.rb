@@ -67,7 +67,7 @@ describe "Traject::MarcReader" do
       file = File.new(support_file_path "one-marc8.mrc")
       settings = Traject::Indexer::Settings.new("marc_source.encoding" => "ADFADFADF")
       assert_raises(ArgumentError) do
-        record = Traject::MarcReader.new(file, settings).to_a.first
+        Traject::MarcReader.new(file, settings).to_a.first
       end
     end
 

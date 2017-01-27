@@ -41,7 +41,7 @@ describe "Traject::SolrJsonWriter" do
       return resp
     end
 
-    def get (*args)
+    def get(*args)
       @mutex.synchronize do
         @get_args << args
       end
@@ -171,11 +171,12 @@ describe "Traject::SolrJsonWriter" do
       logged = strio.string
 
       10.times do |i|
-        assert_match /ERROR.*Could not add record doc_#{i} at source file position : Solr error response: 500/, logged
+        assert_match(/ERROR.*Could not add record doc_#{i} at source file position : Solr error response: 500/,
+                     logged)
       end
     end
 
-    it "raises when skipped more than max_skipped" do
+    it "raises when skipped documents number more than max_skipped" do
       @writer = create_writer("solr_writer.max_skipped" => 5)
       @fake_http_client.response_status = 500
 
@@ -193,7 +194,7 @@ describe "Traject::SolrJsonWriter" do
       @writer = create_writer("solr_writer.max_skipped" => 0)
       @fake_http_client.response_status = 500
 
-      e = assert_raises(RuntimeError) do
+       assert_raises(RuntimeError) do
         @writer.put context_with("id" => "doc_1", "key" => "value")
         @writer.close
       end

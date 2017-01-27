@@ -5,6 +5,7 @@ gemspec
 
 group :development do
   gem "nokogiri" # used only for rake tasks load_maps:
+  gem 'minitest-reporters'
 end
 
 group :debug do

@@ -57,7 +57,7 @@ describe "TranslationMap" do
 
     it "raises on syntax error in yaml" do
       exception = assert_raises(Psych::SyntaxError) do
-        found = @cache.lookup("bad_yaml")
+        @cache.lookup("bad_yaml")
       end
 
       assert  exception.message.include?("bad_yaml.yaml"), "exception message includes source file"
@@ -65,7 +65,7 @@ describe "TranslationMap" do
 
     it "raises on syntax error in ruby" do
       exception = assert_raises(SyntaxError) do
-        found = @cache.lookup("bad_ruby")
+        @cache.lookup("bad_ruby")
       end
       assert  exception.message.include?("bad_ruby.rb"), "exception message includes source file"
     end

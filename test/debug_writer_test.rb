@@ -45,8 +45,8 @@ describe 'Simple output' do
     expected = [
         "record_num_1 title #{@title}",
     ]
-    assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
-    assert_match /At least one record \(\#1\) doesn't define field 'id'/, logger_strio.string
+    assert_equal(expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, ''))
+    assert_match(/At least one record \(\#1\) doesn't define field 'id'/, logger_strio.string)
     @writer.close
 
   end

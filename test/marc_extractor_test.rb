@@ -61,12 +61,8 @@ describe "Traject::MarcExtractor" do
       assert_equal %w{b c d}, spec700.subfields
     end
     
-    it "parses from an array" do
+    it "parses the correct number of specs from an array" do
       parsed  = Traject::MarcExtractor::Spec.hash_from_string(%w[245abcde 810 700|*4|bcd])
-      spec245 = parsed['245'].first
-      spec810 = parsed['810'].first
-      spec700 = parsed['700'].first
-
       assert_length 3, parsed
     end
       

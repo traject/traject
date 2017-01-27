@@ -39,7 +39,7 @@ describe "Delimited/CSV Writers" do
     end
 
     it "outputs a header if asked to" do
-      dw = Traject::DelimitedWriter.new(@settings)
+      Traject::DelimitedWriter.new(@settings) # silently side-effects @out
       @out.string.chomp.must_equal %w[four one two].join("\t")
     end
 
