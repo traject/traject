@@ -208,9 +208,10 @@ module Traject::Macros
             end.flatten
           end
         end
-        codes = codes.uniq
 
         translation_map.translate_array!(codes)
+        
+        codes.uniq!
 
         accumulator.concat codes
       end
