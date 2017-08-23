@@ -184,7 +184,7 @@ class Traject::Indexer
     @after_processing_steps = []
   end
 
-  # Pass a string file path, or a File object, for
+  # Pass a string file path, a Pathname, or a File object, for
   # a config file to load into indexer.
   #
   # Can raise:
@@ -195,9 +195,9 @@ class Traject::Indexer
   def load_config_file(file_path)
     File.open(file_path) do |file|
       begin
-        self.instance_eval(file.read, file_path)
+        self.instance_eval(file.read, file_path.to_s)
       rescue ScriptError, StandardError => e
-        raise ConfigLoadError.new(file_path, e)
+        raise ConfigLoadError.new(file_path.to_s, e)
       end
     end
   end
