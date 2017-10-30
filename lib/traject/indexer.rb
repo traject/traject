@@ -242,7 +242,10 @@ class Traject::Indexer
   # Part of DSL, used to define an indexing mapping. Register logic
   # to be called for each record, and generate values for a particular
   # output field.
-  def to_field(field_name, aLambda = nil, &block)
+  def to_field(field_name, aLambda = nil, block = Proc.new { |*args| })
+    if block_given?
+      block = Proc.new { |*args| yield args }
+    end
     @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first))
   end
 
