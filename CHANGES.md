@@ -1,12 +1,22 @@
 # Changes
 
+## 2.3.3
+  * Further squash use of capture-variabels ('$1', etc.)
+    to try to work around the non-thread-safety of
+    regexp in ruby
+  * Fix a bug in trim_punctuation where trailing
+    periods were being eliminated even if there
+    was a short string before them (e.g., 'Jr.')
+  * Begin to reorganize tests, starting with
+    the Marc21 macros
+
 ## 2.3.2
   * Change to `extract_marc` to work around a threadsafe problem in JRuby/MRI where
     regexps were unsafely shared between threads. (@codeforkjeff)
   * Make trim-punctuation safe for non-just-ASCII text (thanks to @dunn and @redlibrarian)
 
 ## 2.3.1
-  * Update README with more info aout new nil-related options
+  * Update README with more info about new nil-related options
 
 ## 2.3.0
   * Allow nil values, empty fields, and deduplication
@@ -21,7 +31,7 @@
       Set to `true` to pass empty fields on to the writer (with the value being an empty array)
 
 ## 2.2.1
-  * Had inadverntantly broken use of arrays as extract_marc specifications. Fixed.
+  * Had inadvertently broken use of arrays as extract_marc specifications. Fixed.
   
 ## 2.2.0
   * Change DebugWriter to be more forgiving (and informative) about missing record-id fields

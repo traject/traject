@@ -233,7 +233,7 @@ module Traject::Macros
       str = str.sub(/ *[ ,\/;:] *\Z/, '')
 
       # trailing period if it is preceded by at least three letters (possibly preceded and followed by whitespace)
-      str = str.sub(/( *[[:word:][:word:][:word:]])\. *\Z/, '\1')
+      str = str.sub(/( *[[:word:]]{3,})\. *\Z/, '\1')
 
       # single square bracket characters if they are the start and/or end
       #   chars and there are no internal square brackets.

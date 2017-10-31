@@ -192,7 +192,7 @@ describe "Traject::Indexer#map_record" do
       end
 
       @indexer.to_field('radical') do |rec, acc, context|
-        context.skip!("Chomsky!") if rec['245'].to_s =~ /Chomsky/
+        context.skip!("Chomsky!") if rec['245'].to_s  =~ /Chomsky/
       end
 
       @indexer.to_field('afterSkip') do |rec, acc|

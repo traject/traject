@@ -5,14 +5,14 @@ module Traject
     def self.exception_to_log_message(e)
       indent = "    "
 
-      msg  = indent + "Exception: " + e.class.name + ": " + e.message + "\n"
+      msg = indent + "Exception: " + e.class.name + ": " + e.message + "\n"
       msg += indent + e.backtrace.first + "\n"
 
-      if (e.respond_to?(:getRootCause) && e.getRootCause && e != e.getRootCause )
+      if (e.respond_to?(:getRootCause) && e.getRootCause && e != e.getRootCause)
         caused_by = e.getRootCause
-        msg += indent + "Caused by\n"
-        msg += indent + caused_by.class.name + ": " + caused_by.message + "\n"
-        msg += indent + caused_by.backtrace.first + "\n"
+        msg       += indent + "Caused by\n"
+        msg       += indent + caused_by.class.name + ": " + caused_by.message + "\n"
+        msg       += indent + caused_by.backtrace.first + "\n"
       end
 
       return msg
@@ -37,8 +37,8 @@ module Traject
       # For a SyntaxError, we really need to grep it from the
       # exception message, it really appears to be nowhere else. Ugh.
       if exception.kind_of? SyntaxError
-        if exception.message =~ /:(\d+):/
-          return $1.to_i
+        if m = /:(\d+):/.match(exception.message)
+          return m[1].to_i
         end
       end
 
@@ -48,9 +48,9 @@ module Traject
       # exception.backtrace_locations exists in MRI 2.1+, which makes
       # our task a lot easier. But not yet in JRuby 1.7.x, so we got to
       # handle the old way of having to parse the strings in backtrace too.
-      if ( exception.respond_to?(:backtrace_locations) &&
-           exception.backtrace_locations &&
-           exception.backtrace_locations.length > 0 )
+      if (exception.respond_to?(:backtrace_locations) &&
+          exception.backtrace_locations &&
+          exception.backtrace_locations.length > 0)
         location = exception.backtrace_locations.find do |bt|
           bt.path == file_path
         end
@@ -58,8 +58,10 @@ module Traject
       else # have to parse string backtrace
         exception.backtrace.each do |line|
           if line.start_with?(file_path)
-            return $1.to_i if line =~ /\A.*\:(\d+)\:in/
-            break
+            if m = /\A.*\:(\d+)\:in/.match(line)
+              return m[1].to_i
+              break
+            end
           end
         end
         # if we got here, we have nothing
@@ -75,14 +77,14 @@ module Traject
     # returned array will actually be of Thread::Backtrace::Location elements.
     def self.backtrace_from_config(file_path, exception)
       filtered_trace = []
-      found = false
+      found          = false
 
       # MRI 2.1+ has exception.backtrace_locations which makes
       # this a lot easier, but JRuby 1.7.x doesn't yet, so we
       # need to do it both ways.
-      if ( exception.respond_to?(:backtrace_locations) &&
-           exception.backtrace_locations &&
-           exception.backtrace_locations.length > 0 )
+      if (exception.respond_to?(:backtrace_locations) &&
+          exception.backtrace_locations &&
+          exception.backtrace_locations.length > 0)
 
         exception.backtrace_locations.each do |location|
           filtered_trace << location
@@ -98,7 +100,6 @@ module Traject
 
       return found ? filtered_trace : []
     end
-
 
 
     # Ruby stdlib queue lacks a 'drain' function, we write one.

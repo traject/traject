@@ -120,7 +120,9 @@ to_field "discipline_facet",  marc_lcc_to_broad_category(:default => nil) do |re
     if call_type == "sudoc"
       # we choose to call it:
       accumulator << "Government Publication"
-    elsif call_type.nil? || call_type == "lc" || field['a'] =~ Traject::Macros::Marc21Semantics::LCC_REGEX
+    elsif call_type.nil? ||
+          call_type == "lc" ||
+        Traject::Macros::Marc21Semantics::LCC_REGEX.match(field['a'])
       # run it through the map
       s = field['a']
       s = s.slice(0, 1) if s

@@ -58,7 +58,7 @@ describe "Traject::Indexer.to_field" do
       acc = ['hello']
     end
     output = @indexer.map_record('never looked at')
-    assert_equal nil, output['foo']
+    assert_nil output['foo']
   end
 
   it "allows use of accumulator.replace" do
