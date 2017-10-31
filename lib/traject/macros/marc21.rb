@@ -59,7 +59,7 @@ module Traject::Macros
       # Benchmarking shows for MarcExtractor at least, there is
       # significant performance advantage.
 
-      if translation_map_arg  = options.delete(:translation_map)
+      if translation_map_arg = options.delete(:translation_map)
         translation_map = Traject::TranslationMap.new(translation_map_arg)
       else
         translation_map = nil
@@ -68,12 +68,62 @@ module Traject::Macros
 
       extractor = Traject::MarcExtractor.new(spec, options)
 
+      ppchain = Marc21.create_post_processing_chain(options, translation_map)
       lambda do |record, accumulator, context|
         accumulator.concat extractor.extract(record)
-        Marc21.apply_extraction_options(accumulator, options, translation_map)
+        accumulator.replace Marc21.apply_extraction_options(accumulator, ppchain)
       end
     end
     module_function :extract_marc
+
+
+    ONLY_FIRST = ->(acc) do
+      puts "FIRSTING"
+      acc[0..0]
+    end
+
+    TRIM_PUNCT = ->(acc) do
+      puts "TRIMMING"
+      acc.map {|x| Marc21.trim_punctuation(x)}
+    end
+
+    DEDUP = ->(acc) do
+      acc.uniq
+    end
+
+
+
+    # Side-effect the accumulator with the options
+    def self.create_post_processing_chain(options, translation_map = nil)
+      only_first       = options[:first]
+      trim_punctuation = options[:trim_punctuation]
+      default_value    = options[:default]
+      allow_duplicates = options[:allow_duplicates]
+
+      chain = []
+
+      chain << ONLY_FIRST if only_first
+
+      if translation_map
+        mapper = ->(acc) { translation_map.translate_array(acc)}
+        chain << mapper
+      end
+
+      chain << TRIM_PUNCT if trim_punctuation
+      chain << DEDUP unless allow_duplicates
+
+      if options.has_key?(:default)
+        defaulter = ->(acc) { acc.empty? ? [ options[:default] ] : acc }
+        chain << defaulter
+      end
+
+      chain
+    end
+
+    def self.apply_extraction_options(accumulator, ppchain)
+      ppchain.inject(accumulator) {|acc, lam| lam.(acc)}
+    end
+
 
     # Convenience method when you want extract_marc behavior, but NOT
     # to create a lambda for an Indexer step, but instead just give
@@ -94,33 +144,6 @@ module Traject::Macros
       return output
     end
 
-    # Side-effect the accumulator with the options
-    def self.apply_extraction_options(accumulator, options, translation_map=nil)
-      only_first              = options[:first]
-      trim_punctuation        = options[:trim_punctuation]
-      default_value           = options[:default]
-      allow_duplicates        = options[:allow_duplicates]
-
-      if only_first
-        accumulator.replace Array(accumulator[0])
-      end
-
-      if translation_map
-        translation_map.translate_array! accumulator
-      end
-
-      if trim_punctuation
-        accumulator.collect! {|s| Marc21.trim_punctuation(s)}
-      end
-
-      unless allow_duplicates
-        accumulator.uniq!
-      end
-
-      if options.has_key?(:default) && accumulator.empty?
-        accumulator << default_value
-      end
-    end
 
 
     #  A list of symbols that are valid keys in the options hash
