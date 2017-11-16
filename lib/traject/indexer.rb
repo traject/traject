@@ -342,11 +342,9 @@ class Traject::Indexer
 
       # Set the index step for error reporting
       context.index_step = index_step
-      accumulator        = log_mapping_errors(context, index_step) do
+      log_mapping_errors(context, index_step) do
         index_step.execute(context) # will always return [] for an each_record step
       end
-
-      add_accumulator_to_context!(accumulator, context) if index_step.to_field_step?
 
       # And unset the index step now that we're finished
       context.index_step = nil
@@ -354,37 +352,6 @@ class Traject::Indexer
 
     return context
   end
-
-
-  # Add the accumulator to the context with the correct field name
-  # Do post-processing on the accumulator (remove nil values, allow empty
-  # fields, etc)
-  #
-  # Only get here if we've got a to_field step; otherwise the
-  # call to get a field_name will throw an error
-
-  ALLOW_NIL_VALUES       = "allow_nil_values".freeze
-  ALLOW_EMPTY_FIELDS     = "allow_empty_fields".freeze
-  ALLOW_DUPLICATE_VALUES = "allow_duplicate_values".freeze
-
-  def add_accumulator_to_context!(accumulator, context)
-
-    accumulator.compact! unless settings[ALLOW_NIL_VALUES]
-    return if accumulator.empty? and not (settings[ALLOW_EMPTY_FIELDS])
-
-    field_name                      = context.index_step.field_name
-    context.output_hash[field_name] ||= []
-
-    existing_accumulator = context.output_hash[field_name].concat(accumulator)
-    existing_accumulator.uniq! unless settings[ALLOW_DUPLICATE_VALUES]
-
-  rescue NameError => e
-    msg = "Tried to call add_accumulator_to_context with a non-to_field step"
-    msg += context.index_step.inspect
-    logger.error msg
-    raise ArgumentError.new(msg)
-  end
-
 
   # just a wrapper that captures and records any unexpected
   # errors raised in mapping, along with contextual information
@@ -413,7 +380,6 @@ class Traject::Indexer
       raise e
     end
   end
-
 
   # Processes a stream of records, reading from the configured Reader,
   # mapping according to configured mapping rules, and then writing
