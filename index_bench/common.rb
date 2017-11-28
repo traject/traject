@@ -18,6 +18,18 @@ to_field 'fullrecord' do |rec, acc|
   acc << MARC::FastXMLWriter.single_record_document(rec)
 end
 
+require 'marc/marc4j'
+converter = MARC::MARC4J.new
+java_import "org.marc4j.MarcXmlWriter"
+to_field 'fullercord_m4j' do |rec, acc|
+  os = java.io.ByteArrayOutputStream.new
+  writer = MarcXmlWriter.new(os)
+  m4j = converter.rubymarc_to_marc4j(rec)
+  writer.write(m4j)
+  writer.close
+  acc << os.toString
+end
+
 
 ################################
 ######## IDENTIFIERS ###########
@@ -131,6 +143,6 @@ to_field "edition", extract_marc('250a')
 
 to_field 'language', marc_languages("008[35-37]:041a:041d:041e:041j")
 to_field 'language008', extract_marc('008[35-37]') do |r, acc|
-  acc.reject! {|x| !(/\S/.match(x)} # ditch all-spaces values
+  acc.reject! {|x| !(/\S/.match(x))} # ditch all-spaces values
   acc.uniq!
 end
