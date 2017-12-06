@@ -1,5 +1,8 @@
 # Changes
 
+## 2.3.4
+  * Totally internal change to provide easier hooks into indexing process
+
 ## 2.3.3
   * Further squash use of capture-variabels ('$1', etc.)
     to try to work around the non-thread-safety of
