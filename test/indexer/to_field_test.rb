@@ -69,9 +69,26 @@ describe "Traject::Indexer.to_field" do
     assert_equal ['hello'], output['foo']
   end
 
+  describe "supports multiple procs" do
+    it "with no block" do
+      @indexer.to_field "foo",
+        lambda {|record, acc| acc << "one"},
+        lambda {|record, acc| acc << "two"},
+        lambda {|record, acc| acc << "three"}
 
+      output = @indexer.map_record('never looked at')
+      assert_equal ['one', 'two', 'three'], output['foo']
+    end
+
+    it "with a block too" do
+      @indexer.to_field "foo",
+        lambda {|record, acc| acc << "one"},
+        lambda {|record, acc| acc << "two"} do |record, acc|
+          acc << "three"
+      end
+
+      output = @indexer.map_record('never looked at')
+      assert_equal ['one', 'two', 'three'], output['foo']
+    end
+  end
 end
-
-
-
-
