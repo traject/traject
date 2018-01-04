@@ -92,14 +92,13 @@ class Traject::Indexer
 # An indexing step definition for a "to_field" step to specific
 # field.
   class ToFieldStep
-    attr_accessor :field_name, :block, :source_location
-    attr_reader :lambda
+    attr_reader :field_name, :block, :source_location, :procs
 
-    def initialize(fieldname, lambda, block, source_location)
-      self.field_name      = fieldname.freeze
-      self.lambda          = lambda
-      self.block           = block
-      self.source_location = source_location
+    def initialize(fieldname, procs, block, source_location)
+      @field_name      = fieldname.freeze
+      @procs           = procs.freeze
+      @block           = block.freeze
+      @source_location = source_location.freeze
 
       validate!
     end
@@ -108,18 +107,13 @@ class Traject::Indexer
       true
     end
 
-    def lambda=(lam)
-      @lambda       = lam
-      @lambda_arity = @lambda ? @lambda.arity : 0
-    end
-
     def validate!
 
       if self.field_name.nil? || !self.field_name.is_a?(String) || self.field_name.empty?
         raise NamingError.new("to_field requires the field name (as a string) as the first argument at #{self.source_location})")
       end
 
-      [self.lambda, self.block].each do |proc|
+      [*self.procs, self.block].each do |proc|
         # allow negative arity, meaning variable/optional, trust em on that.
         # but for positive arrity, we need 2 or 3 args
         if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
@@ -135,20 +129,16 @@ class Traject::Indexer
 
     def execute(context)
       accumulator = []
-      sr          = context.source_record
+      source_record = context.source_record
 
-      if @lambda
-        if @lambda_arity == 2
-          @lambda.call(sr, accumulator)
+      [*self.procs, self.block].each do |aProc|
+        next unless aProc
+        if aProc.arity == 2
+          aProc.call(source_record, accumulator)
         else
-          @lambda.call(sr, accumulator, context)
+          aProc.call(source_record, accumulator, context)
         end
       end
-
-      if @block
-        @block.call(sr, accumulator, context)
-      end
-
 
       add_accumulator_to_context!(accumulator, context)
       return accumulator
