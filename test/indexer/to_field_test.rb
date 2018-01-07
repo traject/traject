@@ -91,4 +91,12 @@ describe "Traject::Indexer.to_field" do
       assert_equal ['one', 'two', 'three'], output['foo']
     end
   end
+
+  describe "with an array argument" do
+    it "indexes to multiple fields" do
+      @indexer.to_field ["field1", "field2", "field3"], lambda {|rec, acc| acc << "value" }
+      output = @indexer.map_record('never looked at')
+      assert_equal({ "field1" => ["value"], "field2" => ["value"], "field3" => ["value"] }, output)
+    end
+  end
 end

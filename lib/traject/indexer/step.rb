@@ -89,13 +89,14 @@ class Traject::Indexer
   end
 
 
-# An indexing step definition for a "to_field" step to specific
-# field.
+  # An indexing step definition for a "to_field" step to specific
+  # field. The first field name argument can be an array of multiple field
+  # names, the processed values will be added to each one.
   class ToFieldStep
     attr_reader :field_name, :block, :source_location, :procs
 
-    def initialize(fieldname, procs, block, source_location)
-      @field_name      = fieldname.freeze
+    def initialize(field_name, procs, block, source_location)
+      @field_name      = field_name.freeze
       @procs           = procs.freeze
       @block           = block.freeze
       @source_location = source_location.freeze
@@ -109,8 +110,8 @@ class Traject::Indexer
 
     def validate!
 
-      if self.field_name.nil? || !self.field_name.is_a?(String) || self.field_name.empty?
-        raise NamingError.new("to_field requires the field name (as a string) as the first argument at #{self.source_location})")
+      unless (field_name.is_a?(String) && ! field_name.empty?) || (field_name.is_a?(Array) && field_name.all? { |f| f.is_a?(String) && ! f.empty? })
+        raise NamingError.new("to_field requires the field name (as a string), or an array of such, as the first argument at #{self.source_location})")
       end
 
       [*self.procs, self.block].each do |proc|
@@ -155,10 +156,13 @@ class Traject::Indexer
       accumulator.compact! unless context.settings[ALLOW_NIL_VALUES]
       return if accumulator.empty? and not (context.settings[ALLOW_EMPTY_FIELDS])
 
-      context.output_hash[field_name] ||= []
+      # field_name can actually be an array of field names
+      Array(field_name).each do |a_field_name|
+        context.output_hash[a_field_name] ||= []
 
-      existing_accumulator = context.output_hash[field_name].concat(accumulator)
-      existing_accumulator.uniq! unless context.settings[ALLOW_DUPLICATE_VALUES]
+        existing_accumulator = context.output_hash[a_field_name].concat(accumulator)
+        existing_accumulator.uniq! unless context.settings[ALLOW_DUPLICATE_VALUES]
+      end
     end
   end
 
