@@ -40,12 +40,9 @@ class Traject::DebugWriter < Traject::LineWriter
     @idfield = settings["debug_writer.idfield"] || DEFAULT_IDFIELD
     @format  = settings['debug_writer.format'] || DEFAULT_FORMAT
 
-    if @idfield == 'record_position' then
-      @use_position = true
-    end
+    @use_position = (@idfield == 'record_position')
 
     @already_threw_warning_about_missing_id = false
-
   end
 
   def record_number(context)

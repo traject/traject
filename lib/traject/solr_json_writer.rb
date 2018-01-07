@@ -47,6 +47,8 @@ require 'concurrent' # for atomic_fixnum
 class Traject::SolrJsonWriter
   include Traject::QualifiedConstGet
 
+  URI_REGEXP = URI::Parser.new.make_regexp.freeze
+
   DEFAULT_MAX_SKIPPED = 0
   DEFAULT_BATCH_SIZE  = 100
 
@@ -236,7 +238,7 @@ class Traject::SolrJsonWriter
 
   # If we've got a solr.update_url, make sure it's ok
   def check_solr_update_url(url)
-    unless /^#{URI::regexp}$/.match(url)
+    unless /^#{URI_REGEXP}$/.match(url)
       raise ArgumentError.new("#{self.class.name} setting `solr.update_url` doesn't look like a URL: `#{url}`")
     end
     url
@@ -249,7 +251,7 @@ class Traject::SolrJsonWriter
     end
 
     # Not a URL? Bail
-    unless  /^#{URI::regexp}$/.match(url)
+    unless  /^#{URI_REGEXP}$/.match(url)
       raise ArgumentError.new("#{self.class.name} setting `solr.url` doesn't look like a URL: `#{url}`")
     end
 

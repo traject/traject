@@ -151,6 +151,8 @@ module Traject
       if options[:alternate_script] != false
         @fetch_alternate_script = true
         show_interest_in_tag(ALTERNATE_SCRIPT_TAG)
+      else
+        @fetch_alternate_script = false
       end
 
       @interesting_tags_list = @interesting_tags_hash.keys
