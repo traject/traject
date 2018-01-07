@@ -367,17 +367,19 @@ class Traject::Indexer
   def log_mapping_errors(context, index_step)
     begin
       yield
-    rescue Exception => e
+    rescue StandardError => e
       msg = "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
       msg += "    while executing #{index_step.inspect}\n"
+
+      msg += begin
+        "\n    Record: #{context.source_record.to_s}\n"
+      rescue StandardError => to_s_exception
+        "\n    (Could not log record, #{to_s_exception})\n"
+      end
+
       msg += Traject::Util.exception_to_log_message(e)
 
       logger.error msg
-      begin
-        logger.debug "Record: " + context.source_record.to_s
-      rescue Exception => marc_to_s_exception
-        logger.debug "(Could not log record, #{marc_to_s_exception})"
-      end
 
       raise e
     end
@@ -445,9 +447,7 @@ class Traject::Indexer
         else
           writer.put context
         end
-
       end
-
     end
     $stderr.write "\n" if settings["debug_ascii_progress"].to_s == "true"
 
@@ -463,7 +463,7 @@ class Traject::Indexer
     @after_processing_steps.each do |step|
       begin
         step.execute
-      rescue Exception => e
+      rescue StandardError => e
         logger.fatal("Unexpected exception #{e} when executing #{step}")
         raise e
       end
