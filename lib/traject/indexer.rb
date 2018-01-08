@@ -178,10 +178,14 @@ class Traject::Indexer
 
 
   # optional hash or Traject::Indexer::Settings object of settings.
-  def initialize(arg_settings = {})
+  # optionally takes a block which is instance_eval'd in the indexer,
+  # intended for configuration simimlar to what would be in a config file.
+  def initialize(arg_settings = {}, &block)
     @settings               = Settings.new(arg_settings)
     @index_steps            = []
     @after_processing_steps = []
+
+    instance_eval(&block) if block
   end
 
   # Pass a string file path, a Pathname, or a File object, for
