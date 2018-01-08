@@ -56,4 +56,18 @@ describe "Traject::Indexer#process_with" do
       indexer.process_with(input_records, array_writer)
     end
   end
+
+  describe "with block as destination" do
+    it "calls block for each record" do
+      received = []
+      indexer.process_with(input_records) do |context|
+        received << context
+      end
+
+      assert_equal 3, received.length
+      assert received.all? { |o| o.kind_of?(Traject::Indexer::Context)}
+      assert_equal input_records.collect { |r| [r] }, received.collect { |c| c.output_hash["records"] }
+    end
+  end
+
 end
