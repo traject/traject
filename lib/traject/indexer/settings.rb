@@ -55,7 +55,10 @@ class Traject::Indexer
     end
 
     def fill_in_defaults!
-      self.reverse_merge!(self.class.defaults)
+      unless @default_filled
+        self.reverse_merge!(self.class.defaults)
+        @defaults_filled = true
+      end
     end
 
 
