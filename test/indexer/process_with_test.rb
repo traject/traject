@@ -70,4 +70,58 @@ describe "Traject::Indexer#process_with" do
     end
   end
 
+  describe "exceptions" do
+    let(:indexer) {
+      Traject::Indexer.new do
+        to_field "foo", lambda { |rec, acc|
+          if rec.keys.include?(:one)
+            raise ArgumentError, "intentional"
+          end
+
+          acc << rec
+        }
+      end
+    }
+
+    describe "by default" do
+      it "raises" do
+        assert_raises(ArgumentError) do
+          indexer.process_with(input_records, array_writer)
+        end
+      end
+    end
+
+    describe "with rescue" do
+      it "calls block and keeps processing" do
+        rescued = []
+        rescue_lambda = lambda do |context, exception|
+          rescued << {
+            context: context,
+            exception: exception
+          }
+        end
+
+        writer = indexer.process_with(input_records, array_writer, rescue: rescue_lambda)
+
+        # not including the one that raised
+        assert_equal 2, array_writer.contexts.length
+        # and raise was called
+
+        assert_equal 1, rescued.length
+        assert rescued.first[:context].is_a?(Traject::Indexer::Context)
+        assert_equal ArgumentError, rescued.first[:exception].class
+        assert_equal "intentional", rescued.first[:exception].message
+      end
+
+      it "can raise from rescue" do
+        rescue_lambda = lambda do |context, exception|
+          raise exception
+        end
+
+        assert_raises(ArgumentError) do
+          indexer.process_with(input_records, array_writer, rescue: rescue_lambda)
+        end
+      end
+    end
+  end
 end

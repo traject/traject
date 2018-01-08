@@ -500,6 +500,9 @@ class Traject::Indexer
   #  * Will _not_ call any `after_processing` steps. Call yourself with `indexer.run_after_processing_steps` as desired.
   #  * WILL by default call #close on the writer, IF the writer has a #close method.
   #    pass `:close_writer => false` to not do so.
+  #  * exceptions will just raise out, unless you pass in a rescue: option, value is a proc/lambda
+  #    that will receive two args, context and exception. If the rescue proc doesn't re-raise,
+  #    `process_with` will continue to process subsequent records.
   #
   # Example:
   #
@@ -513,26 +516,33 @@ class Traject::Indexer
     settings.fill_in_defaults!
 
     position = 0
-
     source.each do |record |
-      position += 1
+      begin
+        position += 1
 
-      context = Context.new(
-          :source_record => record,
-          :settings      => settings,
-          :position      => position,
-          :logger        => logger
-      )
+        context = Context.new(
+            :source_record => record,
+            :settings      => settings,
+            :position      => position,
+            :logger        => logger
+        )
 
-      map_to_context!(context)
+        map_to_context!(context)
 
-      if context.skip?
-        log_skip(context)
-      else
-        destination.put(context) if destination
+        if context.skip?
+          log_skip(context)
+        else
+          destination.put(context) if destination
+        end
+
+        yield(context) if block_given?
+      rescue StandardError => e
+        if options[:rescue]
+          options[:rescue].call(context, e)
+        else
+          raise e
+        end
       end
-
-      yield(context) if block_given?
     end
 
     if destination.respond_to?(:close) && options[:close_writer]
