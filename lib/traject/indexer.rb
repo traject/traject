@@ -11,6 +11,7 @@ require 'traject/marc_reader'
 require 'traject/json_writer'
 require 'traject/solr_json_writer'
 require 'traject/debug_writer'
+require 'traject/array_writer'
 
 
 require 'traject/macros/marc21'
@@ -461,17 +462,9 @@ class Traject::Indexer
 
     thread_pool.raise_collected_exception!
 
-
     writer.close if writer.respond_to?(:close)
 
-    @after_processing_steps.each do |step|
-      begin
-        step.execute
-      rescue StandardError => e
-        logger.fatal("Unexpected exception #{e} when executing #{step}")
-        raise e
-      end
-    end
+    run_after_processing_steps
 
     elapsed = Time.now - start_time
     avg_rps = (count / elapsed)
@@ -483,6 +476,77 @@ class Traject::Indexer
     end
 
     return true
+  end
+
+  # A light-weight process method meant for programmatic use, generally
+  # with only a "few" (not milliions) of records.
+  #
+  # It does _not_ use instance-configured reader or writer, instead taking
+  # a source/reader and destination/writer as arguments to this call.
+  #
+  # The reader can be anything that has an #each returning source
+  # records. This includes an ordinary array of source records, or any
+  # traject Reader.
+  #
+  # The writer can be anything with a #put method taking a Traject::Indexer::Context.
+  # For convenience, see the Traject::ArrayWriter that just collects output in an array.
+  #
+  # Return value of process_with is the writer passed as second arg, for your convenience.
+  #
+  # This does much less than the full #process method, to be more flexible
+  # and make fewer assumptions:
+  #
+  #  * Will never use any additional threads. Wrap in your own threading if desired.
+  #  * Will not do any stnadard logging or progress bars, regardless of indexer settings.
+  #    Log yourself if desired.
+  #  * Will _not_ call any `after_processing` steps. Call yourself with `indexer.run_after_processing_steps` as desired.
+  #  * WILL by default call #close on the writer, IF the writer has a #close method.
+  #    pass `:close_writer => false` to not do so.
+  #
+  # Example:
+  #
+  #     output_values = indexer.process_with([record1, record2], Traject::ArrayWriter.new)
+  def process_with(source, destination, options = {})
+    options[:close_writer] = true unless options.has_key?(:close_writer)
+    settings.fill_in_defaults!
+
+    position = 0
+
+    source.each do |record |
+      position += 1
+
+      context = Context.new(
+          :source_record => record,
+          :settings      => settings,
+          :position      => position,
+          :logger        => logger
+      )
+
+      map_to_context!(context)
+
+      if context.skip?
+        log_skip(context)
+      else
+        destination.put context
+      end
+    end
+
+    if destination.respond_to?(:close) && options[:close_writer]
+      destination.close
+    end
+
+    return destination
+  end
+
+  def run_after_processing_steps
+    @after_processing_steps.each do |step|
+      begin
+        step.execute
+      rescue StandardError => e
+        logger.fatal("Unexpected exception #{e} when executing #{step}")
+        raise e
+      end
+    end
   end
 
   # Log that the current record is being skipped, using
