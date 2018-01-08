@@ -504,7 +504,11 @@ class Traject::Indexer
   # Example:
   #
   #     output_values = indexer.process_with([record1, record2], Traject::ArrayWriter.new)
-  def process_with(source, destination, options = {})
+  def process_with(source, destination = nil, options = {})
+    unless destination || block_given?
+      raise ArgumentError, "Need either a second arg writer/destination, or a block"
+    end
+
     options[:close_writer] = true unless options.has_key?(:close_writer)
     settings.fill_in_defaults!
 
@@ -525,8 +529,10 @@ class Traject::Indexer
       if context.skip?
         log_skip(context)
       else
-        destination.put context
+        destination.put(context) if destination
       end
+
+      yield(context) if block_given?
     end
 
     if destination.respond_to?(:close) && options[:close_writer]

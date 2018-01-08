@@ -62,6 +62,18 @@ The `writer` can be any object with a `put` method that will take a Traject::Ind
     output_contexts = writer.contexts
     writer.clear! # if desired
 
+Instead of (or in addition to) using a writer/destination object, you can supply a block
+that will be called with the post-transformation `Traject::Indexer::Context` for every
+record (including skipped records! Check `context.skip?` if needed).
+
+    indexer.process_with(source_records) do |context|
+      unless context.skip?
+        puts "#{context.position}: #{context.output_hash}"
+      end
+    end
+
+Notes:
+
 * `process_with` does very little logging or progress status, do it yourself if you want it.
 
 * `process_with` will _never_ use any additional threads, regardless of indexer settings. If you want threads, do them yourself with multiple invocations of `process_with`, with different records, in different threads.
