@@ -14,6 +14,9 @@
 
       to_field ["field1", "field2"], extract_marc("240")
 
+* `Traject::Indexer.process_with` method for more convenient programmatic/embedded use.
+
+* `Traject::Indexer.new` takes a block for config, for more convenient programmatic/embedded use.
 
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process
