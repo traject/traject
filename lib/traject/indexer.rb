@@ -330,6 +330,20 @@ class Traject::Indexer
     return context.output_hash unless context.skip?
   end
 
+  # Takes a single record, maps it, and sends it to the instance-configured
+  # writer. No threading, no logging, no error handling. Respects skipped
+  # records by not adding them. Returns the Traject::Context.
+  #
+  # Aliased as #<<
+  def process_record(record)
+    context = Context.new(:source_record => record, :settings => settings)
+    map_to_context!(context)
+    writer.put( context ) unless context.skip?
+
+    return context
+  end
+  alias_method :<<, :process_record
+
   # Maps a single record INTO the second argument, a Traject::Indexer::Context.
   #
   # Context must be passed with a #source_record and #settings, and optionally
