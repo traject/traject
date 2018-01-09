@@ -1,6 +1,6 @@
 require 'test_helper'
 
-describe "Traject::Indexer#process_with" do
+describe "Traject::Indexer#process_using" do
   let(:input_records) { [
     { one: "one" },
     { two: "two" },
@@ -16,7 +16,7 @@ describe "Traject::Indexer#process_with" do
   }
 
   it "processes" do
-    writer = indexer.process_with(input_records, array_writer)
+    writer = indexer.process_using(input_records, array_writer)
     assert_equal([{"records"=>[{:one=>"one"}]}, {"records"=>[{:two=>"two"}]}, {"records"=>[{:three=>"three"}]}], writer.values)
   end
 
@@ -33,12 +33,12 @@ describe "Traject::Indexer#process_with" do
     end
 
     it "calls by default" do
-      writer = indexer.process_with(input_records, array_writer)
+      writer = indexer.process_using(input_records, array_writer)
       assert writer.close_called?
     end
 
     it "does not call if told not to" do
-      writer = indexer.process_with(input_records, array_writer, close_writer: false)
+      writer = indexer.process_using(input_records, array_writer, close_writer: false)
       assert ! writer.close_called?
     end
   end
@@ -53,14 +53,14 @@ describe "Traject::Indexer#process_with" do
       }
     it "are not called" do
       # should not raise
-      indexer.process_with(input_records, array_writer)
+      indexer.process_using(input_records, array_writer)
     end
   end
 
   describe "with block as destination" do
     it "calls block for each record" do
       received = []
-      indexer.process_with(input_records) do |context|
+      indexer.process_using(input_records) do |context|
         received << context
       end
 
@@ -86,7 +86,7 @@ describe "Traject::Indexer#process_with" do
     describe "by default" do
       it "raises" do
         assert_raises(ArgumentError) do
-          indexer.process_with(input_records, array_writer)
+          indexer.process_using(input_records, array_writer)
         end
       end
     end
@@ -101,7 +101,7 @@ describe "Traject::Indexer#process_with" do
           }
         end
 
-        writer = indexer.process_with(input_records, array_writer, rescue: rescue_lambda)
+        writer = indexer.process_using(input_records, array_writer, rescue: rescue_lambda)
 
         # not including the one that raised
         assert_equal 2, array_writer.contexts.length
@@ -119,7 +119,7 @@ describe "Traject::Indexer#process_with" do
         end
 
         assert_raises(ArgumentError) do
-          indexer.process_with(input_records, array_writer, rescue: rescue_lambda)
+          indexer.process_using(input_records, array_writer, rescue: rescue_lambda)
         end
       end
     end
