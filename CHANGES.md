@@ -12,7 +12,7 @@
 
 * Placeholder
 
-* `Traject::Indexer.process_with` method for more convenient programmatic/embedded use.
+* `Traject::Indexer.process_using` method for more convenient programmatic/embedded use.
 
 * `Traject::Indexer.new` takes a block for config, for more convenient programmatic/embedded use.
 
