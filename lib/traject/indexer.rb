@@ -320,13 +320,16 @@ class Traject::Indexer
   # this indexer. Returns the output hash (a hash whose keys are
   # string fields, and values are arrays of one or more values in that field)
   #
+  # If the record is marked `skip` as part of processing, this will return
+  # nil.
+  #
   # This is a convenience shortcut for #map_to_context! -- use that one
   # if you want to provide addtional context
   # like position, and/or get back the full context.
   def map_record(record)
     context = Context.new(:source_record => record, :settings => settings)
     map_to_context!(context)
-    return context.output_hash
+    return context.output_hash unless context.skip?
   end
 
   # Maps a single record INTO the second argument, a Traject::Indexer::Context.

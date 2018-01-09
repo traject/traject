@@ -196,12 +196,11 @@ describe "Traject::Indexer#map_record" do
       end
 
       @indexer.to_field('afterSkip') do |rec, acc|
-        acc << "After. Should never happen"
+        raise ArgumentError, "intentional, should never happen"
       end
 
       output = @indexer.map_record(@record)
-      assert_equal ['Before'], output['beforeSkip']
-      assert_nil output['afterSkip']
+      assert_nil output
     end
 
 
