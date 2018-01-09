@@ -6,7 +6,7 @@ describe "Traject::Indexer#process_with" do
     { two: "two" },
     { three: "three" }
   ] }
-  let(:array_writer) { Traject::Indexer::ArrayWriter.new }
+  let(:array_writer) { Traject::ArrayWriter.new }
   let(:indexer) {
     Traject::Indexer.new do
       to_field "records", lambda { |rec, acc|
