@@ -6,6 +6,8 @@
 
 * Placeholder
 
+* `map_record` now returns `nil` if record was skipped.
+
 ### Added
 
 * Placeholder

@@ -111,7 +111,7 @@ Notes:
 ### map_record: simplest of all
 
 Simplest of all, `#map_record` takes a single source record, and simply returns the output_hash
-transformed from it. You don't get the full Context back, and it is your responsibility to do something with this output_hash. (TODO: If the record was skipped, you get back nil). Exceptions
+transformed from it. You don't get the full Context back, and it is your responsibility to do something with this output_hash. If the record was skipped, nil is returned. Exceptions
 in processing are simply raised out of this method.
 
 ```ruby
