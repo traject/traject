@@ -255,7 +255,7 @@ class Traject::SolrJsonWriter
 
     # First, try the /update/json handler
     candidate = [url.chomp('/'), 'update', 'json'].join('/')
-    resp      = @http_client.get(candidate)
+    resp      = @http_client.get(candidate, {"commit" => 'true'})
     if resp.status == 404
       candidate = [url.chomp('/'), 'update'].join('/')
     end
