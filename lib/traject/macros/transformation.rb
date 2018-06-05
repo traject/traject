@@ -43,7 +43,7 @@ module Traject
         lambda do |rec, acc|
           acc.collect! do |v|
             # unicode whitespace class aware
-            v.gsub(/\A[[:space:]]+|[[:space:]]+\Z/, '')
+            v.sub(/\A[[:space:]]+/,'').sub(/[[:space:]]+\Z/, '')
           end
         end
       end
