@@ -52,7 +52,7 @@ describe "Traject::Macros::Transformation" do
         to_field "test", first_only
       end
       output = @indexer.map_record(@record)
-      assert_equal nil, output["test"]
+      assert_nil output["test"]
     end
 
     it "no-ops on single value" do
