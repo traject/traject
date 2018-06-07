@@ -10,6 +10,10 @@
 
 * Placeholder
 
+* `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
+
+      to_field ["field1", "field2"], extract_marc("240")
+
 
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process
