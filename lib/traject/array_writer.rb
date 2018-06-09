@@ -10,12 +10,15 @@ module Traject
   #
   # Recommend against using it with huge number of records, as it will
   # of course store them all in memory.
+  #
+  # Uses Concurrent::Arrays internally, so should be safe for use as writer
+  # in concurrency scenarios.
   class ArrayWriter
     attr_reader :values, :contexts
 
     def initialize
-      @values = []
-      @contexts = []
+      @values = Concurrent::Array.new
+      @contexts = Concurrent::Array.new
     end
 
     def put(context)
