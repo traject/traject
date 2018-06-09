@@ -473,6 +473,8 @@ Bundler rake tasks included for gem releases: `rake release`
 and do the same release again. The JRuby release is identical but for including
 a gemspec dependency on the Marc4JReader gem. 
 
+The standard [bundle console](https://bundler.io/v1.7/bundle_console.html) command may be useful for getting an `irb` console with the gem and it's dependencies loaded. 
+
 ## TODO
 
 * Readers and index rules helpers for reading XML files as input? Maybe. 
