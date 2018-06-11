@@ -116,7 +116,9 @@ module Traject
           result << queue.deq(:raise_if_empty)
         end
       rescue ThreadError
-        # Need do nothing, queue was concurrently popped, no biggie
+        # Need do nothing, queue was concurrently popped, no biggie, but let's
+        # stop iterating and return what we've got.
+        return result
       end
 
       return result
