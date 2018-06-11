@@ -48,7 +48,17 @@ describe "extract_marc" do
 
     assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title"]
     assert_equal({}, @indexer.map_record(empty_record))
+  end
 
+  it "can use trim_punctuation as transformation macro" do
+    @indexer.instance_eval do
+      to_field "title", extract_marc("245ab"), trim_punctuation
+    end
+
+    output = @indexer.map_record(@record)
+
+    assert_equal ["Manufacturing consent : the political economy of the mass media"], output["title"]
+    assert_equal({}, @indexer.map_record(empty_record))
   end
 
   it "respects :default option" do

@@ -16,6 +16,29 @@
 
       to_field ["field1", "field2"], extract_marc("240")
 
+* `to_field` can take multiple transformation procs (all with the same form). https://github.com/traject/traject/pull/153
+
+* Existing arguments to `marc_extract` have been provided as transformation proc macros, along with some additional new useful general purposes transformations, in [Traject::Macros::Transformations](./lib/traject/macros/transformation.rb). https://github.com/traject/traject/pull/154
+
+  This is the new preferred way to do post-processing with the `marc_extract` options, but the existing options are not deprecated and there is no current plan for them to be removed.
+  * before:
+
+        to_field "some_field", extract_marc("800",
+                                translation_map: "marc_800_map",
+                                allow_duplicates: true,
+                                first: true,
+                                default: "default value")
+  * now preferred:
+
+        to_field "some_field", extract_marc("800", allow_duplicates: true),
+            translation_map("marc_800_map"),
+            first_only,
+            default("default value")
+
+    (still need `allow_duplicates: true` cause extract_marc defaults to false, but see also `unique` macro)
+
+  * So, these transformation steps can now be used with non-MARC formats as well. See also `strip`, `split`, `append`, `prepend`, and `gsub`.
+
 * `Traject::Indexer.new` takes a block for config, for more convenient programmatic/embedded use.
 
 * `Traject::Indexer.process_with` method for more convenient programmatic/embedded use.

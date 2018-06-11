@@ -16,6 +16,7 @@ require 'traject/array_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
+require 'traject/macros/transformation'
 
 if defined? JRUBY_VERSION
   require 'traject/marc4j_reader'
@@ -176,6 +177,7 @@ class Traject::Indexer
   # default macro modules provided)
   include Traject::Macros::Marc21
   include Traject::Macros::Basic
+  include Traject::Macros::Transformation
 
 
   # optional hash or Traject::Indexer::Settings object of settings.
