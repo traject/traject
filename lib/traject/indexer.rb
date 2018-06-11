@@ -510,7 +510,7 @@ class Traject::Indexer
   # The writer can be anything with a #put method taking a Traject::Indexer::Context.
   # For convenience, see the Traject::ArrayWriter that just collects output in an array.
   #
-  # Return value of process_using is the writer passed as second arg, for your convenience.
+  # Return value of process_with is the writer passed as second arg, for your convenience.
   #
   # This does much less than the full #process method, to be more flexible
   # and make fewer assumptions:
@@ -523,12 +523,22 @@ class Traject::Indexer
   #    pass `:close_writer => false` to not do so.
   #  * exceptions will just raise out, unless you pass in a rescue: option, value is a proc/lambda
   #    that will receive two args, context and exception. If the rescue proc doesn't re-raise,
-  #    `process_using` will continue to process subsequent records.
+  #    `process_with` will continue to process subsequent records.
   #
   # Example:
   #
-  #     output_values = indexer.process_using([record1, record2], Traject::ArrayWriter.new)
-  def process_using(source, destination = nil, options = {})
+  #     output_values = indexer.process_with([record1, record2], Traject::ArrayWriter.new)
+  #
+  # You can also supply a block, which will be called for every output record, in addition
+  # to or instead of a writer.
+  #
+  #     indexer.process_with([record]) do |context|
+  #       unless context.skip?
+  #         do_something_with(context.output_hash)
+  #       end
+  #     end
+  #
+  def process_with(source, destination = nil, options = {})
     unless destination || block_given?
       raise ArgumentError, "Need either a second arg writer/destination, or a block"
     end

@@ -3,9 +3,9 @@ module Traject
   # output_hash'es in an array. Useful for testing, or for simple programmatic
   # use.
   #
-  # Useful with process_using:
+  # Useful with process_with:
   #
-  #     indexer.process_using(source_array, ArrayWriter.new).values
+  #     indexer.process_with(source_array, ArrayWriter.new).values
   #       # => array of output_hash's
   #
   # Recommend against using it with huge number of records, as it will

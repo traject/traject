@@ -41,9 +41,9 @@
 
 * `Traject::Indexer.new` takes a block for config, for more convenient programmatic/embedded use.
 
-* `Traject::Indexer.process_with` method for more convenient programmatic/embedded use.
+* `Traject::Indexer.process_record` method for more convenient programmatic/embedded use.
 
-* `Traject::Indexer.process_using` method for more convenient programmatic/embedded use.
+* `Traject::Indexer.process_with` method for more convenient programmatic/embedded use.
 
 * `Traject::SolrJsonWriter#flush`, flush to solr without closing, may be useful for direct programmatic use.
 
