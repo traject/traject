@@ -22,7 +22,6 @@
 
 * `Traject::Indexer.process_using` method for more convenient programmatic/embedded use.
 
-
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process
 
