@@ -144,6 +144,19 @@ describe "Traject::SolrJsonWriter" do
     assert_length 1, JSON.parse(post_args[1][1]), "second batch posted with last remaining doc"
   end
 
+  it "can #flush" do
+    2.times do |i|
+      doc = {"id" => "doc_#{i}", "key" => "value"}
+      @writer.put context_with(doc)
+    end
+
+    assert_length 0, @fake_http_client.post_args, "Hasn't yet written"
+
+    @writer.flush
+
+    assert_length 1, @fake_http_client.post_args, "Has flushed to solr"
+  end
+
   it "commits on close when set" do
     @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_on_close" => "true")
     @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})

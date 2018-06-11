@@ -45,6 +45,8 @@
 
 * `Traject::Indexer.process_using` method for more convenient programmatic/embedded use.
 
+* `Traject::SolrJsonWriter#flush`, flush to solr without closing, may be useful for direct programmatic use.
+
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process
 
