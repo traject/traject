@@ -160,14 +160,8 @@ end
 #
 class Traject::Indexer
   CompletedStateError = Class.new(StandardError)
-
-
-  # Arity error on a passed block
-  class ArityError < ArgumentError;
-  end
-  class NamingError < ArgumentError;
-  end
-
+  ArityError          = Class.new(ArgumentError)
+  NamingError         = Class.new(ArgumentError)
 
   include Traject::QualifiedConstGet
 
