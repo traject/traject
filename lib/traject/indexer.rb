@@ -529,7 +529,7 @@ class Traject::Indexer
   end
 
   # A light-weight process method meant for programmatic use, generally
-  # with only a "few" (not milliions) of records.
+  # intended for only a "few" (not milliions) of records.
   #
   # It does _not_ use instance-configured reader or writer, instead taking
   # a source/reader and destination/writer as arguments to this call.
@@ -546,8 +546,8 @@ class Traject::Indexer
   # This does much less than the full #process method, to be more flexible
   # and make fewer assumptions:
   #
-  #  * Will never use any additional threads. Wrap in your own threading if desired.
-  #  * Will not do any stnadard logging or progress bars, regardless of indexer settings.
+  #  * Will never use any additional threads (unless writer does). Wrap in your own threading if desired.
+  #  * Will not do any standard logging or progress bars, regardless of indexer settings.
   #    Log yourself if desired.
   #  * Will _not_ call any `after_processing` steps. Call yourself with `indexer.run_after_processing_steps` as desired.
   #  * WILL by default call #close on the writer, IF the writer has a #close method.
@@ -556,25 +556,25 @@ class Traject::Indexer
   #    that will receive two args, context and exception. If the rescue proc doesn't re-raise,
   #    `process_with` will continue to process subsequent records.
   #
-  # Example:
+  # @example
+  #     array_writer_instance = indexer.process_with([record1, record2], Traject::ArrayWriter.new)
   #
-  #     output_values = indexer.process_with([record1, record2], Traject::ArrayWriter.new)
-  #
-  # You can also supply a block, which will be called for every output record, in addition
-  # to or instead of a writer.
+  # @example With a block, in addition to or instead of a writer.
   #
   #     indexer.process_with([record]) do |context|
-  #       unless context.skip?
-  #         do_something_with(context.output_hash)
-  #       end
+  #       do_something_with(context.output_hash)
   #     end
   #
-  def process_with(source, destination = nil, options = {})
+  # @param source [#each]
+  # @param destination [#put]
+  # @param close_writer whether the destination should have #close called on it, if it responds to.
+  # @param rescue_with proc to call on errors, taking two args: A Traject::Context and an exception.
+  #   If nil (default), exceptions will be raised out. If set, you can raise or handle otherwise if you like.
+  def process_with(source, destination = nil, close_writer: true, rescue_with: nil)
     unless destination || block_given?
       raise ArgumentError, "Need either a second arg writer/destination, or a block"
     end
 
-    options[:close_writer] = true unless options.has_key?(:close_writer)
     settings.fill_in_defaults!
 
     position = 0
@@ -595,19 +595,18 @@ class Traject::Indexer
           log_skip(context)
         else
           destination.put(context) if destination
+          yield(context) if block_given?
         end
-
-        yield(context) if block_given?
       rescue StandardError => e
-        if options[:rescue]
-          options[:rescue].call(context, e)
+        if rescue_with
+          rescue_with.call(context, e)
         else
           raise e
         end
       end
     end
 
-    if destination.respond_to?(:close) && options[:close_writer]
+    if close_writer && destination.respond_to?(:close)
       destination.close
     end
 
