@@ -496,12 +496,16 @@ class Traject::Indexer
     return true
   end
 
+  def completed?
+    @completed
+  end
+
   # Instance variable readers and writers are not generally re-usble.
   # The writer may have been closed. The reader does it's thing and doesn't
   # rewind. If we're completed, as a sanity check don't let someone do
   # something with the indexer that uses the reader or writer and isn't gonna work.
-  def check_uncompleted
-    if @completed
+  protected def check_uncompleted
+    if completed?
       raise CompletedStateError.new("Indexer has been completed, and it's reader and writer are not in a usable state")
     end
   end
