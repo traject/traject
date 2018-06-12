@@ -123,5 +123,26 @@ describe "Traject::Indexer#process_with" do
         end
       end
     end
+
+    describe "skipped records" do
+      let(:indexer) {
+        Traject::Indexer.new do
+          to_field "foo", literal("value")
+          each_record do |record, context|
+            context.skip!
+          end
+        end
+      }
+      it "calls on_skipped, does not send to writer" do
+        skip_calls = []
+        on_skipped = lambda { |*args| skip_calls << args }
+
+        writer = indexer.process_with(input_records, array_writer, on_skipped: on_skipped)
+
+        assert_equal writer.values, [], "nothing sent to writer"
+        assert_equal input_records.count, skip_calls.count, "skip proc called"
+        assert skip_calls.all? {|a| a.length == 1 && a[0].kind_of?(Traject::Indexer::Context) }, "skip proc called with single arg"
+      end
+    end
   end
 end

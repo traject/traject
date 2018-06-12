@@ -333,7 +333,7 @@ class Traject::Indexer
 
   # Takes a single record, maps it, and sends it to the instance-configured
   # writer. No threading, no logging, no error handling. Respects skipped
-  # records by not adding them. Returns the Traject::Context.
+  # records by not adding them. Returns the Traject::Indexer::Context.
   #
   # Aliased as #<<
   def process_record(record)
@@ -568,9 +568,10 @@ class Traject::Indexer
   # @param source [#each]
   # @param destination [#put]
   # @param close_writer whether the destination should have #close called on it, if it responds to.
-  # @param rescue_with proc to call on errors, taking two args: A Traject::Context and an exception.
+  # @param rescue_with [Proc] to call on errors, taking two args: A Traject::Indexer::Context and an exception.
   #   If nil (default), exceptions will be raised out. If set, you can raise or handle otherwise if you like.
-  def process_with(source, destination = nil, close_writer: true, rescue_with: nil)
+  # @param on_skipped [Proc] will be called for any skipped records, with one arg Traject::Indexer::Context
+  def process_with(source, destination = nil, close_writer: true, rescue_with: nil, on_skipped: nil)
     unless destination || block_given?
       raise ArgumentError, "Need either a second arg writer/destination, or a block"
     end
@@ -592,7 +593,7 @@ class Traject::Indexer
         map_to_context!(context)
 
         if context.skip?
-          log_skip(context)
+          on_skipped.call(context) if on_skipped
         else
           destination.put(context) if destination
           yield(context) if block_given?
