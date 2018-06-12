@@ -44,4 +44,12 @@ describe "Traject::Indexer#process_record" do
 
     @indexer << @record
   end
+
+  it "raises on completed indexer" do
+    @indexer.complete
+    assert_raises Traject::Indexer::CompletedStateError do
+      @indexer.process_record(@record)
+    end
+  end
+
 end

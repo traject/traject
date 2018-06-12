@@ -106,6 +106,18 @@ describe "Traject::Indexer#process" do
     assert_equal [:one, :two], called, "Both after_processing hooks called, in order"
   end
 
+  it "can't be run twice" do
+    @file = File.open(support_file_path "test_data.utf8.mrc")
+    @indexer = Traject::Indexer.new(
+      "writer_class_name" => "Traject::NullWriter"
+    )
+    @indexer.process(@file)
+
+    assert_raises Traject::Indexer::CompletedStateError do
+      @indexer.process(@file)
+    end
+  end
+
   describe "demo_config.rb" do
     before do
       @indexer = Traject::Indexer.new(

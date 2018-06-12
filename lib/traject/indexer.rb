@@ -159,6 +159,8 @@ end
 # inconveient for you, we'd like to know your use case and improve things.
 #
 class Traject::Indexer
+  CompletedStateError = Class.new(StandardError)
+
 
   # Arity error on a passed block
   class ArityError < ArgumentError;
@@ -341,6 +343,8 @@ class Traject::Indexer
   #
   # Aliased as #<<
   def process_record(record)
+    check_uncompleted
+
     context = Context.new(:source_record => record, :settings => settings)
     map_to_context!(context)
     writer.put( context ) unless context.skip?
@@ -420,6 +424,8 @@ class Traject::Indexer
   # non-zero to command line.
   #
   def process(io_stream)
+    check_uncompleted
+
     settings.fill_in_defaults!
 
     count      = 0
@@ -494,6 +500,16 @@ class Traject::Indexer
     end
 
     return true
+  end
+
+  # Instance variable readers and writers are not generally re-usble.
+  # The writer may have been closed. The reader does it's thing and doesn't
+  # rewind. If we're completed, as a sanity check don't let someone do
+  # something with the indexer that uses the reader or writer and isn't gonna work.
+  def check_uncompleted
+    if @completed
+      raise CompletedStateError.new("Indexer has been completed, and it's reader and writer are not in a usable state")
+    end
   end
 
   # Closes the writer (which may flush/save/finalize buffered records),
