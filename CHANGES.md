@@ -37,13 +37,18 @@
 
     (still need `allow_duplicates: true` cause extract_marc defaults to false, but see also `unique` macro)
 
-  * So, these transformation steps can now be used with non-MARC formats as well. See also `strip`, `split`, `append`, `prepend`, and `gsub`.
+  * So, these transformation steps can now be used with non-MARC formats as well. See also new transformation macros: `strip`, `split`, `append`, `prepend`, and `gsub`. And for MARC use, `trim_punctuation`.
 
-* `Traject::Indexer.new` takes a block for config, for more convenient programmatic/embedded use.
 
-* `Traject::Indexer.process_record` method for more convenient programmatic/embedded use.
+* Traject::Indexer new api, for more convenient programmatic/embedded use.
 
-* `Traject::Indexer.process_with` method for more convenient programmatic/embedded use.
+  * `Traject::Indexer.new` takes a block for config
+
+  * `Traject::Indexer#process_record`
+
+  * `Traject::Indexer#process_with`
+
+  * `Traject::Indexer#complete` and `#run_after_processing_steps` public API.
 
 * `Traject::SolrJsonWriter#flush`, flush to solr without closing, may be useful for direct programmatic use.
 

@@ -184,6 +184,7 @@ class Traject::Indexer
   # optionally takes a block which is instance_eval'd in the indexer,
   # intended for configuration simimlar to what would be in a config file.
   def initialize(arg_settings = {}, &block)
+    @completed              = false
     @settings               = Settings.new(arg_settings)
     @index_steps            = []
     @after_processing_steps = []
@@ -481,9 +482,7 @@ class Traject::Indexer
 
     thread_pool.raise_collected_exception!
 
-    writer.close if writer.respond_to?(:close)
-
-    run_after_processing_steps
+    complete
 
     elapsed = Time.now - start_time
     avg_rps = (count / elapsed)
@@ -495,6 +494,28 @@ class Traject::Indexer
     end
 
     return true
+  end
+
+  # Closes the writer (which may flush/save/finalize buffered records),
+  # and calls run_after_processing_steps
+  def complete
+    writer.close if writer.respond_to?(:close)
+    run_after_processing_steps
+
+    # after an indexer has been completed, it is not really usable anymore,
+    # as the writer has been closed.
+    @completed = true
+  end
+
+  def run_after_processing_steps
+    @after_processing_steps.each do |step|
+      begin
+        step.execute
+      rescue StandardError => e
+        logger.fatal("Unexpected exception #{e} when executing #{step}")
+        raise e
+      end
+    end
   end
 
   # A light-weight process method meant for programmatic use, generally
@@ -581,17 +602,6 @@ class Traject::Indexer
     end
 
     return destination
-  end
-
-  def run_after_processing_steps
-    @after_processing_steps.each do |step|
-      begin
-        step.execute
-      rescue StandardError => e
-        logger.fatal("Unexpected exception #{e} when executing #{step}")
-        raise e
-      end
-    end
   end
 
   # Log that the current record is being skipped, using
