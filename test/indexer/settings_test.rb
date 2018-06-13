@@ -124,12 +124,12 @@ describe "Traject::Indexer#settings" do
       assert_equal( {"a" => "a", "password" => "[hidden]", "some_password" => "[hidden]", "some.password" => "[hidden]"}, parsed)
     end
   end
-  
+
   describe "JRuby / MRI" do
     before do
       @indexer = Traject::Indexer.new
     end
-    
+
     it "has the right indexer name" do
       if defined? JRUBY_VERSION
         assert_equal "Traject::Marc4JReader", @indexer.settings['reader_class_name']
@@ -137,7 +137,7 @@ describe "Traject::Indexer#settings" do
         assert_equal "Traject::MarcReader", @indexer.settings['reader_class_name']
       end
     end
-    
+
     # This next one has the added effect of making sure the correct class
     # has actually been loaded -- otherwise the constant wouldn't be available
     it "has the correct default indexer class based on platform" do
@@ -146,6 +146,38 @@ describe "Traject::Indexer#settings" do
       else
         assert_equal Traject::MarcReader, @indexer.reader_class
       end
+    end
+  end
+
+  describe "order of precedence" do
+    it "args beat 'provides'" do
+      # args come from command-line in typical use
+
+      @indexer = Traject::Indexer.new(sample: "from args")
+      @indexer.settings do
+        provide :sample, "from config"
+      end
+      @indexer.settings.fill_in_defaults!
+
+      assert_equal "from args", @indexer.settings["sample"]
+    end
+
+    it "args beat defaults" do
+      key = Traject::Indexer::Settings.defaults.keys.first
+      @indexer = Traject::Indexer.new(key.to_sym => "from args")
+      @indexer.settings.fill_in_defaults!
+
+      assert_equal "from args", @indexer.settings[key]
+    end
+
+    it "provide beats defaults" do
+      key = Traject::Indexer::Settings.defaults.keys.first
+      @indexer.settings do
+        provide key, "from config"
+      end
+      @indexer.settings.fill_in_defaults!
+
+      assert_equal "from config", @indexer.settings[key]
     end
   end
 
