@@ -5,10 +5,10 @@ describe "Traject::Indexer#settings" do
     @indexer = Traject::Indexer.new
   end
 
-  it "starts out a Hash, that can fill in it's defaults" do
+  it "starts out a Hash, that uses it's defaults" do
     assert_kind_of Hash, @indexer.settings
 
-    Traject::Indexer::Settings.defaults.each_pair do |key, value|
+    Traject::Indexer.default_settings.each_pair do |key, value|
       assert_equal value, @indexer.settings[key]
     end
   end
@@ -16,12 +16,14 @@ describe "Traject::Indexer#settings" do
   it "can fill_in_defaults!" do
     @indexer.settings.fill_in_defaults!
 
-    assert_equal Traject::Indexer::Settings.defaults, @indexer.settings
+    assert_equal Traject::Indexer.default_settings, @indexer.settings
   end
 
   it "doesn't overwrite with fill_in_defaults!" do
-    key = Traject::Indexer::Settings.defaults.keys.first
+    key = Traject::Indexer.default_settings.keys.first
     @indexer.settings[ key  ] = "MINE KEEP IT"
+
+    assert_equal "MINE KEEP IT", @indexer.settings[key]
 
     @indexer.settings.fill_in_defaults!
 
@@ -163,7 +165,7 @@ describe "Traject::Indexer#settings" do
     end
 
     it "args beat defaults" do
-      key = Traject::Indexer::Settings.defaults.keys.first
+      key = Traject::Indexer.default_settings.keys.first
       @indexer = Traject::Indexer.new(key.to_sym => "from args")
       @indexer.settings.fill_in_defaults!
 
@@ -171,7 +173,7 @@ describe "Traject::Indexer#settings" do
     end
 
     it "provide beats defaults" do
-      key = Traject::Indexer::Settings.defaults.keys.first
+      key = Traject::Indexer.default_settings.keys.first
       @indexer.settings do
         provide key, "from config"
       end

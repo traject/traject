@@ -11,33 +11,53 @@ class Traject::Indexer
   #
   # method #provide(key, value) is added, to do like settings[key] ||= value,
   # set only if not already set (but unlike ||=, nil or false can count as already set)
+  # provide WILL overwrite defaults.
   #
-  # Also has an interesting 'defaults' system, meant to play along
-  # with configuration file 'provide' statements. There is a built-in hash of
-  # defaults, which will be lazily filled in if accessed and not yet
-  # set. (nil can count as set, though!).  If they haven't been lazily
-  # set yet, then #provide will still fill them in. But you can also call
-  # fill_in_defaults! to fill all defaults in, if you know configuration
-  # files have all been loaded, and want to fill them in for inspection.
+  # Or you can use standard Hash `store` which will overwrite already set values as well
+  # as defaults.
+  #
+  # Has kind of a weird 'defaults' system, where you tell the hash what it's defaults
+  # are, but they aren't actually loaded until asked for (or you can call fill_in_defaults!
+  # to load em all for inspection), to accomodate the `provide` API, where a caller wants to set
+  # only if not already set, but DO overwrite defaults.
   class Settings < Hash
+    # Just a hash with indifferent access and hash initializer, to use for
+    # our defaults hash.
+    class DefaultsHash < Hash
+      include Hashie::Extensions::MergeInitializer # can init with hash
+      include Hashie::Extensions::IndifferentAccess
+    end
+
     include Hashie::Extensions::MergeInitializer # can init with hash
     include Hashie::Extensions::IndifferentAccess
 
     def initialize(*args)
       super
+
+      @defaults = {}
+
       self.default_proc = lambda do |hash, key|
-        if self.class.defaults.has_key?(key)
-          return hash[key] = self.class.defaults[key]
+        if @defaults.has_key?(key)
+          return hash[key] = @defaults[key]
         else
           return nil
         end
       end
     end
 
+    def with_defaults(defaults)
+      @defaults = DefaultsHash.new(defaults).freeze
+      self
+    end
+
+    def keys
+      super + @defaults.keys
+    end
+
     # a cautious store, which only saves key=value if
     # there was not already a value for #key. Can be used
     # to set settings that can be overridden on command line,
-    # or general first-set-wins settings.
+    # or general first-set-wins settings. DOES set over defaults.
     def provide(key, value)
       unless has_key? key
         store(key, value)
@@ -54,50 +74,11 @@ class Traject::Indexer
       replace(reverse_merge(other_hash))
     end
 
+    # Normally defaults are filled in on-demand, but you can trigger it here --
+    # but if you later try to load traject config, `provide` will no longer
+    # overwrite defaults!
     def fill_in_defaults!
-      self.reverse_merge!(self.class.defaults)
-    end
-
-
-    def self.mri_defaults
-      {
-          # Reader defaults
-          "reader_class_name"       => "Traject::MarcReader",
-          "marc_source.type"        => "binary",
-
-          # Writer defaults
-          "writer_class_name"       => "Traject::SolrJsonWriter",
-          "solr_writer.batch_size"  => 100,
-          "solr_writer.thread_pool" => 1,
-
-          # Threading and logging
-          "processing_thread_pool"  => self.default_processing_thread_pool,
-          "log.batch_size.severity" => "info",
-
-          # how to post-process the accumulator
-          "allow_nil_values"        => false,
-          "allow_duplicate_values"  => true,
-
-          "allow_empty_fields"      => false,
-      }
-    end
-
-    def self.jruby_defaults
-      {
-          'reader_class_name'        => "Traject::Marc4JReader",
-          'marc4j_reader.permissive' => true
-      }
-    end
-
-
-    def self.defaults
-      return @@defaults if defined? @@defaults
-      default_settings = self.mri_defaults
-      if defined? JRUBY_VERSION
-        default_settings.merge! self.jruby_defaults
-      end
-
-      @@defaults = default_settings
+      self.reverse_merge!(@defaults)
     end
 
     def inspect

@@ -6,6 +6,8 @@
 
 * Placeholder
 
+* Traject::Indexer::Settings no longer has it's own global defaults, Instead it can be given a set of defaults with #with_defaults, usually right after instantiation. To support different defaults for different Indexers.
+
 ### Added
 
 * Placeholder

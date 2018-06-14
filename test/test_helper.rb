@@ -12,8 +12,7 @@ STDERR.sync = true
 
 # Hacky way to turn off Indexer logging by default, say only
 # log things higher than fatal, which is nothing.
-require 'traject/indexer/settings'
-Traject::Indexer::Settings.defaults["log.level"] = "gt.fatal"
+Traject::Indexer.default_settings["log.level"] = "gt.fatal"
 
 def support_file_path(relative_path)
   return File.expand_path(File.join("test_support", relative_path), File.dirname(__FILE__))
