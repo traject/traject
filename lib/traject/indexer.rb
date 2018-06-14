@@ -181,7 +181,7 @@ class Traject::Indexer
   # intended for configuration simimlar to what would be in a config file.
   def initialize(arg_settings = {}, &block)
     @completed              = false
-    @settings               = Settings.new(arg_settings)
+    @settings               = Settings.new(arg_settings).with_defaults(self.class.default_settings)
     @index_steps            = []
     @after_processing_steps = []
 
@@ -241,6 +241,45 @@ class Traject::Indexer
     @settings.instance_eval &block if block_given?
 
     return @settings
+  end
+
+  # We intentionally do not freeze the settings hash, you can mutate default settings
+  # if you like in your app, although it may not be advisable, except possibly for testing.
+  # Usually better to make a sub-class (which calls super and merges new things in) with different settings.
+  # If you start mutating settings hashes on a sub-class, the way this implementation works you may
+  # end up mutating global on Indexer itself, beware. (Is there a better imp we could do? Maybe we should
+  # be freezing.)
+  def self.default_settings
+    @default_settings ||= begin
+      is_jruby = defined?(JRUBY_VERSION)
+
+      settings = {
+        # Reader defaults
+        "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
+        "marc_source.type"        => "binary",
+
+        # Writer defaults
+        "writer_class_name"       => "Traject::SolrJsonWriter",
+        "solr_writer.batch_size"  => 100,
+        "solr_writer.thread_pool" => 1,
+
+        # Threading and logging
+        "processing_thread_pool"  => Traject::Indexer::Settings.default_processing_thread_pool,
+        "log.batch_size.severity" => "info",
+
+        # how to post-process the accumulator
+        "allow_nil_values"        => false,
+        "allow_duplicate_values"  => true,
+
+        "allow_empty_fields"      => false
+      }
+
+      if is_jruby
+        settings["marc4j_reader.permissive"] = true
+      end
+
+      settings
+    end
   end
 
   # Part of DSL, used to define an indexing mapping. Register logic
