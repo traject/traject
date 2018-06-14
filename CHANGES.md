@@ -6,6 +6,11 @@
 
 * Placeholder
 
+* The `Traject::Indexer` class no longer includes marc-specific settings and modules.
+  * If you are using command-line `traject`, this should make no difference to you, as command-line now defaults to the new `Traject::Indexer::MarcIndexer` with those removed things.
+  * If you are using Traject::Indexer programmatically and want those features, switch to using `Traject::Indexer::MarcIndexer`.
+  * If neccessary, as a hopefully temporary backwards compat shim, call `Traject::Indexer.legacy_marc_mode!`, which injects the old marc-specific behavior into Traject::Indexer again, globally and permanently.
+
 * Traject::Indexer::Settings no longer has it's own global defaults, Instead it can be given a set of defaults with #with_defaults, usually right after instantiation. To support different defaults for different Indexers.
 
 ### Added

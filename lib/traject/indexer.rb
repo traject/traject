@@ -12,10 +12,11 @@ require 'traject/json_writer'
 require 'traject/solr_json_writer'
 require 'traject/debug_writer'
 
-
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
 require 'traject/macros/transformation'
+
+require 'traject/indexer/marc_indexer'
 
 if defined? JRUBY_VERSION
   require 'traject/marc4j_reader'
@@ -170,11 +171,6 @@ class Traject::Indexer
 
   attr_writer :reader_class, :writer_class, :writer
 
-  # For now we hard-code these basic macro's included
-  # TODO, make these added with extend per-indexer,
-  # added by default but easily turned off (or have other
-  # default macro modules provided)
-  include Traject::Macros::Marc21
   include Traject::Macros::Basic
   include Traject::Macros::Transformation
 
@@ -245,14 +241,7 @@ class Traject::Indexer
   # if you like in your app, although it may not be advisable, except possibly for testing.
   # Usually better to make a sub-class with different settings.
   def self.default_settings
-    @default_settings ||= begin
-      is_jruby = defined?(JRUBY_VERSION)
-
-      settings = {
-        # Reader defaults
-        "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
-        "marc_source.type"        => "binary",
-
+    @default_settings ||= {
         # Writer defaults
         "writer_class_name"       => "Traject::SolrJsonWriter",
         "solr_writer.batch_size"  => 100,
@@ -267,14 +256,28 @@ class Traject::Indexer
         "allow_duplicate_values"  => true,
 
         "allow_empty_fields"      => false
-      }
+    }
+  end
 
-      if is_jruby
-        settings["marc4j_reader.permissive"] = true
-      end
+  def self.legacy_marc_mode!
+    # include legacy Marc macros
+    include Traject::Macros::Marc21
 
-      settings
+    # alter default settings to be legacy including marc-specific
+    is_jruby = defined?(JRUBY_VERSION)
+
+    # Reader defaults
+    legacy_settings = {
+      "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
+      "marc_source.type"        => "binary",
+    }
+    if is_jruby
+      legacy_settings["marc4j_reader.permissive"] = true
     end
+
+    default_settings.merge!(legacy_settings)
+
+    self
   end
 
   # Part of DSL, used to define an indexing mapping. Register logic

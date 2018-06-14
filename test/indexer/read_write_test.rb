@@ -25,7 +25,7 @@ memory_writer_class = Class.new do
 describe "Traject::Indexer#process" do
   before do
     # no threading for these tests
-    @indexer = Traject::Indexer.new("processing_thread_pool" => nil)
+    @indexer = Traject::Indexer::MarcIndexer.new("processing_thread_pool" => nil)
     @indexer.writer_class = memory_writer_class
     @file = File.open(support_file_path "test_data.utf8.mrc")
   end
@@ -68,7 +68,7 @@ describe "Traject::Indexer#process" do
 
   require 'traject/null_writer'
   it "calls after_processing after processing" do
-    @indexer = Traject::Indexer.new(
+    @indexer = Traject::Indexer::MarcIndexer.new(
       "writer_class_name" => "Traject::NullWriter"
     )
     @file = File.open(support_file_path "test_data.utf8.mrc")
