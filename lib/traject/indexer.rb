@@ -376,8 +376,8 @@ class Traject::Indexer
       rescue Exception => marc_to_s_exception
         logger.debug "(Could not log record, #{marc_to_s_exception})"
       end
+      raise e unless @settings['continue_after_exception']
 
-      raise e
     end
   end
 
@@ -406,7 +406,7 @@ class Traject::Indexer
 
     log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
 
-    reader.each do |record; position |
+    reader.each do |record; position|
       count    += 1
 
       # have to use a block local var, so the changing `count` one
@@ -443,9 +443,7 @@ class Traject::Indexer
         else
           writer.put context
         end
-
       end
-
     end
     $stderr.write "\n" if settings["debug_ascii_progress"].to_s == "true"
 

@@ -79,6 +79,7 @@ class Traject::Indexer
           "allow_duplicate_values"  => true,
 
           "allow_empty_fields"      => false,
+          "continue_after_exception" => false,
       }
     end
 
