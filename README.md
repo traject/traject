@@ -31,7 +31,7 @@ that can combine to deal with any of your local needs.
 
 ## Installation
 
-Traject runs under jruby (1.7.x or higher), MRI ruby (1.9.3 or higher), or probably any other ruby platform.
+Traject runs under jruby (9.0.x or higher), MRI ruby (2.2.x or higher), or probably any other ruby platform.
 
 **Traject runs much faster on JRuby** where it can use multi-core parallelism, and the Java Marc4J marc reader. If performance is a concern, you should run traject on JRuby.
 
@@ -304,7 +304,7 @@ You set which writer is being used in settings (`provide "writer_class_name", "T
 or with the shortcut command line argument  `-w Traject::DebugWriter`.
 
 The [SolrJWriter](https://github.com/traject/traject-solrj_writer) is packaged separately,
-and will be useful if you need to index to Solr's older than version 3.2. It requires Jruby.  
+and will be useful if you need to index to Solr's older than version 3.2. It requires Jruby.
 
 You can easily write your own Readers and Writers if you'd like, see comments at top
 of [Traject::Indexer](lib/traject/indexer.rb).
@@ -450,7 +450,7 @@ Own Code](./doc/extending.md)
   * [traject_umich_format](https://github.com/billdueber/traject_umich_format/): opinionated code and associated macros to extract format (book, audio file, etc.) and types (bibliography, conference report, etc.) from a MARC record. Code mirrors that used by the University of Michigan, and is an alternate approach to that taken by the `marc_formats` macro in `Traject::Macros::MarcFormatClassifier`.
   * [traject-solrj_writer](https://github.com/traject/traject-solrj_writer): a jruby-only writer that uses the solrj .jar to talk directly to solr. Your only option for speaking to a solr version < 3.2, which is when the json handler was added to solr.
   * [traject_marc4j_reader](https://github.com/traject/traject-marc4j_reader): Packaged with traject automatically on jruby. A JRuby-only reader for
-  reading marc records using the Marc4J library, fastest MARC reading on JRuby. 
+  reading marc records using the Marc4J library, fastest MARC reading on JRuby.
   * [traject_sequel_writer](https://github.com/traject/traject_sequel_writer) A writer for sending to an rdbms via [Sequel](https://github.com/jeremyevans/sequel)
 
 # Development
@@ -471,15 +471,15 @@ online api docs has a `--markup markdown` specified -- inline class/method docs 
 Bundler rake tasks included for gem releases: `rake release`
 * Every traject release needs to be done once when running MRI, and switch to JRuby
 and do the same release again. The JRuby release is identical but for including
-a gemspec dependency on the Marc4JReader gem. 
+a gemspec dependency on the Marc4JReader gem.
 
 The standard [bundle console](https://bundler.io/v1.7/bundle_console.html) command may be useful for getting an `irb` console with the gem and it's dependencies loaded. 
 
 ## TODO
 
-* Readers and index rules helpers for reading XML files as input? Maybe. 
+* Readers and index rules helpers for reading XML files as input? Maybe.
 
-* Writers for writing to stores other than Solr? ElasticSearch? Maybe. 
+* Writers for writing to stores other than Solr? ElasticSearch? Maybe.
 
 * Unicode normalization. Has to normalize to NFKC on way out to index. Except for serialized marc field and other exceptions? Except maybe don't have to, rely on solr analyzer to do it?
 

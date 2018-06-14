@@ -1,5 +1,51 @@
 # Changes
 
+## 3.0.0
+
+### Changed/Backwards Incompatibilities
+
+* Placeholder
+
+* The `Traject::Indexer` class no longer includes marc-specific settings and modules.
+  * If you are using command-line `traject`, this should make no difference to you, as command-line now defaults to the new `Traject::Indexer::MarcIndexer` with those removed things.
+  * If you are using Traject::Indexer programmatically and want those features, switch to using `Traject::Indexer::MarcIndexer`.
+  * If neccessary, as a hopefully temporary backwards compat shim, call `Traject::Indexer.legacy_marc_mode!`, which injects the old marc-specific behavior into Traject::Indexer again, globally and permanently.
+
+* Traject::Indexer::Settings no longer has it's own global defaults, Instead it can be given a set of defaults with #with_defaults, usually right after instantiation. To support different defaults for different Indexers.
+
+### Added
+
+* Placeholder
+
+* `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
+
+      to_field ["field1", "field2"], extract_marc("240")
+
+* `to_field` can take multiple transformation procs (all with the same form). https://github.com/traject/traject/pull/153
+
+* Existing arguments to `marc_extract` have been provided as transformation proc macros, along with some additional new useful general purposes transformations, in [Traject::Macros::Transformations](./lib/traject/macros/transformation.rb). https://github.com/traject/traject/pull/154
+
+  This is the new preferred way to do post-processing with the `marc_extract` options, but the existing options are not deprecated and there is no current plan for them to be removed.
+  * before:
+
+        to_field "some_field", extract_marc("800",
+                                translation_map: "marc_800_map",
+                                allow_duplicates: true,
+                                first: true,
+                                default: "default value")
+  * now preferred:
+
+        to_field "some_field", extract_marc("800", allow_duplicates: true),
+            translation_map("marc_800_map"),
+            first_only,
+            default("default value")
+
+    (still need `allow_duplicates: true` cause extract_marc defaults to false, but see also `unique` macro)
+
+  * So, these transformation steps can now be used with non-MARC formats as well. See also `strip`, `split`, `append`, `prepend`, and `gsub`.
+
+
+
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process
 
@@ -35,7 +81,7 @@
 
 ## 2.2.1
   * Had inadvertently broken use of arrays as extract_marc specifications. Fixed.
-  
+
 ## 2.2.0
   * Change DebugWriter to be more forgiving (and informative) about missing record-id fields
   * Automatically require DebugWriter for easier use on the command line

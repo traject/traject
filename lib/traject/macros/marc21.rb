@@ -122,6 +122,14 @@ module Traject::Macros
       end
     end
 
+    # A transformation macro version of trim_punctuation -- heuristics for trimming punctuation
+    # from AACR2/MARC style values, to get bare values.
+    def trim_punctuation
+      lambda do |rec, accumulator|
+        accumulator.collect! {|s| Marc21.trim_punctuation(s)}
+      end
+    end
+
 
     #  A list of symbols that are valid keys in the options hash
     EXTRACT_MARC_VALID_OPTIONS = [:first, :trim_punctuation, :default,

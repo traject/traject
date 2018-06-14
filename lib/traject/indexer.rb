@@ -12,9 +12,11 @@ require 'traject/json_writer'
 require 'traject/solr_json_writer'
 require 'traject/debug_writer'
 
-
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
+require 'traject/macros/transformation'
+
+require 'traject/indexer/marc_indexer'
 
 if defined? JRUBY_VERSION
   require 'traject/marc4j_reader'
@@ -169,17 +171,13 @@ class Traject::Indexer
 
   attr_writer :reader_class, :writer_class, :writer
 
-  # For now we hard-code these basic macro's included
-  # TODO, make these added with extend per-indexer,
-  # added by default but easily turned off (or have other
-  # default macro modules provided)
-  include Traject::Macros::Marc21
   include Traject::Macros::Basic
+  include Traject::Macros::Transformation
 
 
   # optional hash or Traject::Indexer::Settings object of settings.
   def initialize(arg_settings = {})
-    @settings               = Settings.new(arg_settings)
+    @settings               = Settings.new(arg_settings).with_defaults(self.class.default_settings)
     @index_steps            = []
     @after_processing_steps = []
   end
@@ -239,11 +237,56 @@ class Traject::Indexer
     return @settings
   end
 
+  # We intentionally do not freeze the settings hash, you can mutate default settings
+  # if you like in your app, although it may not be advisable, except possibly for testing.
+  # Usually better to make a sub-class with different settings.
+  def self.default_settings
+    @default_settings ||= {
+        # Writer defaults
+        "writer_class_name"       => "Traject::SolrJsonWriter",
+        "solr_writer.batch_size"  => 100,
+        "solr_writer.thread_pool" => 1,
+
+        # Threading and logging
+        "processing_thread_pool"  => Traject::Indexer::Settings.default_processing_thread_pool,
+        "log.batch_size.severity" => "info",
+
+        # how to post-process the accumulator
+        "allow_nil_values"        => false,
+        "allow_duplicate_values"  => true,
+
+        "allow_empty_fields"      => false
+    }
+  end
+
+  def self.legacy_marc_mode!
+    # include legacy Marc macros
+    include Traject::Macros::Marc21
+
+    # alter default settings to be legacy including marc-specific
+    is_jruby = defined?(JRUBY_VERSION)
+
+    # Reader defaults
+    legacy_settings = {
+      "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
+      "marc_source.type"        => "binary",
+    }
+    if is_jruby
+      legacy_settings["marc4j_reader.permissive"] = true
+    end
+
+    default_settings.merge!(legacy_settings)
+
+    self
+  end
+
   # Part of DSL, used to define an indexing mapping. Register logic
   # to be called for each record, and generate values for a particular
-  # output field.
-  def to_field(field_name, aLambda = nil, &block)
-    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first))
+  # output field. The first field_name argument can be a single string, or
+  # an array of multiple strings -- in the latter case, the processed values
+  # will be added to each field mentioned.
+  def to_field(field_name, *procs, &block)
+    @index_steps << ToFieldStep.new(field_name, procs, block, Traject::Util.extract_caller_location(caller.first))
   end
 
   # Part of DSL, register logic to be called for each record
