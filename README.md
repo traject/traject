@@ -363,6 +363,15 @@ Fields that are empty will have a value sent to the writer of an empty
 array (`[]`). Writers that need to special-case empty fields should do so in the
 writer class in question.
 
+### Error Handling
+
+The default behavior is to terminate processing when an otherwise-unhandled
+("unexpected") exception occurs during processing.  This usually indicates a bug in the code that handles transformations, but there are situations where this behavior may not fit your needs.
+
+After carefully considering the implications, you have the option of changing
+the `continue_after_exception` setting to
+`true`, which will cause traject to log the exception and continue. 
+
 ## The traject command Line
 
 The simplest invocation is:
