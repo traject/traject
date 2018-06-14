@@ -129,7 +129,7 @@ describe "Traject::Indexer#settings" do
 
   describe "JRuby / MRI" do
     before do
-      @indexer = Traject::Indexer.new
+      @indexer = Traject::Indexer::MarcIndexer.new
     end
 
     it "has the right indexer name" do
