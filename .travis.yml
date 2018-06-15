@@ -12,5 +12,5 @@ matrix:
     - jdk: oraclejdk8
       rvm: jruby-9.0.5.0
     - jdk: oraclejdk8
-      rvm: jruby-9.1.15.0
+      rvm: jruby-9.2.0.0
 
