@@ -164,7 +164,6 @@ class Traject::Indexer
   class NamingError < ArgumentError;
   end
 
-
   include Traject::QualifiedConstGet
 
   attr_writer :reader_class, :writer_class, :writer
@@ -175,7 +174,6 @@ class Traject::Indexer
   # default macro modules provided)
   include Traject::Macros::Marc21
   include Traject::Macros::Basic
-
 
   # optional hash or Traject::Indexer::Settings object of settings.
   def initialize(arg_settings = {})
@@ -342,7 +340,7 @@ class Traject::Indexer
 
       # Set the index step for error reporting
       context.index_step = index_step
-      log_mapping_errors(context, index_step) do
+      trap_mapping_errors(context, index_step) do
         index_step.execute(context) # will always return [] for an each_record step
       end
 
@@ -362,22 +360,11 @@ class Traject::Indexer
   # log_mapping_errors(context, index_step) do
   #    all_sorts_of_stuff # that will have errors logged
   # end
-  def log_mapping_errors(context, index_step)
+  def trap_mapping_errors(context, index_step)
     begin
       yield
-    rescue Exception => e
-      msg = "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
-      msg += "    while executing #{index_step.inspect}\n"
-      msg += Traject::Util.exception_to_log_message(e)
-
-      logger.error msg
-      begin
-        logger.debug "Record: " + context.source_record.to_s
-      rescue Exception => marc_to_s_exception
-        logger.debug "(Could not log record, #{marc_to_s_exception})"
-      end
-      raise e unless @settings['continue_after_exception']
-
+    rescue StandardError => e
+      mapping_error_handler.call(context, index_step, e)
     end
   end
 
@@ -500,6 +487,7 @@ class Traject::Indexer
     return reader_class.new(io_stream, settings.merge("logger" => logger))
   end
 
+  
   # Instantiate a Traject Writer, suing class set in #writer_class
   def writer!
     writer_class = @writer_class || qualified_const_get(settings["writer_class_name"])
@@ -509,6 +497,27 @@ class Traject::Indexer
   def writer
     @writer ||= settings["writer"] || writer!
   end
+
+  def mapping_error_handler
+    @mapping_error_handler ||= settings.fetch('mapping_error_handler', default_mapping_error_handler)
+  end
+
+  def default_mapping_error_handler
+    lambda do |context, index_step, e|
+      msg = "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
+      msg += "    while executing #{index_step.inspect}\n"
+      msg += Traject::Util.exception_to_log_message(e)
+      logger.error msg
+      begin
+        logger.debug "Record: " + context.source_record.to_s
+      rescue Exception => marc_to_s_exception
+        logger.debug "(Could not log record, #{marc_to_s_exception})"
+      end
+      raise e
+    end
+  end
+
+
 
 
   # Raised by #load_config_file when config file can not

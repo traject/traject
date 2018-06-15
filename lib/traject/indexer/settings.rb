@@ -58,7 +58,6 @@ class Traject::Indexer
       self.reverse_merge!(self.class.defaults)
     end
 
-
     def self.mri_defaults
       {
           # Reader defaults
@@ -79,7 +78,6 @@ class Traject::Indexer
           "allow_duplicate_values"  => true,
 
           "allow_empty_fields"      => false,
-          "continue_after_exception" => false,
       }
     end
 
