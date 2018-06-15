@@ -11,6 +11,7 @@ require 'traject/marc_reader'
 require 'traject/json_writer'
 require 'traject/solr_json_writer'
 require 'traject/debug_writer'
+require 'traject/array_writer'
 
 
 require 'traject/macros/marc21'
@@ -158,13 +159,9 @@ end
 # inconveient for you, we'd like to know your use case and improve things.
 #
 class Traject::Indexer
-
-  # Arity error on a passed block
-  class ArityError < ArgumentError;
-  end
-  class NamingError < ArgumentError;
-  end
-
+  CompletedStateError = Class.new(StandardError)
+  ArityError          = Class.new(ArgumentError)
+  NamingError         = Class.new(ArgumentError)
 
   include Traject::QualifiedConstGet
 
@@ -180,10 +177,15 @@ class Traject::Indexer
 
 
   # optional hash or Traject::Indexer::Settings object of settings.
-  def initialize(arg_settings = {})
+  # optionally takes a block which is instance_eval'd in the indexer,
+  # intended for configuration simimlar to what would be in a config file.
+  def initialize(arg_settings = {}, &block)
+    @completed              = false
     @settings               = Settings.new(arg_settings)
     @index_steps            = []
     @after_processing_steps = []
+
+    instance_eval(&block) if block
   end
 
   # Pass a string file path, a Pathname, or a File object, for
@@ -317,14 +319,33 @@ class Traject::Indexer
   # this indexer. Returns the output hash (a hash whose keys are
   # string fields, and values are arrays of one or more values in that field)
   #
+  # If the record is marked `skip` as part of processing, this will return
+  # nil.
+  #
   # This is a convenience shortcut for #map_to_context! -- use that one
   # if you want to provide addtional context
   # like position, and/or get back the full context.
   def map_record(record)
     context = Context.new(:source_record => record, :settings => settings)
     map_to_context!(context)
-    return context.output_hash
+    return context.output_hash unless context.skip?
   end
+
+  # Takes a single record, maps it, and sends it to the instance-configured
+  # writer. No threading, no logging, no error handling. Respects skipped
+  # records by not adding them. Returns the Traject::Indexer::Context.
+  #
+  # Aliased as #<<
+  def process_record(record)
+    check_uncompleted
+
+    context = Context.new(:source_record => record, :settings => settings)
+    map_to_context!(context)
+    writer.put( context ) unless context.skip?
+
+    return context
+  end
+  alias_method :<<, :process_record
 
   # Maps a single record INTO the second argument, a Traject::Indexer::Context.
   #
@@ -369,17 +390,19 @@ class Traject::Indexer
   def log_mapping_errors(context, index_step)
     begin
       yield
-    rescue Exception => e
+    rescue StandardError => e
       msg = "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
       msg += "    while executing #{index_step.inspect}\n"
+
+      msg += begin
+        "\n    Record: #{context.source_record.to_s}\n"
+      rescue StandardError => to_s_exception
+        "\n    (Could not log record, #{to_s_exception})\n"
+      end
+
       msg += Traject::Util.exception_to_log_message(e)
 
       logger.error msg
-      begin
-        logger.debug "Record: " + context.source_record.to_s
-      rescue Exception => marc_to_s_exception
-        logger.debug "(Could not log record, #{marc_to_s_exception})"
-      end
 
       raise e
     end
@@ -395,6 +418,8 @@ class Traject::Indexer
   # non-zero to command line.
   #
   def process(io_stream)
+    check_uncompleted
+
     settings.fill_in_defaults!
 
     count      = 0
@@ -447,9 +472,7 @@ class Traject::Indexer
         else
           writer.put context
         end
-
       end
-
     end
     $stderr.write "\n" if settings["debug_ascii_progress"].to_s == "true"
 
@@ -459,17 +482,7 @@ class Traject::Indexer
 
     thread_pool.raise_collected_exception!
 
-
-    writer.close if writer.respond_to?(:close)
-
-    @after_processing_steps.each do |step|
-      begin
-        step.execute
-      rescue Exception => e
-        logger.fatal("Unexpected exception #{e} when executing #{step}")
-        raise e
-      end
-    end
+    complete
 
     elapsed = Time.now - start_time
     avg_rps = (count / elapsed)
@@ -481,6 +494,128 @@ class Traject::Indexer
     end
 
     return true
+  end
+
+  def completed?
+    @completed
+  end
+
+  # Instance variable readers and writers are not generally re-usble.
+  # The writer may have been closed. The reader does it's thing and doesn't
+  # rewind. If we're completed, as a sanity check don't let someone do
+  # something with the indexer that uses the reader or writer and isn't gonna work.
+  protected def check_uncompleted
+    if completed?
+      raise CompletedStateError.new("Indexer has been completed, and it's reader and writer are not in a usable state")
+    end
+  end
+
+  # Closes the writer (which may flush/save/finalize buffered records),
+  # and calls run_after_processing_steps
+  def complete
+    writer.close if writer.respond_to?(:close)
+    run_after_processing_steps
+
+    # after an indexer has been completed, it is not really usable anymore,
+    # as the writer has been closed.
+    @completed = true
+  end
+
+  def run_after_processing_steps
+    @after_processing_steps.each do |step|
+      begin
+        step.execute
+      rescue StandardError => e
+        logger.fatal("Unexpected exception #{e} when executing #{step}")
+        raise e
+      end
+    end
+  end
+
+  # A light-weight process method meant for programmatic use, generally
+  # intended for only a "few" (not milliions) of records.
+  #
+  # It does _not_ use instance-configured reader or writer, instead taking
+  # a source/reader and destination/writer as arguments to this call.
+  #
+  # The reader can be anything that has an #each returning source
+  # records. This includes an ordinary array of source records, or any
+  # traject Reader.
+  #
+  # The writer can be anything with a #put method taking a Traject::Indexer::Context.
+  # For convenience, see the Traject::ArrayWriter that just collects output in an array.
+  #
+  # Return value of process_with is the writer passed as second arg, for your convenience.
+  #
+  # This does much less than the full #process method, to be more flexible
+  # and make fewer assumptions:
+  #
+  #  * Will never use any additional threads (unless writer does). Wrap in your own threading if desired.
+  #  * Will not do any standard logging or progress bars, regardless of indexer settings.
+  #    Log yourself if desired.
+  #  * Will _not_ call any `after_processing` steps. Call yourself with `indexer.run_after_processing_steps` as desired.
+  #  * WILL by default call #close on the writer, IF the writer has a #close method.
+  #    pass `:close_writer => false` to not do so.
+  #  * exceptions will just raise out, unless you pass in a rescue: option, value is a proc/lambda
+  #    that will receive two args, context and exception. If the rescue proc doesn't re-raise,
+  #    `process_with` will continue to process subsequent records.
+  #
+  # @example
+  #     array_writer_instance = indexer.process_with([record1, record2], Traject::ArrayWriter.new)
+  #
+  # @example With a block, in addition to or instead of a writer.
+  #
+  #     indexer.process_with([record]) do |context|
+  #       do_something_with(context.output_hash)
+  #     end
+  #
+  # @param source [#each]
+  # @param destination [#put]
+  # @param close_writer whether the destination should have #close called on it, if it responds to.
+  # @param rescue_with [Proc] to call on errors, taking two args: A Traject::Indexer::Context and an exception.
+  #   If nil (default), exceptions will be raised out. If set, you can raise or handle otherwise if you like.
+  # @param on_skipped [Proc] will be called for any skipped records, with one arg Traject::Indexer::Context
+  def process_with(source, destination = nil, close_writer: true, rescue_with: nil, on_skipped: nil)
+    unless destination || block_given?
+      raise ArgumentError, "Need either a second arg writer/destination, or a block"
+    end
+
+    settings.fill_in_defaults!
+
+    position = 0
+    source.each do |record |
+      begin
+        position += 1
+
+        context = Context.new(
+            :source_record => record,
+            :settings      => settings,
+            :position      => position,
+            :logger        => logger
+        )
+
+        map_to_context!(context)
+
+        if context.skip?
+          on_skipped.call(context) if on_skipped
+        else
+          destination.put(context) if destination
+          yield(context) if block_given?
+        end
+      rescue StandardError => e
+        if rescue_with
+          rescue_with.call(context, e)
+        else
+          raise e
+        end
+      end
+    end
+
+    if close_writer && destination.respond_to?(:close)
+      destination.close
+    end
+
+    return destination
   end
 
   # Log that the current record is being skipped, using

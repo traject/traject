@@ -32,6 +32,8 @@ class Traject::Indexer
           return nil
         end
       end
+
+      @defaults_filled = Concurrent::AtomicBoolean.new(false)
     end
 
     # a cautious store, which only saves key=value if
@@ -55,7 +57,10 @@ class Traject::Indexer
     end
 
     def fill_in_defaults!
-      self.reverse_merge!(self.class.defaults)
+      # only if it hasn't been done before, in thread-safe manner.
+      if @defaults_filled.false? && @defaults_filled.make_true
+        self.reverse_merge!(self.class.defaults)
+      end
     end
 
 

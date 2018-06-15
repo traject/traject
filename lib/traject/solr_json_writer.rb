@@ -107,6 +107,18 @@ class Traject::SolrJsonWriter
     end
   end
 
+  # Not part of standard writer API.
+  #
+  # If we are batching adds, and have some not-yet-written ones queued up --
+  # flush em all to solr.
+  #
+  # This should be thread-safe to call, but the write does take place in
+  # the caller's thread, no threading is done for you here, regardless of setting
+  # of solr_writer.thread_pool
+  def flush
+    send_batch( Traject::Util.drain_queue(@batched_queue) )
+  end
+
   # Send the given batch of contexts. If something goes wrong, send
   # them one at a time.
   # @param [Array<Traject::Indexer::Context>] an array of contexts
