@@ -363,6 +363,30 @@ Fields that are empty will have a value sent to the writer of an empty
 array (`[]`). Writers that need to special-case empty fields should do so in the
 writer class in question.
 
+### Error Handling
+
+During the mapping phase, the default behavior is to terminate processing
+when an otherwise-unhandled ("unexpected") exception occurs.  This usually
+indicates a bug in the code that handles transformations, but there are
+situations where this behavior may not fit your needs.
+
+After carefully considering the implications, you have the option of adding
+the `mapping_error_handler` setting to your `Indexer`, which should be a
+lambda that accepts a context, the current index step, and the thrown
+exception, e.g.
+
+```
+    indexer.settings['mapping_error_handler] = lambda do |ctx, step, e|
+        logger.warn("I got #{e} during #{step.inspect} but that is not going to bother me one bit")
+        ctx.skip!
+    end
+```
+
+The example is of course a bit silly, but this will output a message to
+standard error and skip the current record instead of halting the entire
+process. Notice that the custom handler is invoked in a way that the
+indexer's logger, settings, etc. are in scope.
+
 ## The traject command Line
 
 The simplest invocation is:

@@ -58,7 +58,6 @@ class Traject::Indexer
       self.reverse_merge!(self.class.defaults)
     end
 
-
     def self.mri_defaults
       {
           # Reader defaults
