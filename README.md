@@ -381,7 +381,7 @@ errors = 0
   indexer.settings['mapping_error_handler] = lambda do |ctx, step, e|
     errors += 1
       ctx.logger.warn("I got #{e} during #{step.inspect} but that is not going to bother me one bit")
-      if errors > max_error_count
+      if errors < max_error_count
         ctx.skip!
       else 
         ctx.logger.error("You have exceeded #{max_error_count} mapping errors.  I'm putting a halt to this.")
