@@ -363,6 +363,35 @@ Fields that are empty will have a value sent to the writer of an empty
 array (`[]`). Writers that need to special-case empty fields should do so in the
 writer class in question.
 
+### Error Handling
+
+During the mapping phase, the default behavior when an otherwise-unhandled ("unexpected") exception occurs is to log some information about the error and the record that was being mapped, then terminate processing.
+
+This situation usually indicates a bug in the code that handles MARC-Sorl transformations that you should address, but there are situations where this behavior may not fit your needs.
+
+You have the option (after carefully considering the implications!) of adding
+the `mapping_error_handler` setting to your `Indexer`, which should be a
+lambda that accepts a `Context`, the current index step, and the thrown
+exception, e.g.
+
+``` 
+# log errors until we exceed some value
+max_error_count = 5
+errors = 0
+  indexer.settings['mapping_error_handler] = lambda do |ctx, step, e|
+    errors += 1
+      ctx.logger.warn("I got #{e} during #{step.inspect} but that is not going to bother me one bit")
+      if errors > max_error_count
+        ctx.skip!
+      else 
+        ctx.logger.error("You have exceeded #{max_error_count} mapping errors.  I'm putting a halt to this.")
+        raise e
+      end
+    end
+```
+
+As in the example, our handler will have access to the indexer's `logger` and `settings` via the context.
+
 ## The traject command Line
 
 The simplest invocation is:
