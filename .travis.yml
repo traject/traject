@@ -1,6 +1,6 @@
 language: ruby
 cache: bundler
-sudo: false
+sudo: true
 rvm:
   - jruby-9.0.5.0
   - jruby-9.1.15.0
