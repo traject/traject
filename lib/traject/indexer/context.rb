@@ -1,6 +1,8 @@
 # Represents the context of a specific record being indexed, passed
 # to indexing logic blocks
 #
+# Arg source_record_id_proc is a lambda that takes one arg (indexer-specific source record),
+# and returns an ID for it suitable for use in log messages.
 class Traject::Indexer
   class Context
     def initialize(hash_init = {})
@@ -17,7 +19,7 @@ class Traject::Indexer
     end
 
     attr_accessor :clipboard, :output_hash, :logger
-    attr_accessor :index_step, :source_record, :settings
+    attr_accessor :index_step, :source_record, :settings, :source_record_id_proc
     # 1-based position in stream of processed records.
     attr_accessor :position
 
@@ -41,19 +43,14 @@ class Traject::Indexer
     # in output messages, especially since this method may sometimes
     # return empty string if info on record id is not available.
     #
-    # Returns MARC 001, then a slash, then output_hash["id"] -- if both
+    # Returns id from source_record (if we can get it from a source_record_id_proc),
+    # then a slash,then output_hash["id"] -- if both
     # are present. Otherwise may return just one, or even an empty string.
-    #
-    # Likely override this for a future XML or other source format version.
     def source_record_id
-      marc_id   = if self.source_record &&
-          self.source_record.kind_of?(MARC::Record) &&
-          self.source_record['001']
-                    self.source_record['001'].value
-                  end
+      source_id = source_record_id_proc && source_record_id_proc.call(source_record)
       output_id = self.output_hash["id"]
 
-      return [marc_id, output_id].compact.join("/")
+      return [source_id, output_id].compact.join("/")
     end
 
   end

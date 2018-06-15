@@ -19,6 +19,17 @@ module Traject
           super.merge(marc_settings)
         end
       end
+
+      # Overridden from base Indexer, to get MARC 001 for log messages.
+      def source_record_id_proc
+        @source_record_id_proc ||= lambda do |source_marc_record|
+          if ( source_marc_record &&
+               source_marc_record.kind_of?(MARC::Record) &&
+               source_marc_record['001'] )
+            source_marc_record['001'].value
+          end
+        end
+      end
     end
   end
 end

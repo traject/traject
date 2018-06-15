@@ -5,7 +5,7 @@ describe "Traject::Indexer::Context" do
   describe "source_record_id" do
     before do
       @record = MARC::Reader.new(support_file_path('test_data.utf8.mrc')).first
-      @context = Traject::Indexer::Context.new
+      @context = Traject::Indexer::Context.new(source_record_id_proc: Traject::Indexer::MarcIndexer.new.source_record_id_proc)
       @record_001 = "   00282214 " # from the mrc file
     end
 

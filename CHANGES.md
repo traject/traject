@@ -60,6 +60,8 @@
 
 * `Traject::SolrJsonWriter#flush`, flush to solr without closing, may be useful for direct programmatic use.
 
+* Traject::Indexer sub-classes can implement a #source_record_id_proc, which is passed to Context, for source-format-specific logic for getting an ID to use in logging.
+
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process
 

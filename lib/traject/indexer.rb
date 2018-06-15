@@ -264,7 +264,26 @@ class Traject::Indexer
     }
   end
 
+  # Sub-classes should override to return a _proc_ object that takes one arg,
+  # a source record, and returns an identifier for it that can be used in
+  # logged messages. This differs depending on input record format, is why we
+  # leave it to sub-classes.
+  def source_record_id_proc
+    if defined?(@@legacy_marc_mode) && @@legacy_marc_mode
+      return @source_record_id_proc ||= lambda do |source_marc_record|
+        if ( source_marc_record &&
+             source_marc_record.kind_of?(MARC::Record) &&
+             source_marc_record['001'] )
+          source_marc_record['001'].value
+        end
+      end
+    end
+
+    @source_record_id_proc ||= lambda { |source| nil }
+  end
+
   def self.legacy_marc_mode!
+    @@legacy_marc_mode = true
     # include legacy Marc macros
     include Traject::Macros::Marc21
 
@@ -368,7 +387,7 @@ class Traject::Indexer
   # if you want to provide addtional context
   # like position, and/or get back the full context.
   def map_record(record)
-    context = Context.new(:source_record => record, :settings => settings)
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc => source_record_id_proc)
     map_to_context!(context)
     return context.output_hash unless context.skip?
   end
@@ -381,7 +400,7 @@ class Traject::Indexer
   def process_record(record)
     check_uncompleted
 
-    context = Context.new(:source_record => record, :settings => settings)
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc =>  source_record_id_proc)
     map_to_context!(context)
     writer.put( context ) unless context.skip?
 
@@ -492,6 +511,7 @@ class Traject::Indexer
 
       context = Context.new(
           :source_record => record,
+          :source_record_id_proc => source_record_id_proc,
           :settings      => settings,
           :position      => position,
           :logger        => logger
@@ -630,10 +650,11 @@ class Traject::Indexer
         position += 1
 
         context = Context.new(
-            :source_record => record,
-            :settings      => settings,
-            :position      => position,
-            :logger        => logger
+            :source_record          => record,
+            :source_record_id_proc  => source_record_id_proc,
+            :settings               => settings,
+            :position               => position,
+            :logger                 => logger
         )
 
         map_to_context!(context)
