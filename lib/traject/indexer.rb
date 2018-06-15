@@ -364,7 +364,7 @@ class Traject::Indexer
     begin
       yield
     rescue StandardError => e
-      mapping_error_handler.call(context, index_step, e)
+      instance_exec(context, index_step, e, &mapping_error_handler)
     end
   end
 

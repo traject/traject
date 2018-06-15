@@ -377,14 +377,15 @@ exception, e.g.
 
 ```
     indexer.settings['mapping_error_handler] = lambda do |ctx, step, e|
-        warn "I got #{e} during #{step.inspect} but that is not going to
-        bother me one bit"
+        logger.warn("I got #{e} during #{step.inspect} but that is not going to bother me one bit")
         ctx.skip!
     end
 ```
 
 The example is of course a bit silly, but this will output a message to
-standard error and skip the current record instead of halting the entire process.
+standard error and skip the current record instead of halting the entire
+process. Notice that the custom handler is invoked in a way that the
+indexer's logger, settings, etc. are in scope.
 
 ## The traject command Line
 
