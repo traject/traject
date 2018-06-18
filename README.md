@@ -365,23 +365,29 @@ writer class in question.
 
 ### Error Handling
 
-During the mapping phase, the default behavior when an otherwise-unhandled ("unexpected") exception occurs is to log some information about the error and the record that was being mapped, then terminate processing.
+During the mapping phase, the default behavior when an otherwise-unhandled
+("unexpected") exception occurs is to log some information about the error and
+the record that was being mapped, then terminate processing.
 
-This situation usually indicates a bug in the code that handles MARC-Sorl transformations that you should address, but there are situations where this behavior may not fit your needs.
+This situation usually indicates a bug in the code that handles MARC-Solr
+transformations that you should address, but there are situations where this
+behavior may not fit your needs.
 
 You have the option (after carefully considering the implications!) of adding
 the `mapping_error_handler` setting to your `Indexer`, which should be a
 lambda that accepts a `Context`, the current index step, and the thrown
 exception, e.g.
 
-``` 
+```
+# Traject may be run multithreaded, so the error counter must be threadsafe
+require 'concurrent`
 # log errors until we exceed some value
 max_error_count = 5
-errors = 0
+errors = Concurrent::AtomicFixnum.new(0)
   indexer.settings['mapping_error_handler] = lambda do |ctx, step, e|
-    errors += 1
+    errors.increment
       ctx.logger.warn("I got #{e} during #{step.inspect} but that is not going to bother me one bit")
-      if errors < max_error_count
+      if errors.value < max_error_count
         ctx.skip!
       else 
         ctx.logger.error("You have exceeded #{max_error_count} mapping errors.  I'm putting a halt to this.")
@@ -390,8 +396,11 @@ errors = 0
     end
 ```
 
-As in the example, our handler will have access to the indexer's `logger` and `settings` via the context.
+As in the example, our handler will have access to the indexer's `logger` and
+`settings` via the context.
 
+Note this mechanism only covers errors encountered when mapping MARC to Solr.
+Writers have their own error handling mechanisms, which take network (un)reliability into account.  See, e.g. [SolrJsonWriter](lib/traject/solr_json_writer.rb); 
 ## The traject command Line
 
 The simplest invocation is:
