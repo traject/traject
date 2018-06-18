@@ -239,12 +239,7 @@ class Traject::Indexer
     return @settings
   end
 
-  # We intentionally do not freeze the settings hash, you can mutate default settings
-  # if you like in your app, although it may not be advisable, except possibly for testing.
-  # Usually better to make a sub-class (which calls super and merges new things in) with different settings.
-  # If you start mutating settings hashes on a sub-class, the way this implementation works you may
-  # end up mutating global on Indexer itself, beware. (Is there a better imp we could do? Maybe we should
-  # be freezing.)
+  # Hash is frozen to avoid inheritance-mutability confusion.
   def self.default_settings
     @default_settings ||= {
         # Writer defaults
@@ -261,7 +256,16 @@ class Traject::Indexer
         "allow_duplicate_values"  => true,
 
         "allow_empty_fields"      => false
-    }
+    }.freeze
+  end
+
+
+  # Not sure if allowing changing of default_settings is a good idea, but we do
+  # use it in test. For now we make it private to require extreme measures to do it,
+  # and advertise that this API could go away or change without a major version release,
+  # it is experimental and internal.
+  private_class_method def self.default_settings=(settings)
+    @default_settings = settings
   end
 
   # Sub-classes should override to return a _proc_ object that takes one arg,
