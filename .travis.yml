@@ -2,11 +2,15 @@ language: ruby
 cache: bundler
 sudo: false
 rvm:
-  - jruby-9.0.5.0
-  - jruby-9.1.15.0
   - 2.2.9
   - 2.3.6
   - 2.4.3
   - 2.5.1
-jdk:
-  - oraclejdk8
+# avoid having travis install jdk on MRI builds where we don't need it.
+matrix:
+  include:
+    - jdk: oraclejdk8
+      rvm: jruby-9.0.5.0
+    - jdk: oraclejdk8
+      rvm: jruby-9.2.0.0
+
