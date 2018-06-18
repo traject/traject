@@ -26,9 +26,8 @@
 
 * `to_field` can take multiple transformation procs (all with the same form). https://github.com/traject/traject/pull/153
 
-* Existing arguments to `marc_extract` have been provided as transformation proc macros, along with some additional new useful general purposes transformations, in [Traject::Macros::Transformations](./lib/traject/macros/transformation.rb). https://github.com/traject/traject/pull/154
-
-  This is the new preferred way to do post-processing with the `marc_extract` options, but the existing options are not deprecated and there is no current plan for them to be removed.
+* There is a new set of standard transformation macros included in `Traject::Indexer`, from [Traject::Macros::Transformation](./lib/traject/macros/transformation.rb). It includes an extraction of previous/existing arguments from `marc_extract`, along with some additional stuff. , in [Traject::Macros::Transformations]. https://github.com/traject/traject/pull/154
+  * This is the new preferred way to do post-processing with the `marc_extract` options, but the existing options are not deprecated and there is no current plan for them to be removed.
   * before:
 
         to_field "some_field", extract_marc("800",
@@ -45,7 +44,7 @@
 
     (still need `allow_duplicates: true` cause extract_marc defaults to false, but see also `unique` macro)
 
-  * So, these transformation steps can now be used with non-MARC formats as well. See also new transformation macros: `strip`, `split`, `append`, `prepend`, and `gsub`. And for MARC use, `trim_punctuation`.
+  * So, these transformation steps can now be used with non-MARC formats as well. See also new transformation macros: `strip`, `split`, `append`, `prepend`, `gsub`, and `transform`. And for MARC use, `trim_punctuation`.
 
 
 * Traject::Indexer new api, for more convenient programmatic/embedded use.
