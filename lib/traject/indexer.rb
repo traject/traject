@@ -13,10 +13,11 @@ require 'traject/solr_json_writer'
 require 'traject/debug_writer'
 require 'traject/array_writer'
 
-
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
 require 'traject/macros/transformation'
+
+require 'traject/indexer/marc_indexer'
 
 if defined? JRUBY_VERSION
   require 'traject/marc4j_reader'
@@ -167,11 +168,6 @@ class Traject::Indexer
 
   attr_writer :reader_class, :writer_class, :writer
 
-  # For now we hard-code these basic macro's included
-  # TODO, make these added with extend per-indexer,
-  # added by default but easily turned off (or have other
-  # default macro modules provided)
-  include Traject::Macros::Marc21
   include Traject::Macros::Basic
   include Traject::Macros::Transformation
 
@@ -181,7 +177,7 @@ class Traject::Indexer
   # intended for configuration simimlar to what would be in a config file.
   def initialize(arg_settings = {}, &block)
     @completed              = false
-    @settings               = Settings.new(arg_settings)
+    @settings               = Settings.new(arg_settings).with_defaults(self.class.default_settings)
     @index_steps            = []
     @after_processing_steps = []
 
@@ -241,6 +237,75 @@ class Traject::Indexer
     @settings.instance_eval &block if block_given?
 
     return @settings
+  end
+
+  # Hash is frozen to avoid inheritance-mutability confusion.
+  def self.default_settings
+    @default_settings ||= {
+        # Writer defaults
+        "writer_class_name"       => "Traject::SolrJsonWriter",
+        "solr_writer.batch_size"  => 100,
+        "solr_writer.thread_pool" => 1,
+
+        # Threading and logging
+        "processing_thread_pool"  => Traject::Indexer::Settings.default_processing_thread_pool,
+        "log.batch_size.severity" => "info",
+
+        # how to post-process the accumulator
+        "allow_nil_values"        => false,
+        "allow_duplicate_values"  => true,
+
+        "allow_empty_fields"      => false
+    }.freeze
+  end
+
+
+  # Not sure if allowing changing of default_settings is a good idea, but we do
+  # use it in test. For now we make it private to require extreme measures to do it,
+  # and advertise that this API could go away or change without a major version release,
+  # it is experimental and internal.
+  private_class_method def self.default_settings=(settings)
+    @default_settings = settings
+  end
+
+  # Sub-classes should override to return a _proc_ object that takes one arg,
+  # a source record, and returns an identifier for it that can be used in
+  # logged messages. This differs depending on input record format, is why we
+  # leave it to sub-classes.
+  def source_record_id_proc
+    if defined?(@@legacy_marc_mode) && @@legacy_marc_mode
+      return @source_record_id_proc ||= lambda do |source_marc_record|
+        if ( source_marc_record &&
+             source_marc_record.kind_of?(MARC::Record) &&
+             source_marc_record['001'] )
+          source_marc_record['001'].value
+        end
+      end
+    end
+
+    @source_record_id_proc ||= lambda { |source| nil }
+  end
+
+  def self.legacy_marc_mode!
+    @@legacy_marc_mode = true
+    # include legacy Marc macros
+    include Traject::Macros::Marc21
+
+    # alter default settings to be legacy including marc-specific
+    is_jruby = defined?(JRUBY_VERSION)
+
+    # Reader defaults
+    legacy_settings = {
+      "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
+      "marc_source.type"        => "binary",
+    }
+    if is_jruby
+      legacy_settings["marc4j_reader.permissive"] = true
+    end
+
+    default_settings.merge!(legacy_settings)
+
+    self
   end
 
   # Part of DSL, used to define an indexing mapping. Register logic
@@ -326,7 +391,7 @@ class Traject::Indexer
   # if you want to provide addtional context
   # like position, and/or get back the full context.
   def map_record(record)
-    context = Context.new(:source_record => record, :settings => settings)
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc => source_record_id_proc)
     map_to_context!(context)
     return context.output_hash unless context.skip?
   end
@@ -339,7 +404,7 @@ class Traject::Indexer
   def process_record(record)
     check_uncompleted
 
-    context = Context.new(:source_record => record, :settings => settings)
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc =>  source_record_id_proc)
     map_to_context!(context)
     writer.put( context ) unless context.skip?
 
@@ -450,6 +515,7 @@ class Traject::Indexer
 
       context = Context.new(
           :source_record => record,
+          :source_record_id_proc => source_record_id_proc,
           :settings      => settings,
           :position      => position,
           :logger        => logger
@@ -588,10 +654,11 @@ class Traject::Indexer
         position += 1
 
         context = Context.new(
-            :source_record => record,
-            :settings      => settings,
-            :position      => position,
-            :logger        => logger
+            :source_record          => record,
+            :source_record_id_proc  => source_record_id_proc,
+            :settings               => settings,
+            :position               => position,
+            :logger                 => logger
         )
 
         map_to_context!(context)

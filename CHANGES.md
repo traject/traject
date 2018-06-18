@@ -8,6 +8,14 @@
 
 * `map_record` now returns `nil` if record was skipped.
 
+* The `Traject::Indexer` class no longer includes marc-specific settings and modules.
+  * If you are using command-line `traject`, this should make no difference to you, as command-line now defaults to the new `Traject::Indexer::MarcIndexer` with those removed things.
+  * If you are using Traject::Indexer programmatically and want those features, switch to using `Traject::Indexer::MarcIndexer`.
+  * If neccessary, as a hopefully temporary backwards compat shim, call `Traject::Indexer.legacy_marc_mode!`, which injects the old marc-specific behavior into Traject::Indexer again, globally and permanently.
+
+* Traject::Indexer::Settings no longer has it's own global defaults, Instead it can be given a set of defaults with #with_defaults, usually right after instantiation. To support different defaults for different Indexers.
+
+
 ### Added
 
 * Placeholder
@@ -18,9 +26,8 @@
 
 * `to_field` can take multiple transformation procs (all with the same form). https://github.com/traject/traject/pull/153
 
-* Existing arguments to `marc_extract` have been provided as transformation proc macros, along with some additional new useful general purposes transformations, in [Traject::Macros::Transformations](./lib/traject/macros/transformation.rb). https://github.com/traject/traject/pull/154
-
-  This is the new preferred way to do post-processing with the `marc_extract` options, but the existing options are not deprecated and there is no current plan for them to be removed.
+* There is a new set of standard transformation macros included in `Traject::Indexer`, from [Traject::Macros::Transformation](./lib/traject/macros/transformation.rb). It includes an extraction of previous/existing arguments from `marc_extract`, along with some additional stuff. , in [Traject::Macros::Transformations]. https://github.com/traject/traject/pull/154
+  * This is the new preferred way to do post-processing with the `marc_extract` options, but the existing options are not deprecated and there is no current plan for them to be removed.
   * before:
 
         to_field "some_field", extract_marc("800",
@@ -37,7 +44,7 @@
 
     (still need `allow_duplicates: true` cause extract_marc defaults to false, but see also `unique` macro)
 
-  * So, these transformation steps can now be used with non-MARC formats as well. See also new transformation macros: `strip`, `split`, `append`, `prepend`, and `gsub`. And for MARC use, `trim_punctuation`.
+  * So, these transformation steps can now be used with non-MARC formats as well. See also new transformation macros: `strip`, `split`, `append`, `prepend`, `gsub`, and `transform`. And for MARC use, `trim_punctuation`.
 
 
 * Traject::Indexer new api, for more convenient programmatic/embedded use.
@@ -51,6 +58,8 @@
   * `Traject::Indexer#complete` and `#run_after_processing_steps` public API.
 
 * `Traject::SolrJsonWriter#flush`, flush to solr without closing, may be useful for direct programmatic use.
+
+* Traject::Indexer sub-classes can implement a #source_record_id_proc, which is passed to Context, for source-format-specific logic for getting an ID to use in logging.
 
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process
