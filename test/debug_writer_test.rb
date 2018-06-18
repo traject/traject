@@ -9,7 +9,7 @@ describe 'Simple output' do
   before do
     @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
     @indexer = Traject::Indexer.new
-    @indexer.instance_eval do
+    @indexer.configure do
       to_field "id", extract_marc("001", :first => true)
       to_field "title", extract_marc("245ab")
     end

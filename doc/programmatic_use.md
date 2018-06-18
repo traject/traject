@@ -24,10 +24,10 @@ indexer.load_config_file(path_to_config)
 
 This can be convenient for config files you can use either from the command line, or programmatically. Or for allowing other staff roles to write config files separately. You can call `load_config_file` multiple times, and order may matter -- exactly the same as command line configuration files.
 
-Alternately, you may instead want to do your configuration inline, using instance_eval:
+Alternately, you may instead want to do your configuration inline, using `configure` (which just does an `instance_eval`, but is encourage for clarity and forwards-compatibility:
 
 ```ruby
-indexer.instance_eval do
+indexer.configure do
   # you can choose to load config files this way
   load_config_file(path_to_config)
 

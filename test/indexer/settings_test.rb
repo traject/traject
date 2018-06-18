@@ -38,7 +38,7 @@ describe "Traject::Indexer#settings" do
   end
 
   it "has settings DSL to set" do
-    @indexer.instance_eval do
+    @indexer.configure do
       settings do
         store "foo", "foo"
       end

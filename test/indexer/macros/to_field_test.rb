@@ -7,7 +7,7 @@ describe "Indexer Macros#to_field" do
   end
 
   it "works with simple literal" do
-    @indexer.instance_eval do
+    @indexer.configure do
       extend Traject::Macros::Basic
 
       to_field "source", literal("MY LIBRARY")
@@ -21,7 +21,7 @@ describe "Indexer Macros#to_field" do
   it "works with macro AND block" do
     called = false
 
-    @indexer.instance_eval do
+    @indexer.configure do
       extend Traject::Macros::Basic
       to_field "source", literal("MY LIBRARY") do |record, accumulator, context|
         called = true
