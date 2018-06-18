@@ -12,7 +12,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "translation_map" do
     it "translates" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "cataloging_agency", literal("DLC"), translation_map("marc_040a_translate_test")
       end
       output = @indexer.map_record(@record)
@@ -22,7 +22,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "transform" do
     it "transforms with block" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "sample_field", literal("one"), literal("two"), transform(&:upcase)
       end
       output = @indexer.map_record(@record)
@@ -30,7 +30,7 @@ describe "Traject::Macros::Transformation" do
     end
 
     it "transforms with proc arg" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "sample_field", literal("one"), literal("two"), transform(->(val) { val.tr('aeiou', '!') })
       end
       output = @indexer.map_record(@record)
@@ -38,7 +38,7 @@ describe "Traject::Macros::Transformation" do
     end
 
     it "transforms with both, in correct order" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "sample_field", literal("one"), literal("two"), transform(->(val) { val.tr('aeiou', '!') }, &:upcase)
       end
       output = @indexer.map_record(@record)
@@ -48,7 +48,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "default" do
     it "adds default to empty accumulator" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", default("default")
       end
       output = @indexer.map_record(@record)
@@ -56,7 +56,7 @@ describe "Traject::Macros::Transformation" do
     end
 
     it "does not add default if value present" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("value"), default("defaut")
       end
       output = @indexer.map_record(@record)
@@ -66,7 +66,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "first_only" do
     it "takes only first in multi-value" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("one"), literal("two"), literal("three"), first_only
       end
       output = @indexer.map_record(@record)
@@ -74,7 +74,7 @@ describe "Traject::Macros::Transformation" do
     end
 
     it "no-ops on nil" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", first_only
       end
       output = @indexer.map_record(@record)
@@ -82,7 +82,7 @@ describe "Traject::Macros::Transformation" do
     end
 
     it "no-ops on single value" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("one"), first_only
       end
       output = @indexer.map_record(@record)
@@ -92,7 +92,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "unique" do
     it "uniqs" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("one"), literal("two"), literal("one"), literal("three"), unique
       end
       output = @indexer.map_record(@record)
@@ -102,7 +102,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "strip" do
     it "strips" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("  one"), literal(" two  "), strip
       end
       output = @indexer.map_record(@record)
@@ -110,7 +110,7 @@ describe "Traject::Macros::Transformation" do
     end
 
     it "strips unicode whitespace" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal(" \u00A0 \u2002 one \u202F "), strip
       end
       output = @indexer.map_record(@record)
@@ -120,7 +120,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "split" do
     it "splits" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("one.two"), split(".")
       end
       output = @indexer.map_record(@record)
@@ -130,7 +130,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "append" do
     it "appends suffix" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("one"), literal("two"), append(".suffix")
       end
       output = @indexer.map_record(@record)
@@ -140,7 +140,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "prepend" do
     it "prepends prefix" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("one"), literal("two"), prepend("prefix.")
       end
       output = @indexer.map_record(@record)
@@ -150,7 +150,7 @@ describe "Traject::Macros::Transformation" do
 
   describe "gsub" do
     it "gsubs" do
-      @indexer.instance_eval do
+      @indexer.configure do
         to_field "test", literal("one1212two23three"), gsub(/\d+/, ' ')
       end
       output = @indexer.map_record(@record)

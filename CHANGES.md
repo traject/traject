@@ -20,6 +20,8 @@
 
 * Placeholder
 
+* Traject::Indexer#configure is available, and recommended instead of raw `instance_eval`. It just does an instance_eval, but is clearer and safer for future changes.
+
 * `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
 
       to_field ["field1", "field2"], extract_marc("240")

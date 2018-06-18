@@ -184,6 +184,13 @@ class Traject::Indexer
     instance_eval(&block) if block
   end
 
+  # Right now just does an `instance_eval`, but encouraged in case we change the underlying
+  # implementation later, and to make intent more clear.
+  def configure(&block)
+    instance_eval(&block)
+  end
+
+
   # Pass a string file path, a Pathname, or a File object, for
   # a config file to load into indexer.
   #
