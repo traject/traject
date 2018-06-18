@@ -20,6 +20,32 @@ describe "Traject::Macros::Transformation" do
     end
   end
 
+  describe "transform" do
+    it "transforms with block" do
+      @indexer.instance_eval do
+        to_field "sample_field", literal("one"), literal("two"), transform(&:upcase)
+      end
+      output = @indexer.map_record(@record)
+      assert_equal ["ONE", "TWO"], output["sample_field"]
+    end
+
+    it "transforms with proc arg" do
+      @indexer.instance_eval do
+        to_field "sample_field", literal("one"), literal("two"), transform(->(val) { val.tr('aeiou', '!') })
+      end
+      output = @indexer.map_record(@record)
+      assert_equal ["!n!", "tw!"], output["sample_field"]
+    end
+
+    it "transforms with both, in correct order" do
+      @indexer.instance_eval do
+        to_field "sample_field", literal("one"), literal("two"), transform(->(val) { val.tr('aeiou', '!') }, &:upcase)
+      end
+      output = @indexer.map_record(@record)
+      assert_equal ["!N!", "TW!"], output["sample_field"]
+    end
+  end
+
   describe "default" do
     it "adds default to empty accumulator" do
       @indexer.instance_eval do

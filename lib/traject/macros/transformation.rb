@@ -19,6 +19,43 @@ module Traject
         end
       end
 
+      # Pass in a proc/lambda arg or a block (or both), that will be called on each
+      # value already in the accumulator, to transform it. (Ie, with `#map!`/`#collect!` on your proc(s)).
+      #
+      # Due to how ruby syntax precedence works, the block form is probably not too useful
+      # in traject config files, except with the `&:` trick.
+      #
+      # The "stabby lambda" may be convenient for passing an explicit proc argument.
+      #
+      # You can pass both an explicit proc arg and a block, in which case the proc arg
+      # will be applied first.
+      #
+      # @example
+      #    to_field("something"), extract_marc("something"), transform(&:upcase)
+      #
+      # @example
+      #    to_field("something"), extract_marc("something"), transform(->(val) { val.tr('^a-z', "\uFFFD") })
+      def transform(a_proc=nil, &block)
+        unless a_proc || block
+          raise ArgumentError, "Needs a transform proc arg or block arg"
+        end
+
+        transformer_callable = if a_proc && block
+          # need to make a combo wrapper.
+          ->(val) { block.call(a_proc.call(val)) }
+        elsif a_proc
+          a_proc
+        else
+          block
+        end
+
+        lambda do |rec, acc|
+          acc.collect! do |value|
+            transformer_callable.call(value)
+          end
+        end
+      end
+
       def default(default_value)
         lambda do |rec, acc|
           if acc.empty?
