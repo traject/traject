@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/assets/blacklight_oai_provider/oai2-215c34219a0c518cf7dde42605d91175cbfd22c3f0ce528f795eae128dd1d872.xsl"?>
+<OAI-PMH schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2018-06-15T22:34:53Z</responseDate><request metadataPrefix="oai_dc" verb="ListRecords">https://digital.sciencehistory.org/oai</request><ListRecords><record><header><identifier>oai:sciencehistoryorg:mk61rg92z</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/mk61rg92z</identifier>
+ <title>Warehouses</title>
+
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:fq977t769</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/fq977t769</identifier>
+ <title>Spice Storage</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>Interior view of the spice storage area at the Norda Company plant in Boonton, New Jersey, showing sacks of spices used in the manufacture of perfumes and essential oils.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/9k41zd701/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/fq977t769</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/9k41zd701/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/9k41zd701</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:p5547r367</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/p5547r367</identifier>
+ <title>Building #1 and Still Tower</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>Exterior view of the Norda Company plant in Boonton, New Jersey. Photograph includes view of building #1 and the still tower.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/mc87pq46k/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/p5547r367</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/mc87pq46k/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/mc87pq46k</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:jm214p12r</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/jm214p12r</identifier>
+ <title>Control Laboratory</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>Interior view of the control laboratory at the Norda Company plant in Boonton, New Jersey, showing various bottles, glassware, and apparatuses used in the manufacture of perfumes and essential oils.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/8336h203f/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/jm214p12r</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/8336h203f/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/8336h203f</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:f4752g72m</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/f4752g72m</identifier>
+ <title>Hydroxy Building</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>Exterior view of the hydroxy building at the Norda Company plant in Boonton, New Jersey.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/wd375w431/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/f4752g72m</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/wd375w431/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/wd375w431</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:0g354f20t</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/0g354f20t</identifier>
+ <title>Norda Plant</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>Exterior view of the Norda Company plant in Boonton, New Jersey. Photograph includes view of smokestack and water tower branded with "Norda," as well as neighboring railroad tracks.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/t435gd16w/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/0g354f20t</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/t435gd16w/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/t435gd16w</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:tq57nr00k</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/tq57nr00k</identifier>
+ <title>Interior of Building #1</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>Interior view of building #1 at the Norda Company plant in Boonton, New Jersey, showing various machinery used in the manufacture of perfumes and essential oils.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/6395w7352/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/tq57nr00k</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/6395w7352/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/6395w7352</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:bn999672v</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/bn999672v</identifier>
+ <title>Vacuum Still</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>View of a vacuum still at the Norda Company plant in Boonton, New Jersey.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/mw22v558n/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/bn999672v</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/mw22v558n/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/mw22v558n</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:x920fw84d</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/x920fw84d</identifier>
+ <title>Vacuum Stills</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>View of the vacuum stills at the Norda Company plant in Boonton, New Jersey.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/rb68xc003/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/x920fw84d</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/rb68xc003/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/rb68xc003</object>
+</dc>
+</metadata></record><record><header><identifier>oai:sciencehistoryorg:w0892992w</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><dc>
+ <identifier>https://digital.sciencehistory.org/works/w0892992w</identifier>
+ <title>Benzaldehyde Plant</title>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <creator>Norda Essential Oil and Chemical Company</creator>
+ <date>1950s</date>
+ <description>View of the benzaldehyde plant at the Norda Company plant in Boonton, New Jersey.</description>
+ <format>image/tiff</format>
+ <subject>Research, Industrial--Laboratories</subject>
+ <subject>Essences and essential oils industry</subject>
+ <subject>Norda Essential Oil and Chemical Company</subject>
+ <subject>Perfumes industry</subject>
+ <type>Image</type>
+ <type>photographs</type>
+ <identifier>https://digital.sciencehistory.org/download_redirect/2z10wq46j/dl_small?no_content_disposition=true</identifier>
+ <originalRecord>https://digital.sciencehistory.org/works/w0892992w</originalRecord>
+ <preview>https://digital.sciencehistory.org/download_redirect/2z10wq46j/dl_small?no_content_disposition=true</preview>
+ <rights>http://rightsstatements.org/vocab/NKC/1.0/</rights>
+ <hasType>photographs</hasType>
+ <object>http://digital.sciencehistory.org/downloads/2z10wq46j</object>
+</dc>
+</metadata></record><resumptionToken completeListSize="6387">oai_dc.f(2018-05-03T18:09:08Z).u(2018-06-15T19:25:21Z).t(6387):100</resumptionToken></ListRecords></OAI-PMH>
