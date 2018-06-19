@@ -7,6 +7,7 @@ module Traject
     def initialize(input_stream, settings)
       @settings = Traject::Indexer::Settings.new settings
       @input_stream = input_stream
+      default_namespaces # trigger validation
       validate_each_record_xpath
     end
 
@@ -15,24 +16,26 @@ module Traject
     end
 
     protected def validate_each_record_xpath
+      return unless each_record_xpath
+
       components = each_record_xpath.split('/')
       components.each do |component|
-        namespace, element = component.split(':')
+        prefix, element = component.split(':')
         unless element
           # there was no namespace
-          namespace, element = nil, namespace
+          prefix, element = nil, prefix
         end
 
         # We don't support brackets or any xpath beyond the MOST simple.
         # Catch a few we can catch.
         if element =~ /::/ || element =~ /[\[\]]/
-          raise ArgumentError, "Only the simplest xpath supported. '//some/path' or '/some/path'. Not: #{element}"
+          raise ArgumentError, "each_record_xpath: Only very simple xpaths supported. '//some/path' or '/some/path'. Not: #{each_record_xpath.inspect}"
         end
 
-        if namespace
-          namespace = default_namespaces[namespace]
-          if namespace.nil?
-            raise ArgumentError, "To use a namespace in each_record_xpath, it has to be registered with nokogiri_reader.default_namespaces"
+        if prefix
+          ns_uri = default_namespaces[prefix]
+          if ns_uri.nil?
+            raise ArgumentError, "each_record_xpath: Can't find namespace prefix '#{prefix}' in '#{each_record_xpath}'. To use a namespace in each_record_xpath, it has to be registered with nokogiri_reader.default_namespaces: #{default_namespaces.inspect}"
           end
         end
       end
