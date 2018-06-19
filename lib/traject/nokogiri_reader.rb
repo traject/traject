@@ -23,6 +23,12 @@ module Traject
           namespace, element = nil, namespace
         end
 
+        # We don't support brackets or any xpath beyond the MOST simple.
+        # Catch a few we can catch.
+        if element =~ /::/ || element =~ /[\[\]]/
+          raise ArgumentError, "Only the simplest xpath supported. '//some/path' or '/some/path'. Not: #{element}"
+        end
+
         if namespace
           namespace = default_namespaces[namespace]
           if namespace.nil?
@@ -39,10 +45,8 @@ module Traject
     #  *  or rooted at root, `./path/to`, `path/to`, `./path/to` (all equivalent)
     #
     # gotten from setting "xml.each_record_xpath"
-    def path_matcher
-      path_spec =
-
-      @path_matcher ||= PathMatcher.new(each_record_xpath, namespaces: default_namespaces)
+    def path_tracker
+      @path_tracker ||= PathTracker.new(each_record_xpath, namespaces: default_namespaces)
     end
 
     def default_namespaces
@@ -55,21 +59,20 @@ module Traject
 
     def each
       reader = Nokogiri::XML::Reader(input_stream)
-      # We're guessing using a string will be more efficient than an array
-      path_stack = ""
 
       reader.each do |reader_node|
         if reader_node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
-          path_matcher.push(reader_node)
+          path_tracker.push(reader_node)
 
-          if path_matcher.match?
+          if path_tracker.match?
             # yeah, sadly we got to have nokogiri parse it again
-            yield Nokogiri::XML.parse(reader_node.outer_xml)
+            doc = Nokogiri::XML.parse(reader_node.outer_xml)
+            yield path_tracker.fix_namespaces(doc)
           end
         end
 
         if reader_node.node_type == Nokogiri::XML::Reader::TYPE_END_ELEMENT
-          path_matcher.pop
+          path_tracker.pop
         end
       end
     end
@@ -86,10 +89,15 @@ module Traject
     #
     # Elements can (and must, to match) have XML namespaces, if and only if
     # they are registered with settings nokogiri_reader.default_namespaces
-    class PathMatcher
-      attr_reader :path_spec, :namespaces, :inverted_namespaces, :current_path
+    #
+    # sadly JRuby Nokogiri has an incompatibility with true nokogiri, and
+    # doesn't preserve our namespaces on outer_xml,
+    # so in JRuby we have to track them ourselves.
+    class PathTracker
+      attr_reader :path_spec, :inverted_namespaces, :current_path, :namespaces_stack
       def initialize(str_spec, namespaces: {})
         @inverted_namespaces  = namespaces.invert
+        # We're guessing using a string will be more efficient than an array
         @current_path         = ""
         @floating             = false
 
@@ -102,6 +110,15 @@ module Traject
         end
 
         @path_spec = str_spec # a string again for ultra fast matching, we think.
+
+        @namespaces_stack = []
+      end
+
+      def is_jruby?
+        unless defined?(@is_jruby)
+          @is_jruby = defined?(JRUBY_VERSION)
+        end
+        @is_jruby
       end
 
       # adds a component to slash-separated current_path, with namespace prefix.
@@ -114,11 +131,19 @@ module Traject
         end
 
         current_path << ("/" + node_str)
+
+        if is_jruby?
+          namespaces_stack << reader_node.namespaces
+        end
       end
 
       # removes the last slash-separated component from current_path
       def pop
         current_path.slice!( current_path.rindex('/')..-1 )
+
+        if is_jruby?
+          namespaces_stack.pop
+        end
       end
 
       def floating?
@@ -131,6 +156,34 @@ module Traject
         else
           current_path == path_spec
         end
+      end
+
+      def fix_namespaces(doc)
+        if is_jruby?
+          # Only needed in jruby, nokogiri's jruby implementation isn't weird
+          # around namespaces in exactly the same way as MRI. We need to keep
+          # track of the namespaces in outer contexts ourselves, and then see
+          # if they are needed ourselves. :(
+          namespaces = namespaces_stack.compact.reduce({}, :merge)
+          namespaces.each_pair do |attrib, uri|
+            if attrib == "xmlns"
+              ns_prefix = nil
+            else
+              ns_prefix = attrib.sub(/\Axmlns:/, '')
+            end
+
+            # gotta make sure it's actually used in the doc to not add it
+            # unecessarily. GAH.
+            if ns_prefix != nil &&
+                  doc.xpath("//*[starts-with(name(), '#{ns_prefix}:')][1]").empty? &&
+                  doc.xpath("//@*[starts-with(name(), '#{ns_prefix}:')][1]").empty?
+              next
+            end
+
+            doc.root.add_namespace_definition(ns_prefix, uri)
+          end
+        end
+        return doc
       end
     end
   end
