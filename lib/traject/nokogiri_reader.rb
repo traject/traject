@@ -101,7 +101,8 @@ module Traject
     #
     # sadly JRuby Nokogiri has an incompatibility with true nokogiri, and
     # doesn't preserve our namespaces on outer_xml,
-    # so in JRuby we have to track them ourselves.
+    # so in JRuby we have to track them ourselves, and then also do yet ANOTHER
+    # parse in nokogiri. This may make this in Java even LESS performant, I'm afraid.
     class PathTracker
       attr_reader :path_spec, :inverted_namespaces, :current_path, :namespaces_stack
       def initialize(str_spec, namespaces: {})
@@ -188,8 +189,15 @@ module Traject
                   doc.xpath("//@*[starts-with(name(), '#{ns_prefix}:')][1]").empty?
               next
             end
-
-            doc.root.add_namespace_definition(ns_prefix, uri)
+            if ns_prefix == nil
+              doc.root.default_namespace = uri
+              # OMG nokogiri
+              doc.xpath("//*[namespace-uri()='']").each do |node|
+                node.default_namespace = uri
+              end
+            else
+              doc.root.add_namespace_definition(ns_prefix, uri)
+            end
           end
         end
         return doc

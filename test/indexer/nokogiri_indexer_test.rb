@@ -21,7 +21,6 @@ describe "Traject::NokogiriIndexer" do
       end
       to_field "id", extract_xpath("//oai:metadata/oai_dc:dc/dc:identifier"), first_only
       to_field "title", extract_xpath("//oai:metadata/oai_dc:dc/dc:title")
-      to_field "rights", extract_xpath("//oai:metadata/oai_dc:dc/edm:rights")
     end
 
     @indexer.process(File.open(@xml_sample_path))
@@ -32,8 +31,8 @@ describe "Traject::NokogiriIndexer" do
 
     assert_equal source_doc.xpath("//oai:record", @namespaces).count, results.count
     assert(results.all? { |hash|
-      hash["id"].length == 1 &&
-      hash["title"].length >= 1
-    })
+      hash["id"] && hash["id"].length == 1 &&
+      hash["title"] && hash["title"].length >= 1
+    }, "expected results have expected values")
   end
 end
