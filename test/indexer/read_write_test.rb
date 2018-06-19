@@ -25,7 +25,7 @@ memory_writer_class = Class.new do
 describe "Traject::Indexer#process" do
   before do
     # no threading for these tests
-    @indexer = Traject::Indexer.new("processing_thread_pool" => nil)
+    @indexer = Traject::Indexer::MarcIndexer.new("processing_thread_pool" => nil)
     @indexer.writer_class = memory_writer_class
     @file = File.open(support_file_path "test_data.utf8.mrc")
   end
@@ -68,7 +68,7 @@ describe "Traject::Indexer#process" do
 
   require 'traject/null_writer'
   it "calls after_processing after processing" do
-    @indexer = Traject::Indexer.new(
+    @indexer = Traject::Indexer::MarcIndexer.new(
       "writer_class_name" => "Traject::NullWriter"
     )
     @file = File.open(support_file_path "test_data.utf8.mrc")
@@ -85,6 +85,37 @@ describe "Traject::Indexer#process" do
     @indexer.process(@file)
 
     assert_equal [:one, :two], called, "Both after_processing hooks called, in order"
+  end
+
+  it "calls after_processing from #run_after_processing_steps" do
+    @indexer = Traject::Indexer.new(
+      "writer_class_name" => "Traject::NullWriter"
+    )
+    @file = File.open(support_file_path "test_data.utf8.mrc")
+
+    called = []
+
+    @indexer.after_processing do
+      called << :one
+    end
+    @indexer.after_processing do
+      called << :two
+    end
+
+    @indexer.run_after_processing_steps
+    assert_equal [:one, :two], called, "Both after_processing hooks called, in order"
+  end
+
+  it "can't be run twice" do
+    @file = File.open(support_file_path "test_data.utf8.mrc")
+    @indexer = Traject::Indexer::MarcIndexer.new(
+      "writer_class_name" => "Traject::NullWriter"
+    )
+    @indexer.process(@file)
+
+    assert_raises Traject::Indexer::CompletedStateError do
+      @indexer.process(@file)
+    end
   end
 
   describe "demo_config.rb" do

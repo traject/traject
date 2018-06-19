@@ -266,7 +266,9 @@ module Traject
     end
 
     def initialize_indexer!
-      indexer = Traject::Indexer.new self.assemble_settings_hash(self.options)
+      # for now use MarcIndexer, soon we will add a command line switch, but will still
+      # default to MarcIndexer for backwards compat.
+      indexer = Traject::Indexer::MarcIndexer.new self.assemble_settings_hash(self.options)
       load_configuration_files!(indexer, options[:conf])
 
       return indexer

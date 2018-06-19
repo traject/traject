@@ -1,6 +1,9 @@
 require "traject/version"
 
 require 'traject/indexer'
+require 'traject/indexer/marc_indexer'
+require 'traject/indexer/nokogiri_indexer'
+
 require 'traject/util'
 
 require 'traject/macros/basic'
