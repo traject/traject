@@ -58,6 +58,12 @@ module Traject
     end
 
     def each
+      unless each_record_xpath
+        # forget streaming, just read it and return it once, done.
+        yield Nokogiri::XML.parse(input_stream)
+        return
+      end
+
       reader = Nokogiri::XML::Reader(input_stream)
 
       reader.each do |reader_node|
