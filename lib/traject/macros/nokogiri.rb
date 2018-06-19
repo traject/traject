@@ -1,8 +1,17 @@
 module Traject
   module Macros
     module Nokogiri
+
+      def default_namespaces
+        @default_namespaces ||= (settings["nokogiri_reader.default_namespaces"] || {}).tap { |ns|
+          unless ns.kind_of?(Hash)
+            raise ArgumentError, "nokogiri_reader.default_namespaces must be a hash, not: #{ns.inspect}"
+          end
+        }
+      end
+
       def extract_xpath(xpath, namespaces = {}, to_text: true)
-        if namespaces.present?
+        if namespaces && namespaces.length > 0
           namespaces = default_namespaces.merge(namespaces)
         else
           namespaces = default_namespaces
