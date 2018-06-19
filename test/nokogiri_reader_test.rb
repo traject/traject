@@ -30,6 +30,20 @@ describe "Traject::NokogiriReader" do
     assert_equal manually_extracted.collect(&:to_xml), yielded_records.collect(&:root).collect(&:to_xml)
   end
 
+  describe "without each_record_xpath" do
+    before do
+      @xml_sample_path = support_file_path("namespace-test.xml")
+    end
+    it "yields whole file as one record" do
+      @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {})
+
+      yielded_records = @reader.to_a
+
+      assert_length 1, yielded_records
+      assert_equal Nokogiri::XML.parse(File.open(@xml_sample_path)).to_xml, yielded_records.first.to_xml
+    end
+  end
+
   describe "with namespaces" do
     before do
       @namespaces = { "oai" => "http://www.openarchives.org/OAI/2.0/" }
