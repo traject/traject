@@ -58,7 +58,7 @@ describe "Traject::NokogiriIndexer" do
 
   describe "xpath to non-terminal element" do
     before do
-      @xml = <<~EOS
+      @xml = <<-EOS
       <record>
         <name>
           <first>José</first>
