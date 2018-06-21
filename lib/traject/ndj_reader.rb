@@ -12,7 +12,7 @@ class Traject::NDJReader
   def initialize(input_stream, settings)
     @settings = settings
     @input_stream = input_stream
-    if /\.gz\Z/.match(@settings['command_line.filename'])
+    if input_stream.respond_to?(:path) && /\.gz\Z/.match(input_stream.path)
       @input_stream = Zlib::GzipReader.new(@input_stream, :external_encoding => "UTF-8")
     end
   end

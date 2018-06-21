@@ -22,7 +22,7 @@
 
 * Traject::Indexer#configure is available, and recommended instead of raw `instance_eval`. It just does an instance_eval, but is clearer and safer for future changes.
 
-* Traject::Indexer#process can take an array of input streams.
+* traject command line can now take multiple input files. And underlying it, Traject::Indexer#process can take an array of input streams.
 
 * `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
 
