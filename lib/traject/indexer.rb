@@ -165,6 +165,7 @@ class Traject::Indexer
   NamingError         = Class.new(ArgumentError)
 
   include Traject::QualifiedConstGet
+  extend Traject::QualifiedConstGet
 
   attr_writer :reader_class, :writer_class, :writer
 

@@ -368,9 +368,10 @@ The simplest invocation is:
 
     traject -c conf_file.rb marc_file.mrc
 
+By default, and for legacy reasons, the traject command line uses the MarcIndexer, with default marc reader and macros.  If you want to use a different indexer for a different file format, use the `-i` flag:  `traject -i xml`, the NokogiriReader; `traject -i basic`, the base Traject::Indexer with no format-specific behavior; or `traject -i Your::Own::Class`.
+
 Traject assumes marc files are in ISO 2709 MARC 'binary' format; it is not
-currently able to guess other marc format types like XML from filenames or content. If you are reading
-marc files in another format, you need to tell traject either with the `marc_source.type` or the command-line shortcut:
+currently able to guess other marc format types like XML from filenames or content. If you are reading marc files in another format, you need to tell traject either with the `marc_source.type` or the command-line shortcut:
 
     traject -c conf.rb -t xml marc_file.xml
 
