@@ -484,12 +484,15 @@ class Traject::Indexer
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
   #
+  # You instead give it an _array_ of streams, as well.
+  #
   # returns 'false' as a signal to command line to return non-zero exit code
   # for some reason (reason found in logs, presumably). This particular mechanism
   # is open to complexification, starting simple. We do need SOME way to return
   # non-zero to command line.
   #
-  def process(io_stream)
+  # @param [#read, Array<#read>]
+  def process(io_stream_or_array)
     check_uncompleted
 
     settings.fill_in_defaults!
@@ -498,52 +501,55 @@ class Traject::Indexer
     start_time = batch_start_time = Time.now
     logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
 
-    reader = self.reader!(io_stream)
-
     processing_threads = settings["processing_thread_pool"].to_i
     thread_pool        = Traject::ThreadPool.new(processing_threads)
 
-    logger.info "   Indexer with #{processing_threads} processing threads, reader: #{reader.class.name} and writer: #{writer.class.name}"
+    logger.info "   Indexer with #{processing_threads} processing threads, reader: #{reader_class.name} and writer: #{writer.class.name}"
 
-    log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
+    #io_stream can now be an array of io_streams.
+    (io_stream_or_array.kind_of?(Array) ? io_stream_or_array : [io_stream_or_array]).each do |io_stream|
+      reader = self.reader!(io_stream)
 
-    reader.each do |record; position |
-      count    += 1
+      log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
 
-      # have to use a block local var, so the changing `count` one
-      # doesn't get caught in the closure. Weird, yeah.
-      position = count
+      reader.each do |record; position |
+        count    += 1
 
-      thread_pool.raise_collected_exception!
+        # have to use a block local var, so the changing `count` one
+        # doesn't get caught in the closure. Weird, yeah.
+        position = count
 
-      if settings["debug_ascii_progress"].to_s == "true"
-        $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
-      end
+        thread_pool.raise_collected_exception!
 
-      context = Context.new(
-          :source_record => record,
-          :source_record_id_proc => source_record_id_proc,
-          :settings      => settings,
-          :position      => position,
-          :logger        => logger
-      )
+        if settings["debug_ascii_progress"].to_s == "true"
+          $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
+        end
 
-      if log_batch_size && (count % log_batch_size == 0)
-        batch_rps   = log_batch_size / (Time.now - batch_start_time)
-        overall_rps = count / (Time.now - start_time)
-        logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{context.source_record_id}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
-        batch_start_time = Time.now
-      end
+        context = Context.new(
+            :source_record => record,
+            :source_record_id_proc => source_record_id_proc,
+            :settings      => settings,
+            :position      => position,
+            :logger        => logger
+        )
 
-      # We pass context in a block arg to properly 'capture' it, so
-      # we don't accidentally share the local var under closure between
-      # threads.
-      thread_pool.maybe_in_thread_pool(context) do |context|
-        map_to_context!(context)
-        if context.skip?
-          log_skip(context)
-        else
-          writer.put context
+        if log_batch_size && (count % log_batch_size == 0)
+          batch_rps   = log_batch_size / (Time.now - batch_start_time)
+          overall_rps = count / (Time.now - start_time)
+          logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{context.source_record_id}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
+          batch_start_time = Time.now
+        end
+
+        # We pass context in a block arg to properly 'capture' it, so
+        # we don't accidentally share the local var under closure between
+        # threads.
+        thread_pool.maybe_in_thread_pool(context) do |context|
+          map_to_context!(context)
+          if context.skip?
+            log_skip(context)
+          else
+            writer.put context
+          end
         end
       end
     end
