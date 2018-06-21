@@ -1,5 +1,5 @@
 require 'traject/nokogiri_reader'
-require 'traject/macros/nokogiri'
+require 'traject/macros/nokogiri_macros'
 
 module Traject
   class Indexer
@@ -9,7 +9,7 @@ module Traject
     #
     # See docs on XML use. (TODO)
     class NokogiriIndexer < ::Traject::Indexer
-      include Traject::Macros::Nokogiri
+      include Traject::Macros::NokogiriMacros
 
       def self.default_settings
         @default_settings ||= super.merge("reader_class_name" => "Traject::NokogiriReader")

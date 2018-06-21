@@ -1,6 +1,6 @@
 module Traject
   module Macros
-    module Nokogiri
+    module NokogiriMacros
 
       def default_namespaces
         @default_namespaces ||= (settings["nokogiri_reader.default_namespaces"] || {}).tap { |ns|
