@@ -175,30 +175,29 @@ module Traject
           # track of the namespaces in outer contexts ourselves, and then see
           # if they are needed ourselves. :(
           namespaces = namespaces_stack.compact.reduce({}, :merge)
+          default_ns = namespaces.delete("xmlns")
+
           namespaces.each_pair do |attrib, uri|
-            if attrib == "xmlns"
-              ns_prefix = nil
-            else
-              ns_prefix = attrib.sub(/\Axmlns:/, '')
-            end
+            ns_prefix = attrib.sub(/\Axmlns:/, '')
 
             # gotta make sure it's actually used in the doc to not add it
             # unecessarily. GAH.
-            if ns_prefix != nil &&
-                  doc.xpath("//*[starts-with(name(), '#{ns_prefix}:')][1]").empty? &&
+            if    doc.xpath("//*[starts-with(name(), '#{ns_prefix}:')][1]").empty? &&
                   doc.xpath("//@*[starts-with(name(), '#{ns_prefix}:')][1]").empty?
               next
             end
-            if ns_prefix == nil
-              doc.root.default_namespace = uri
-              # OMG nokogiri
-              doc.xpath("//*[namespace-uri()='']").each do |node|
-                node.default_namespace = uri
-              end
-            else
-              doc.root.add_namespace_definition(ns_prefix, uri)
+            doc.root.add_namespace_definition(ns_prefix, uri)
+          end
+
+          if default_ns
+            doc.root.default_namespace = default_ns
+            # OMG nokogiri, really?
+            default_ns = doc.root.namespace
+            doc.xpath("//*[namespace-uri()='']").each do |node|
+              node.namespace = default_ns
             end
           end
+
         end
         return doc
       end
