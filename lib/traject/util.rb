@@ -124,5 +124,11 @@ module Traject
       return result
     end
 
+    # How can we refer to an io object input in logs? For now, if it's a file-like
+    # object, we can use #path.
+    def self.io_name(io_like_object)
+      io_like_object.path if io_like_object.respond_to?(:path)
+    end
+
   end
 end

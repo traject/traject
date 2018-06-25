@@ -463,7 +463,7 @@ class Traject::Indexer
     begin
       yield
     rescue StandardError => e
-      msg = "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
+      msg = "Unexpected error on record #{context.record_inspect}\n"
       msg += "    while executing #{index_step.inspect}\n"
 
       msg += begin
@@ -509,15 +509,19 @@ class Traject::Indexer
     #io_stream can now be an array of io_streams.
     (io_stream_or_array.kind_of?(Array) ? io_stream_or_array : [io_stream_or_array]).each do |io_stream|
       reader = self.reader!(io_stream)
+      input_name = Traject::Util.io_name(io_stream)
+      position_in_input = 0
 
       log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
 
-      reader.each do |record; position |
+      reader.each do |record; safe_count, safe_position_in_input |
         count    += 1
+        position_in_input += 1
 
         # have to use a block local var, so the changing `count` one
-        # doesn't get caught in the closure. Weird, yeah.
-        position = count
+        # doesn't get caught in the closure. Don't totally get it, but
+        # I think it's so.
+        safe_count, safe_position_in_input = count, position_in_input
 
         thread_pool.raise_collected_exception!
 
@@ -529,14 +533,16 @@ class Traject::Indexer
             :source_record => record,
             :source_record_id_proc => source_record_id_proc,
             :settings      => settings,
-            :position      => position,
+            :position      => safe_count,
+            :input_name    => input_name,
+            :position_in_input => safe_position_in_input,
             :logger        => logger
         )
 
         if log_batch_size && (count % log_batch_size == 0)
           batch_rps   = log_batch_size / (Time.now - batch_start_time)
           overall_rps = count / (Time.now - start_time)
-          logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{context.source_record_id}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
+          logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at: #{context.source_inspect}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
           batch_start_time = Time.now
         end
 
@@ -662,6 +668,7 @@ class Traject::Indexer
     settings.fill_in_defaults!
 
     position = 0
+    input_name = Traject::Util.io_name(source)
     source.each do |record |
       begin
         position += 1
@@ -671,6 +678,7 @@ class Traject::Indexer
             :source_record_id_proc  => source_record_id_proc,
             :settings               => settings,
             :position               => position,
+            :position_in_input      => (position if input_name),
             :logger                 => logger
         )
 
@@ -701,7 +709,7 @@ class Traject::Indexer
   # Log that the current record is being skipped, using
   # data in context.position and context.skipmessage
   def log_skip(context)
-    logger.debug "Skipped record #{context.position}: #{context.skipmessage}"
+    logger.debug "Skipped record #{context.record_inspect}: #{context.skipmessage}"
   end
 
   def reader_class
