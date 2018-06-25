@@ -14,7 +14,7 @@ module Traject
     end
 
     def each_record_xpath
-      @each_record_xpath ||= settings["nokogiri_reader.each_record_xpath"]
+      @each_record_xpath ||= settings["nokogiri.each_record_xpath"]
     end
 
     def extra_xpath_hooks
@@ -47,7 +47,7 @@ module Traject
         if prefix
           ns_uri = default_namespaces[prefix]
           if ns_uri.nil?
-            raise ArgumentError, "each_record_xpath: Can't find namespace prefix '#{prefix}' in '#{each_record_xpath}'. To use a namespace in each_record_xpath, it has to be registered with nokogiri_reader.default_namespaces: #{default_namespaces.inspect}"
+            raise ArgumentError, "each_record_xpath: Can't find namespace prefix '#{prefix}' in '#{each_record_xpath}'. To use a namespace in each_record_xpath, it has to be registered with nokogiri.namespaces: #{default_namespaces.inspect}"
           end
         end
       end
@@ -70,9 +70,9 @@ module Traject
     end
 
     def default_namespaces
-      @default_namespaces ||= (settings["nokogiri_reader.default_namespaces"] || {}).tap { |ns|
+      @default_namespaces ||= (settings["nokogiri.namespaces"] || {}).tap { |ns|
         unless ns.kind_of?(Hash)
-          raise ArgumentError, "nokogiri_reader.default_namespaces must be a hash, not: #{ns.inspect}"
+          raise ArgumentError, "nokogiri.namespaces must be a hash, not: #{ns.inspect}"
         end
       }
     end
@@ -113,7 +113,7 @@ module Traject
     #   '/body/head/meta' same thing as './body/head/meta' or 'head/meta'
     #
     # Elements can (and must, to match) have XML namespaces, if and only if
-    # they are registered with settings nokogiri_reader.default_namespaces
+    # they are registered with settings nokogiri.namespaces
     #
     # sadly JRuby Nokogiri has an incompatibility with true nokogiri, and
     # doesn't preserve our namespaces on outer_xml,

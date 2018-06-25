@@ -19,8 +19,8 @@ describe "Traject::NokogiriIndexer" do
     namespaces = @namespaces
     @indexer.configure do
       settings do
-        provide "nokogiri_reader.default_namespaces", namespaces
-        provide "nokogiri_reader.each_record_xpath", "//oai:record"
+        provide "nokogiri.namespaces", namespaces
+        provide "nokogiri.each_record_xpath", "//oai:record"
       end
       to_field "id", extract_xpath("//oai:metadata/oai_dc:dc/dc:identifier"), first_only
       to_field "title", extract_xpath("//oai:metadata/oai_dc:dc/dc:title")
@@ -43,8 +43,8 @@ describe "Traject::NokogiriIndexer" do
     namespaces = @namespaces.merge(edm: "http://this.is.wrong")
     @indexer.configure do
       settings do
-        provide "nokogiri_reader.default_namespaces", namespaces
-        provide "nokogiri_reader.each_record_xpath", "//oai:record"
+        provide "nokogiri.namespaces", namespaces
+        provide "nokogiri.each_record_xpath", "//oai:record"
       end
       to_field "rights", extract_xpath("//oai:metadata/oai_dc:dc/edm:rights", ns: { edm: "http://www.europeana.eu/schemas/edm/" })
     end
@@ -73,7 +73,7 @@ describe "Traject::NokogiriIndexer" do
 
       @indexer.configure do
         settings do
-          provide "nokogiri_reader.each_record_xpath", "//record"
+          provide "nokogiri.each_record_xpath", "//record"
         end
       end
     end

@@ -12,7 +12,7 @@ describe "Traject::NokogiriReader" do
       it "default_namespaces not a hash raises" do
         error = assert_raises(ArgumentError) {
           @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {
-            "nokogiri_reader.default_namespaces" => "i am not a hash",
+            "nokogiri.namespaces" => "i am not a hash",
           })
         }
         assert(error.message =~ /default_namespaces must be a hash/)
@@ -21,8 +21,8 @@ describe "Traject::NokogiriReader" do
       it "each_record_xpath with unregistered prefix raises" do
         error = assert_raises(ArgumentError) {
           @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {
-            "nokogiri_reader.default_namespaces" => @namespaces,
-            "nokogiri_reader.each_record_xpath" => "//foo:bar"
+            "nokogiri.namespaces" => @namespaces,
+            "nokogiri.each_record_xpath" => "//foo:bar"
           })
         }
         assert(error.message =~ %r{Can't find namespace prefix 'foo' in '//foo:bar'})
@@ -31,8 +31,8 @@ describe "Traject::NokogiriReader" do
       it "raises on some unsupported xpath" do
         error = assert_raises(ArgumentError) {
           @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {
-            "nokogiri_reader.default_namespaces" => @namespaces,
-            "nokogiri_reader.each_record_xpath" => "//oai:record[@id='foo']"
+            "nokogiri.namespaces" => @namespaces,
+            "nokogiri.each_record_xpath" => "//oai:record[@id='foo']"
           })
         }
         assert(error.message =~ /Only very simple xpaths supported\./)
@@ -63,8 +63,8 @@ describe "Traject::NokogiriReader" do
     describe "extra_xpath_hooks" do
       it "catches oai-pmh resumption token" do
         @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {
-          "nokogiri_reader.default_namespaces" => @namespaces,
-          "nokogiri_reader.each_record_xpath" => "//oai:record",
+          "nokogiri.namespaces" => @namespaces,
+          "nokogiri.each_record_xpath" => "//oai:record",
           "nokogiri_reader.extra_xpath_hooks" => {
             "//oai:resumptionToken" => lambda do |node, clipboard|
               clipboard[:resumptionToken] = node.text
@@ -79,8 +79,8 @@ describe "Traject::NokogiriReader" do
     describe "outer namespaces" do
       it "are preserved" do
         @reader = Traject::NokogiriReader.new(File.open(support_file_path("namespace-test.xml")), {
-          "nokogiri_reader.default_namespaces" => { mytop: "http://example.org/top" },
-          "nokogiri_reader.each_record_xpath" => "//mytop:record"
+          "nokogiri.namespaces" => { mytop: "http://example.org/top" },
+          "nokogiri.each_record_xpath" => "//mytop:record"
         })
         yielded_records = []
         @reader.each { |record|
@@ -127,8 +127,8 @@ describe "Traject::NokogiriReader" do
 
   def shared_tests
     @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {
-      "nokogiri_reader.default_namespaces" => @namespaces,
-      "nokogiri_reader.each_record_xpath" => @each_record_xpath
+      "nokogiri.namespaces" => @namespaces,
+      "nokogiri.each_record_xpath" => @each_record_xpath
     })
 
     yielded_records = []

@@ -3,9 +3,9 @@ module Traject
     module NokogiriMacros
 
       def default_namespaces
-        @default_namespaces ||= (settings["nokogiri_reader.default_namespaces"] || {}).tap { |ns|
+        @default_namespaces ||= (settings["nokogiri.namespaces"] || {}).tap { |ns|
           unless ns.kind_of?(Hash)
-            raise ArgumentError, "nokogiri_reader.default_namespaces must be a hash, not: #{ns.inspect}"
+            raise ArgumentError, "nokogiri.namespaces must be a hash, not: #{ns.inspect}"
           end
         }
       end
