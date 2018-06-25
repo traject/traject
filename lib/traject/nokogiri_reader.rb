@@ -2,12 +2,20 @@ module Traject
   class NokogiriReader
     include Enumerable
 
-    attr_reader :settings, :input_stream, :clipboard
+    attr_reader :settings, :input_stream, :clipboard, :path_tracker
 
     def initialize(input_stream, settings)
       @settings = Traject::Indexer::Settings.new settings
       @input_stream = input_stream
       @clipboard = Traject::Util.is_jruby? ? Concurrent::Map.new : Concurrent::Hash.new
+
+      if each_record_xpath
+        @path_tracker = PathTracker.new(each_record_xpath,
+                                          clipboard: self.clipboard,
+                                          namespaces: default_namespaces,
+                                          extra_xpath_hooks: extra_xpath_hooks)
+      end
+
       default_namespaces # trigger validation
       validate_limited_xpath(each_record_xpath, key_name: "each_record_xpath")
 
@@ -56,19 +64,6 @@ module Traject
     end
 
 
-
-    # Spec object that can test for match to our tiny xpath subset.
-    #  *  `//path/to/record`, or just `//record`
-    #  *  or rooted at root, `./path/to`, `path/to`, `./path/to` (all equivalent)
-    #
-    # gotten from setting "xml.each_record_xpath"
-    def path_tracker
-      @path_tracker ||= PathTracker.new(each_record_xpath,
-                                        clipboard: clipboard,
-                                        namespaces: default_namespaces,
-                                        extra_xpath_hooks: extra_xpath_hooks)
-    end
-
     def default_namespaces
       @default_namespaces ||= (settings["nokogiri.namespaces"] || {}).tap { |ns|
         unless ns.kind_of?(Hash)
@@ -94,6 +89,10 @@ module Traject
             yield path_tracker.current_node_doc
           end
           path_tracker.run_extra_xpath_hooks
+
+          if reader_node.self_closing?
+            path_tracker.pop
+          end
         end
 
         if reader_node.node_type == Nokogiri::XML::Reader::TYPE_END_ELEMENT
@@ -165,8 +164,12 @@ module Traject
       # adds a component to slash-separated current_path, with namespace prefix.
       def push(reader_node)
         namespace_prefix = reader_node.namespace_uri && inverted_namespaces[reader_node.namespace_uri]
+
+        # gah, reader_node.name has the namespace prefix in there
+        node_name = reader_node.name.gsub(/[^:]+:/, '')
+
         node_str = if namespace_prefix
-          namespace_prefix + ":" + reader_node.name
+          namespace_prefix + ":" + node_name
         else
           reader_node.name
         end
@@ -189,6 +192,7 @@ module Traject
       # removes the last slash-separated component from current_path
       def pop
         current_path.slice!( current_path.rindex('/')..-1 )
+        @current_node = nil
 
         if is_jruby?
           namespaces_stack.pop
