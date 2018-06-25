@@ -2,20 +2,32 @@ module Traject
   class NokogiriReader
     include Enumerable
 
-    attr_reader :settings, :input_stream
+    attr_reader :settings, :input_stream, :clipboard
 
     def initialize(input_stream, settings)
       @settings = Traject::Indexer::Settings.new settings
       @input_stream = input_stream
+      @clipboard = Traject::Util.is_jruby? ? Concurrent::Map.new : Concurrent::Hash.new
       default_namespaces # trigger validation
-      validate_each_record_xpath
+      validate_limited_xpath(each_record_xpath, key_name: "each_record_xpath")
+
     end
 
     def each_record_xpath
-      @each_record_xpath = settings["nokogiri_reader.each_record_xpath"]
+      @each_record_xpath ||= settings["nokogiri_reader.each_record_xpath"]
     end
 
-    protected def validate_each_record_xpath
+    def extra_xpath_hooks
+      @extra_xpath_hooks ||= begin
+        (settings["nokogiri_reader.extra_xpath_hooks"] || {}).tap do |hash|
+          hash.each_pair do |limited_xpath, callable|
+            validate_limited_xpath(limited_xpath, key_name: "nokogiri_reader.extra_xpath_hooks")
+          end
+        end
+      end
+    end
+
+    protected def validate_limited_xpath(each_record_xpath, key_name:)
       return unless each_record_xpath
 
       components = each_record_xpath.split('/')
@@ -29,7 +41,7 @@ module Traject
         # We don't support brackets or any xpath beyond the MOST simple.
         # Catch a few we can catch.
         if element =~ /::/ || element =~ /[\[\]]/
-          raise ArgumentError, "each_record_xpath: Only very simple xpaths supported. '//some/path' or '/some/path'. Not: #{each_record_xpath.inspect}"
+          raise ArgumentError, "#{key_name}: Only very simple xpaths supported. '//some/path' or '/some/path'. Not: #{each_record_xpath.inspect}"
         end
 
         if prefix
@@ -43,13 +55,18 @@ module Traject
       each_record_xpath
     end
 
+
+
     # Spec object that can test for match to our tiny xpath subset.
     #  *  `//path/to/record`, or just `//record`
     #  *  or rooted at root, `./path/to`, `path/to`, `./path/to` (all equivalent)
     #
     # gotten from setting "xml.each_record_xpath"
     def path_tracker
-      @path_tracker ||= PathTracker.new(each_record_xpath, namespaces: default_namespaces)
+      @path_tracker ||= PathTracker.new(each_record_xpath,
+                                        clipboard: clipboard,
+                                        namespaces: default_namespaces,
+                                        extra_xpath_hooks: extra_xpath_hooks)
     end
 
     def default_namespaces
@@ -74,10 +91,9 @@ module Traject
           path_tracker.push(reader_node)
 
           if path_tracker.match?
-            # yeah, sadly we got to have nokogiri parse it again
-            doc = Nokogiri::XML.parse(reader_node.outer_xml)
-            yield path_tracker.fix_namespaces(doc)
+            yield path_tracker.current_node_doc
           end
+          path_tracker.run_extra_xpath_hooks
         end
 
         if reader_node.node_type == Nokogiri::XML::Reader::TYPE_END_ELEMENT
@@ -104,31 +120,46 @@ module Traject
     # so in JRuby we have to track them ourselves, and then also do yet ANOTHER
     # parse in nokogiri. This may make this in Java even LESS performant, I'm afraid.
     class PathTracker
-      attr_reader :path_spec, :inverted_namespaces, :current_path, :namespaces_stack
-      def initialize(str_spec, namespaces: {})
+      attr_reader :path_spec, :inverted_namespaces, :current_path, :namespaces_stack, :extra_xpath_hooks, :clipboard
+      def initialize(str_spec, clipboard:, namespaces: {}, extra_xpath_hooks: {})
         @inverted_namespaces  = namespaces.invert
+        @clipboard = clipboard
         # We're guessing using a string will be more efficient than an array
         @current_path         = ""
         @floating             = false
 
+        @path_spec, @floating = parse_path(str_spec)
+
+        @namespaces_stack = []
+
+
+        @extra_xpath_hooks = extra_xpath_hooks.collect do |path, callable|
+          bare_path, floating = parse_path(path)
+          {
+            path: bare_path,
+            floating: floating,
+            callable: callable
+          }
+        end
+      end
+
+      # returns [bare_path, is_floating]
+      protected def parse_path(str_spec)
+        floating = false
+
         if str_spec.start_with?('//')
           str_spec = str_spec.slice(2..-1)
-          @floating = true
+          floating = true
         else
           str_spec = str_spec.slice(1..-1) if str_spec.start_with?(".")
           str_spec = "/" + str_spec unless str_spec.start_with?("/")
         end
 
-        @path_spec = str_spec # a string again for ultra fast matching, we think.
-
-        @namespaces_stack = []
+        return [str_spec, floating]
       end
 
       def is_jruby?
-        unless defined?(@is_jruby)
-          @is_jruby = defined?(JRUBY_VERSION)
-        end
-        @is_jruby
+        Traject::Util.is_jruby?
       end
 
       # adds a component to slash-separated current_path, with namespace prefix.
@@ -145,6 +176,14 @@ module Traject
         if is_jruby?
           namespaces_stack << reader_node.namespaces
         end
+        @current_node = reader_node
+      end
+
+      def current_node_doc
+        return nil unless @current_node
+
+        # yeah, sadly we got to have nokogiri parse it again
+        fix_namespaces(Nokogiri::XML.parse(@current_node.outer_xml))
       end
 
       # removes the last slash-separated component from current_path
@@ -161,13 +200,30 @@ module Traject
       end
 
       def match?
+        match_path?(path_spec, floating: floating?)
+      end
+
+      def match_path?(path_to_match, floating:)
         if floating?
-          current_path.end_with?(path_spec)
+          current_path.end_with?(path_to_match)
         else
-          current_path == path_spec
+          current_path == path_to_match
         end
       end
 
+      def run_extra_xpath_hooks
+        return unless @current_node
+
+        extra_xpath_hooks.each do |hook_spec|
+          if match_path?(hook_spec[:path], floating: hook_spec[:floating])
+            hook_spec[:callable].call(current_node_doc, clipboard)
+          end
+        end
+      end
+
+      # no-op unless it's jruby, and then we use our namespace stack to
+      # correctly add namespaces to the Nokogiri::XML::Document, cause
+      # in Jruby outer_xml on the Reader doesn't do it for us. :(
       def fix_namespaces(doc)
         if is_jruby?
           # Only needed in jruby, nokogiri's jruby implementation isn't weird

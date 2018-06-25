@@ -124,5 +124,12 @@ module Traject
       return result
     end
 
+    def self.is_jruby?
+      unless defined?(@is_jruby)
+        @is_jruby = defined?(JRUBY_VERSION)
+      end
+      @is_jruby
+    end
+
   end
 end

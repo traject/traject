@@ -59,6 +59,23 @@ describe "Traject::NokogiriReader" do
       end
     end
 
+
+    describe "extra_xpath_hooks" do
+      it "catches oai-pmh resumption token" do
+        @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {
+          "nokogiri_reader.default_namespaces" => @namespaces,
+          "nokogiri_reader.each_record_xpath" => "//oai:record",
+          "nokogiri_reader.extra_xpath_hooks" => {
+            "//oai:resumptionToken" => lambda do |node, clipboard|
+              clipboard[:resumptionToken] = node.text
+            end
+          }
+        })
+        _records = @reader.to_a
+        assert_equal "oai_dc.f(2018-05-03T18:09:08Z).u(2018-06-15T19:25:21Z).t(6387):100", @reader.clipboard[:resumptionToken]
+      end
+    end
+
     describe "outer namespaces" do
       it "are preserved" do
         @reader = Traject::NokogiriReader.new(File.open(support_file_path("namespace-test.xml")), {
