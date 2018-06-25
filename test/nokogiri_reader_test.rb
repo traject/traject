@@ -15,7 +15,7 @@ describe "Traject::NokogiriReader" do
             "nokogiri.namespaces" => "i am not a hash",
           })
         }
-        assert(error.message =~ /default_namespaces must be a hash/)
+        assert(error.message =~ /nokogiri.namespaces must be a hash/)
       end
 
       it "each_record_xpath with unregistered prefix raises" do
