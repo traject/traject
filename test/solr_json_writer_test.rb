@@ -184,7 +184,7 @@ describe "Traject::SolrJsonWriter" do
       logged = strio.string
 
       10.times do |i|
-        assert_match /ERROR.*Could not add record doc_#{i} at source file position : Solr error response: 500/, logged
+        assert_match /ERROR.*Could not add record <output_id:doc_#{i}>: Solr error response: 500/, logged
       end
     end
 

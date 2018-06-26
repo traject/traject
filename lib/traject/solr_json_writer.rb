@@ -161,7 +161,7 @@ class Traject::SolrJsonWriter
       else
         msg = "Solr error response: #{resp.status}: #{resp.body}"
       end
-      logger.error "Could not add record #{c.source_record_id} at source file position #{c.position}: #{msg}"
+      logger.error "Could not add record #{c.record_inspect}: #{msg}"
       logger.debug(c.source_record.to_s)
 
       @skipped_record_incrementer.increment

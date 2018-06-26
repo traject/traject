@@ -51,7 +51,7 @@ class Traject::DebugWriter < Traject::LineWriter
       context.output_hash[@idfield].first
     else
       unless @already_threw_warning_about_missing_id
-        context.logger.warn "At least one record (##{context.position}) doesn't define field '#{@idfield}'.
+        context.logger.warn "At least one record (#{context.record_inspect}) doesn't define field '#{@idfield}'.
 All records are assumed to have a unique id. You can set which field to look in via the setting 'debug_writer.idfield'"
         @already_threw_warning_about_missing_id = true
       end
