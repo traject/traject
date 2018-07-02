@@ -27,16 +27,6 @@ describe "Traject::NokogiriReader" do
         }
         assert(error.message =~ %r{Can't find namespace prefix 'foo' in '//foo:bar'})
       end
-
-      it "raises on some unsupported xpath" do
-        error = assert_raises(ArgumentError) {
-          @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {
-            "nokogiri.namespaces" => @namespaces,
-            "nokogiri.each_record_xpath" => "//oai:record[@id='foo']"
-          })
-        }
-        assert(error.message =~ /Only very simple xpaths supported\./)
-      end
     end
 
     describe "fixed path" do
