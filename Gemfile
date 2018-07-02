@@ -9,4 +9,5 @@ end
 
 group :debug do
   gem "ruby-debug", :platform => "jruby"
+  gem "byebug", :platform => "mri"
 end
