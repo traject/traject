@@ -78,6 +78,10 @@ module Traject
         end
       end
 
+      # Adds a literal to accumulator if accumulator was empty
+      #
+      # @example
+      #      to_field "title", extract_marc("245abc"), default("Unknown Title")
       def default(default_value)
         lambda do |rec, acc|
           if acc.empty?
@@ -86,18 +90,33 @@ module Traject
         end
       end
 
+      # Removes all but the first value from accumulator, if more values were present.
+      #
+      # @example
+      #     to_field "main_author", extract_marc("100"), first_only
       def first_only
         lambda do |rec, acc|
           acc.replace Array(acc[0])
         end
       end
 
+
+      # calls ruby `uniq!` on accumulator, removes any duplicate values
+      #
+      # @example
+      #     to_field "something", extract_marc("245:240"), unique
       def unique
         lambda do |rec, acc|
           acc.uniq!
         end
       end
 
+
+      # For each value in accumulator, remove all leading or trailing whitespace
+      # (unique aware). Like ruby #strip, but whitespace-aware
+      #
+      # @example
+      #     to_field "title", extract_marc("245"), strip
       def strip
         lambda do |rec, acc|
           acc.collect! do |v|
@@ -107,30 +126,34 @@ module Traject
         end
       end
 
+      # Run ruby `split` on each value in the accumulator, with separator
+      # given, flatten all results into single array as accumulator.
       def split(separator)
         lambda do |rec, acc|
           acc.replace( acc.flat_map { |v| v.split(separator) } )
         end
       end
 
+      # Append argument to end of each value in accumulator.
       def append(suffix)
         lambda do |rec, acc|
           acc.collect! { |v| v + suffix }
         end
       end
 
+      # prepend argument to beginning of each value in accumulator.
       def prepend(prefix)
         lambda do |rec, acc|
           acc.collect! { |v| prefix + v }
         end
       end
 
+      # Run ruby `gsub` on each value in accumulator, with pattern and replace value given.
       def gsub(pattern, replace)
         lambda do |rec, acc|
           acc.collect! { |v| v.gsub(pattern, replace) }
         end
       end
-
     end
   end
 end
