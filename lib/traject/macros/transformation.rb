@@ -11,8 +11,30 @@ module Traject
     # used with any first-step extract methods.  Some informed by current users.
     module Transformation
 
-      def translation_map(translation_map_specifier)
-        translation_map = Traject::TranslationMap.new(translation_map_specifier)
+      # Maps all values on accumulator through a  Traject::TranslationMap.
+      #
+      # A Traject::TranslationMap is hash-like mapping from input to output, usually
+      # defined in a yaml or dot-properties file, which can be looked up in load path
+      # with a file name as arg. See [Traject::TranslationMap](../translation_map.rb)
+      # header coments for details.
+      #
+      # Using this macro, you can pass in one TranslationMap initializer arg, but you can
+      # also pass in multiple, and they will be merged into each other (last one last), so
+      # you can use this to apply over-rides: Either from another on-disk map, or even from
+      # an inline hash (since a Hash is a valid TranslationMap initialization arg too).
+      #
+      # @example
+      #     to_field("something"), to_field "cataloging_agency", extract_marc("040a"), translation_map("marc_040a")
+      #
+      # @example with override
+      #     to_field("something"), to_field "cataloging_agency", extract_marc("040a"), translation_map("marc_040a", "local_marc_040a")
+      #
+      # @example with multiple overrides, including local hash
+      #     to_field("something"), to_field "cataloging_agency", extract_marc("040a"), translation_map("marc_040a", "local_marc_040a", {"DLC" => "U.S. LoC"})
+      def translation_map(*translation_map_specifier)
+        translation_map = translation_map_specifier.
+          collect { |spec| Traject::TranslationMap.new(spec) }.
+          reduce(:merge)
 
         lambda do |rec, acc|
           translation_map.translate_array! acc

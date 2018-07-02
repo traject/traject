@@ -1,6 +1,8 @@
 language: ruby
 cache: bundler
-sudo: false
+# we don't really need `sudo: true`, but for some reason travis docker-based systems are unreliable
+# at downloading jruby, and
+sudo: true
 rvm:
   - 2.2.9
   - 2.3.6

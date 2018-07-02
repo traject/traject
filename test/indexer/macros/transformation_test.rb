@@ -18,6 +18,22 @@ describe "Traject::Macros::Transformation" do
       output = @indexer.map_record(@record)
       assert_equal ["Library of Congress"], output["cataloging_agency"]
     end
+
+    it "can merge multiple" do
+      @indexer.configure do
+        to_field "result", literal("key_to_be_overridden"), translation_map("ruby_map", "yaml_map")
+      end
+      output = @indexer.map_record(@record)
+      assert_equal ["value_from_yaml"], output["result"]
+    end
+
+    it "can merge multiple with hash" do
+      @indexer.configure do
+        to_field "result", literal("key_to_be_overridden"), translation_map("ruby_map", "yaml_map", {"key_to_be_overridden" => "value_from_inline_hash"})
+      end
+      output = @indexer.map_record(@record)
+      assert_equal ["value_from_inline_hash"], output["result"]
+    end
   end
 
   describe "transform" do

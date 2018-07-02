@@ -133,4 +133,23 @@ describe "Traject::Indexer#process" do
     end
   end
 
+  describe "multi stream" do
+    before do
+      @file2 = File.open(support_file_path "george_eliot.marc")
+      @file1 = File.open(support_file_path "musical_cage.marc")
+      @indexer = Traject::Indexer::MarcIndexer.new do
+        self.writer_class = memory_writer_class
+        to_field "title", extract_marc("245")
+      end
+    end
+
+    it "parses and loads" do
+      @indexer.process([@file1, @file2])
+      # kinda ridic, yeah.
+      output_hashes = memory_writer_class.class_variable_get("@@last_writer_settings")["memory_writer.added"].collect(&:output_hash)
+
+      assert_length 2, output_hashes
+      assert output_hashes.all? { |hash| hash["title"].length > 0 }
+    end
+  end
 end
