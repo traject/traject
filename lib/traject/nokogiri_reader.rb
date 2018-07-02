@@ -1,4 +1,55 @@
 module Traject
+  # A Trajet reader which reads XML, and yields zero to many Nokogiri::XML::Document
+  # objects as source records in the traject pipeline.
+  #
+  # It does process the entire input document with Nokogiri::XML.parse, DOM-parsing,
+  # so will take RAM for the entire input document, until iteration completes.
+  #
+  # You can have it yield the _entire_ input XML as a single traject source record
+  # (default), or you can use setting `nokogiri.each_record_xpath` to split
+  # the source up into separate records to yield into traject pipeline -- each one
+  # will be it's own Nokogiri::XML::Document.
+  #
+  # ## Settings
+  # * nokogiri.default_namespaces: Set namespace prefixes that can be used in
+  #   other settings, including `extract_xpath` from NokogiriMacros.
+  # * nokogiri.each_record_xpath: if set to a string xpath, will take all matching nodes
+  #   from the input doc, and yield the individually as source records to the pipeline.
+  #   If you need to use namespaces here, you need to have them registered with
+  #   `nokogiri.default_namespaces`. If your source docs use namespaces, you DO need
+  #   to use them in your each_record_xpath.
+  # * nokogiri_reader.extra_xpath_hooks: Experimental in progress, see below.
+  #
+  # ## nokogiri_reader.extra_xpath_hooks: For handling nodes outside of your each_record_xpath
+  #
+  # What if you want to use each_record_xpath to yield certain nodes as source documents, but
+  # there is additional some other info in other parts of the input document you need? This came up
+  # when developing the OaiPmhNokogiriReader, which yields "//oai:record" as pipeline source documents,
+  # but also needed to look at "//oai:resumptionToken" to scrape the entire results.
+  #
+  # There is a semi-finished/in-progress feature that meets that use case -- unclear if it will meet
+  # all use cases for this general issue.
+  #
+  # Setting `nokogiri_reader.extra_xpath_hooks` can be set to a Hash where the keys are xpaths (if using
+  # namespaces must be must be registered with `nokogiri.default_namespaces`), and the value is a lambda/
+  # proc/callable object, taking two arguments.
+  #
+  #     provide "nokogiri_reader.extra_xpath_hooks", {
+  #       "//oai:resumptionToken" =>
+  #         lambda do |node, clipboard|
+  #           clipboard[:resumption_token] = node.text
+  #         end"
+  #     }
+  #
+  # The first arg is the matching node. What's this clipboard? Well, what are you
+  # gonna _do_ with what you get out of there, that you can do in a thread-safe way
+  # in the middle of nokogiri processing? The second arg is a thread-safe Hash "clipboard"
+  # that you can store things in, and later access via reader.clipboard.
+  #
+  # There's no great thread-safe way to get reader.clipboard in a normal nokogiri pipeline though,
+  # (the reader can change in multi-file handling so there can be a race condition if you try naively,
+  # don't!) Which is why this feature needs some work for general applicability. The OaiPmhReader
+  # manually creates it's readers outside the usual nokogiri flow, so can use it.
   class NokogiriReader
     include Enumerable
 
