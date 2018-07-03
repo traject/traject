@@ -2,6 +2,8 @@ gem 'minitest' # I feel like this messes with bundler, but only way to get minit
 require 'minitest/autorun'
 require 'minitest/spec'
 
+require 'webmock/minitest'
+
 require 'traject'
 require 'marc'
 

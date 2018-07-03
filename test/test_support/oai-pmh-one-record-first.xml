@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/assets/blacklight_oai_provider/oai2-215c34219a0c518cf7dde42605d91175cbfd22c3f0ce528f795eae128dd1d872.xsl"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2018-06-15T22:34:53Z</responseDate><request metadataPrefix="oai_dc" verb="ListRecords">https://digital.sciencehistory.org/oai</request><ListRecords><record><header><identifier>oai:sciencehistoryorg:fq977t769</identifier><datestamp>2018-05-03T18:09:08Z</datestamp></header><metadata><oai_dc:dc xmlns:dpla="http://dp.la/about/map/" xmlns:cnt="http://www.w3.org/2011/content#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:edm="http://www.europeana.eu/schemas/edm/" xmlns:gn="http://www.geonames.org/ontology#" xmlns:oa="http://www.w3.org/ns/oa#" xmlns:ore="http://www.openarchives.org/ore/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:svcs="http://rdfs.org/sioc/services" xmlns:wgs84="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+  <dc:identifier>https://digital.sciencehistory.org/works/fq977t769</dc:identifier>
+  <dc:title>Spice Storage</dc:title>
+  <dc:rights>http://rightsstatements.org/vocab/NKC/1.0/</dc:rights>
+  <dc:creator>Norda Essential Oil and Chemical Company</dc:creator>
+  <dc:date>1950s</dc:date>
+  <dc:description>Interior view of the spice storage area at the Norda Company plant in Boonton, New Jersey, showing sacks of spices used in the manufacture of perfumes and essential oils.</dc:description>
+  <dc:format>image/tiff</dc:format>
+  <dc:subject>Research, Industrial--Laboratories</dc:subject>
+  <dc:subject>Essences and essential oils industry</dc:subject>
+  <dc:subject>Norda Essential Oil and Chemical Company</dc:subject>
+  <dc:subject>Perfumes industry</dc:subject>
+  <dc:type>Image</dc:type>
+  <dc:type>photographs</dc:type>
+  <dc:identifier>https://digital.sciencehistory.org/download_redirect/9k41zd701/dl_small?no_content_disposition=true</dc:identifier>
+  <dpla:originalRecord>https://digital.sciencehistory.org/works/fq977t769</dpla:originalRecord>
+  <edm:preview>https://digital.sciencehistory.org/download_redirect/9k41zd701/dl_small?no_content_disposition=true</edm:preview>
+  <edm:rights>http://rightsstatements.org/vocab/NKC/1.0/</edm:rights>
+  <edm:hasType>photographs</edm:hasType>
+  <edm:object>http://digital.sciencehistory.org/downloads/9k41zd701</edm:object>
+</oai_dc:dc>
+</metadata></record><resumptionToken completeListSize="2">dummy_resumption</resumptionToken></ListRecords></OAI-PMH>
