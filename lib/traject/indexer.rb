@@ -500,12 +500,12 @@ class Traject::Indexer
 
     count      = 0
     start_time = batch_start_time = Time.now
-    logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
+    logger.debug "beginning Traject::Indexer#process with settings: #{settings.inspect}"
 
     processing_threads = settings["processing_thread_pool"].to_i
     thread_pool        = Traject::ThreadPool.new(processing_threads)
 
-    logger.info "   Indexer with #{processing_threads} processing threads, reader: #{reader_class.name} and writer: #{writer.class.name}"
+    logger.info "   Traject::Indexer with #{processing_threads} processing threads, reader: #{reader_class.name} and writer: #{writer.class.name}"
 
     #io_stream can now be an array of io_streams.
     (io_stream_or_array.kind_of?(Array) ? io_stream_or_array : [io_stream_or_array]).each do |io_stream|
@@ -572,10 +572,10 @@ class Traject::Indexer
 
     elapsed = Time.now - start_time
     avg_rps = (count / elapsed)
-    logger.info "finished Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
+    logger.info "finished Traject::Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
 
     if writer.respond_to?(:skipped_record_count) && writer.skipped_record_count > 0
-      logger.error "Indexer#process returning 'false' due to #{writer.skipped_record_count} skipped records."
+      logger.error "Traject::Indexer#process returning 'false' due to #{writer.skipped_record_count} skipped records."
       return false
     end
 
@@ -592,7 +592,7 @@ class Traject::Indexer
   # something with the indexer that uses the reader or writer and isn't gonna work.
   protected def check_uncompleted
     if completed?
-      raise CompletedStateError.new("Indexer has been completed, and it's reader and writer are not in a usable state")
+      raise CompletedStateError.new("This Traject::Indexer has been completed, and it's reader and writer are not in a usable state")
     end
   end
 
