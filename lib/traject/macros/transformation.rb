@@ -128,6 +128,8 @@ module Traject
 
       # Run ruby `split` on each value in the accumulator, with separator
       # given, flatten all results into single array as accumulator.
+      # Will generally result in more individual values in accumulator as output than were
+      # there in input, as input values are split up into multiple values.
       def split(separator)
         lambda do |rec, acc|
           acc.replace( acc.flat_map { |v| v.split(separator) } )
