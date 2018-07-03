@@ -398,7 +398,7 @@ class Traject::Indexer
   # if you want to provide addtional context
   # like position, and/or get back the full context.
   def map_record(record)
-    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc => source_record_id_proc)
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc => source_record_id_proc, :logger => logger)
     map_to_context!(context)
     return context.output_hash unless context.skip?
   end
@@ -411,7 +411,7 @@ class Traject::Indexer
   def process_record(record)
     check_uncompleted
 
-    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc =>  source_record_id_proc)
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc =>  source_record_id_proc, :logger => logger)
     map_to_context!(context)
     writer.put( context ) unless context.skip?
 
@@ -439,7 +439,7 @@ class Traject::Indexer
 
       # Set the index step for error reporting
       context.index_step = index_step
-      log_mapping_errors(context, index_step) do
+      handle_mapping_errors(context) do
         index_step.execute(context) # will always return [] for an each_record step
       end
 
@@ -450,21 +450,11 @@ class Traject::Indexer
     return context
   end
 
-  # just a wrapper that captures and records any unexpected
-  # errors raised in mapping, along with contextual information
-  # on record and location in source file of mapping rule.
-  #
-  # Re-raises error at the moment.
-  #
-  # log_mapping_errors(context, index_step) do
-  #    all_sorts_of_stuff # that will have errors logged
-  # end
-  def log_mapping_errors(context, index_step)
-    begin
-      yield
-    rescue StandardError => e
+
+  protected def default_mapping_rescue
+    @default_mapping_rescue ||= lambda do |context, exception|
       msg = "Unexpected error on record #{context.record_inspect}\n"
-      msg += "    while executing #{index_step.inspect}\n"
+      msg += "    while executing #{context.index_step.inspect}\n"
 
       msg += begin
         "\n    Record: #{context.source_record.to_s}\n"
@@ -472,11 +462,28 @@ class Traject::Indexer
         "\n    (Could not log record, #{to_s_exception})\n"
       end
 
-      msg += Traject::Util.exception_to_log_message(e)
+      msg += Traject::Util.exception_to_log_message(exception)
 
-      logger.error msg
+      context.logger.error(msg) if context.logger
 
-      raise e
+      raise exception
+    end
+  end
+
+  # just a wrapper that catches any errors, and handles them. By default, logs
+  # and re-raises. But you can set custom setting `mapping_rescue`
+  # to customize
+  #
+  #
+  # handle_mapping_errors(context, index_step) do
+  #    all_sorts_of_stuff # that will have errors logged
+  # end
+  protected def handle_mapping_errors(context)
+    begin
+      yield
+    rescue StandardError => e
+      error_handler = settings["mapping_rescue"] || default_mapping_rescue
+      error_handler.call(context, e)
     end
   end
 
