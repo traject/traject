@@ -115,7 +115,9 @@ module Traject
     # @returns [HTTP::Client] from http.rb gem
     def http_client
       @http_client ||= begin
-        client = HTTP.timeout(:global, write: timeout, connect: timeout, read: timeout)
+        # timeout setting on http.rb seems to be a mess.
+        # https://github.com/httprb/http/issues/488
+        client = HTTP.timeout(global: timeout, write: timeout / 3, connect: timeout / 3, read: timeout / 3)
 
         if settings["oai_pmh.try_gzip"]
           client = client.use(:auto_inflate).headers("accept-encoding" => "gzip;q=1.0, identity;q=0.5")
