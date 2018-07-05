@@ -24,6 +24,8 @@
 
 * traject command line can now take multiple input files. And underlying it, Traject::Indexer#process can take an array of input streams.
 
+* new setting `mapping_rescue` is available, to supply custom logic for handling errors. See docs at [settings.md](../doc/settings.md)
+
 * `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
 
       to_field ["field1", "field2"], extract_marc("240")
