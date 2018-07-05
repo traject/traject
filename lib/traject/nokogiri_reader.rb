@@ -4,6 +4,9 @@ module Traject
   #
   # It does process the entire input document with Nokogiri::XML.parse, DOM-parsing,
   # so will take RAM for the entire input document, until iteration completes.
+  # (There is a separate half-finished `ExperimentalStreamingNokogiriReader` available, but it is
+  # experimental, half-finished, may disappear or change in backwards compat at any time, problematic,
+  # not recommended for production use, etc.)
   #
   # You can have it yield the _entire_ input XML as a single traject source record
   # (default), or you can use setting `nokogiri.each_record_xpath` to split

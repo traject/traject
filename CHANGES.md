@@ -24,6 +24,8 @@
 
 * traject command line can now take multiple input files. And underlying it, Traject::Indexer#process can take an array of input streams.
 
+* There is now a built-in mode for XML source records, see docs at [xml.md](./doc/xml.md)
+
 * `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
 
       to_field ["field1", "field2"], extract_marc("240")

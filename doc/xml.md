@@ -115,10 +115,20 @@ This is somewhat experimental, please let us know if you find it useful, or find
 See header comment doc on Traject::OaiPmhReader for more info.
 
 
-## JRuby: Performance not great
+## Performance, and JRuby
+
+The current NokogiriReader reads the input with the DOM parser, `Nokogiri::XML.parse`. So will require memory proportional to size of input documents.
+
+I experimented with streaming parsers and spent quite a few hours on it, but couldn't quite get it there in a way that made sense and had good performance.
+
+The NokogiriReader parser should be relatively performant though, allowing you to process hundreds of records per second in MRI.
+
+(There is a half-finished `ExperimentalStreamingNokogiriReader` available, but it is experimental, half-finished, may disappear or change in backwards compat at any time, problematic, not recommended for production use, etc.)
+
+### Jruby
 
 It may be that nokogiri JRuby is just much slower than nokogiri MRI (at least when namespaces are involved?)  It may be that our workaround to a [JRuby bug involving namespaces on moving nodes](https://github.com/sparklemotion/nokogiri/issues/1774) doesn't help.
 
 For whatever reason, in a simple test involving OAI-PMH schema-ed data, running under JRuby processes records only about 30% as quickly as running under MRI.
 
-JRuby is not recommended for XML use of traject at present.
+**JRuby is not recommended for XML use of traject at present.**
