@@ -96,7 +96,8 @@ module Traject
       #     to_field "main_author", extract_marc("100"), first_only
       def first_only
         lambda do |rec, acc|
-          acc.replace Array(acc[0])
+          # kind of esoteric, but slice used this way does mutating first, yep
+          acc.slice!(1, acc.length)
         end
       end
 
