@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "httpclient", "~> 2.5"
   spec.add_dependency "http", "~> 3.0" # used in oai_pmh_reader, may use more extensively in future instead of httpclient
   spec.add_dependency 'marc-fastxmlwriter', '~>1.0' # fast marc->xml
+  spec.add_dependency "nokogiri", "~> 1.0" # NokogiriIndexer
 
   # If we're building the package under JRuby, add in the
   # jruby-only gems and specify the platform.
