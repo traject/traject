@@ -267,13 +267,8 @@ class Traject::SolrJsonWriter
       raise ArgumentError.new("#{self.class.name} setting `solr.url` doesn't look like a URL: `#{url}`")
     end
 
-    # First, try the /update/json handler
-    candidate = [url.chomp('/'), 'update', 'json'].join('/')
-    resp      = @http_client.get(candidate, {"commit" => 'true'})
-    if resp.status == 404
-      candidate = [url.chomp('/'), 'update'].join('/')
-    end
-    candidate
+    # Assume the /update/json handler
+    return [url.chomp('/'), 'update', 'json'].join('/')
   end
 
 

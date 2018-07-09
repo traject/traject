@@ -15,6 +15,8 @@
 
 * Traject::Indexer::Settings no longer has it's own global defaults, Instead it can be given a set of defaults with #with_defaults, usually right after instantiation. To support different defaults for different Indexers.
 
+* SolrJsonWriter now assumes an /update/json convenience url is available in solr instead of trying to verify it.  If you are using an older Solr (before 4?) or otherwise want a different update url, just use setting `solr.update_url`
+
 
 ### Added
 
