@@ -26,6 +26,8 @@
 
 * traject command line can now take multiple input files. And underlying it, Traject::Indexer#process can take an array of input streams.
 
+* There is now a built-in mode for XML source records, see docs at [xml.md](./doc/xml.md)
+
 * new setting `mapping_rescue` is available, to supply custom logic for handling errors. See docs at [settings.md](../doc/settings.md)
 
 * `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
@@ -68,6 +70,8 @@
 * `Traject::SolrJsonWriter#flush`, flush to solr without closing, may be useful for direct programmatic use.
 
 * Traject::Indexer sub-classes can implement a #source_record_id_proc, which is passed to Context, for source-format-specific logic for getting an ID to use in logging.
+
+* command line takes an `-i` flag for choice of indexer.
 
 ## 2.3.4
   * Totally internal change to provide easier hooks into indexing process

@@ -19,6 +19,12 @@ module Traject
     attr_accessor :indexer
     attr_accessor :console
 
+    @@indexer_class_shortcuts = {
+      "basic" => "Traject::Indexer",
+      "marc"  => "Traject::Indexer::MarcIndexer",
+      "xml"   => "Traject::Indexer::NokogiriIndexer"
+    }
+
     def initialize(argv=ARGV)
       self.console = $stderr
 
@@ -236,6 +242,7 @@ module Traject
         on 'd', 'debug', "Include debug log, -s log.level=debug"
         on 'h', 'help', "print usage information to stderr"
         on 'c', 'conf', 'configuration file path (repeatable)', :argument => true, :as => Array
+        on :i, 'indexer', "Traject indexer class name or shortcut", :argument => true, default: "marc"
         on :s, :setting, "settings: `-s key=value` (repeatable)", :argument => true, :as => Array
         on :r, :reader, "Set reader class, shortcut for -s reader_class_name=", :argument => true
         on :o, "output_file", "output file for Writer classes that write to files", :argument => true
@@ -252,9 +259,10 @@ module Traject
     end
 
     def initialize_indexer!
-      # for now use MarcIndexer, soon we will add a command line switch, but will still
-      # default to MarcIndexer for backwards compat.
-      indexer = Traject::Indexer::MarcIndexer.new self.assemble_settings_hash(self.options)
+      indexer_class_name = @@indexer_class_shortcuts[options[:indexer]] || options[:indexer]
+      klass = Traject::Indexer.qualified_const_get(indexer_class_name)
+
+      indexer = klass.new self.assemble_settings_hash(self.options)
       load_configuration_files!(indexer, options[:conf])
 
       return indexer

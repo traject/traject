@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :development do
-  gem "nokogiri" # used only for rake tasks load_maps:
+  gem "webmock", "~> 3.4"
 end
 
 group :debug do

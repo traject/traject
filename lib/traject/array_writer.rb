@@ -16,7 +16,7 @@ module Traject
   class ArrayWriter
     attr_reader :values, :contexts
 
-    def initialize
+    def initialize(_settings = nil)
       @values = Concurrent::Array.new
       @contexts = Concurrent::Array.new
     end
