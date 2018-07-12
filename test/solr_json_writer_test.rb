@@ -212,21 +212,4 @@ describe "Traject::SolrJsonWriter" do
       end
     end
   end
-
-  describe "auto-discovers proper update path" do
-    it "finds /update/json" do
-      assert_equal "http://example.com/solr/update/json", @writer.determine_solr_update_url
-    end
-
-    it "resorts to plain /update" do
-      @fake_http_client = FakeHTTPClient.new
-      @fake_http_client.allow_update_json_path = false
-
-      @writer = create_writer("solr.url" => "http://example.com/solr",
-        "solr_json_writer.http_client" => @fake_http_client)
-
-      assert_equal "http://example.com/solr/update", @writer.determine_solr_update_url
-    end
-  end
-
 end

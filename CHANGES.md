@@ -15,6 +15,8 @@
 
 * Traject::Indexer::Settings no longer has it's own global defaults, Instead it can be given a set of defaults with #with_defaults, usually right after instantiation. To support different defaults for different Indexers.
 
+* SolrJsonWriter now assumes an /update/json convenience url is available in solr instead of trying to verify it.  If you are using an older Solr (before 4?) or otherwise want a different update url, just use setting `solr.update_url`
+
 
 ### Added
 
@@ -25,6 +27,8 @@
 * traject command line can now take multiple input files. And underlying it, Traject::Indexer#process can take an array of input streams.
 
 * There is now a built-in mode for XML source records, see docs at [xml.md](./doc/xml.md)
+
+* new setting `mapping_rescue` is available, to supply custom logic for handling errors. See docs at [settings.md](../doc/settings.md)
 
 * `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
 

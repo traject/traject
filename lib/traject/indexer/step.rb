@@ -125,7 +125,7 @@ class Traject::Indexer
 
     # Override inspect for developer debug messages
     def inspect
-      "(to_field #{self.field_name} at #{self.source_location})"
+      "(to_field #{self.field_name.inspect} at #{self.source_location})"
     end
 
     def execute(context)
