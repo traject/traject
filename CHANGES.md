@@ -30,6 +30,8 @@
 
 * new setting `mapping_rescue` is available, to supply custom logic for handling errors. See docs at [settings.md](../doc/settings.md)
 
+* Call Traject::ThreadPool.disable_concurrency! to force all pool sizes to be 0, and work to be performed inline. All threading will be disabled.
+
 * `to_field` can now take an array as a first argument, to send values to multiple fields mentioned, eg:
 
       to_field ["field1", "field2"], extract_marc("240")
