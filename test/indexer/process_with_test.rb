@@ -101,7 +101,7 @@ describe "Traject::Indexer#process_with" do
           }
         end
 
-        writer = indexer.process_with(input_records, array_writer, rescue_with: rescue_lambda)
+        _writer = indexer.process_with(input_records, array_writer, rescue_with: rescue_lambda)
 
         # not including the one that raised
         assert_equal 2, array_writer.contexts.length

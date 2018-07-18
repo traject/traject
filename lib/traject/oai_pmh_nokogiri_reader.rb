@@ -153,9 +153,6 @@ module Traject
       reader.each { |d| yield d }
 
       return reader.clipboard[:resumption_token]
-    rescue RuntimeError => e
-      byebug
-      1+1
     end
 
   end
