@@ -46,7 +46,7 @@ describe 'Simple output' do
         "record_num_1 title #{@title}",
     ]
     assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
-    assert_match /At least one record \(<record #1>\) doesn't define field 'id'/, logger_strio.string
+    assert_match(/At least one record \(<record #1>\) doesn't define field 'id'/, logger_strio.string)
     @writer.close
 
   end
@@ -68,7 +68,7 @@ describe 'Simple output' do
         "record_num_1 title #{@title}",
     ]
     assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
-    assert_match /At least one record \(<record #1, output_id:2710183>\) doesn't define field 'iden'/, logger_strio.string
+    assert_match(/At least one record \(<record #1, output_id:2710183>\) doesn't define field 'iden'/, logger_strio.string)
     writer.close
 
   end

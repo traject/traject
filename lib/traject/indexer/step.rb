@@ -30,15 +30,15 @@ class Traject::Indexer
     # Set the arity of the lambda expression just once, when we define it
     def lambda=(lam)
       @lambda_arity = 0 # assume
+      @lambda = lam
+
       return unless lam
 
-      @lambda = lam
       if @lambda.is_a?(Proc)
         @lambda_arity = @lambda.arity
       else
         raise NamingError.new("argument to each_record must be a block/lambda, not a #{lam.class} #{self.inspect}")
       end
-
     end
 
     # raises if bad data

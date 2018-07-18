@@ -177,6 +177,7 @@ class Traject::Indexer
   # optionally takes a block which is instance_eval'd in the indexer,
   # intended for configuration simimlar to what would be in a config file.
   def initialize(arg_settings = {}, &block)
+    @writer_class           = nil
     @completed              = false
     @settings               = Settings.new(arg_settings).with_defaults(self.class.default_settings)
     @index_steps            = []
@@ -242,7 +243,7 @@ class Traject::Indexer
   def settings(new_settings = nil, &block)
     @settings.merge!(new_settings) if new_settings
 
-    @settings.instance_eval &block if block_given?
+    @settings.instance_eval(&block) if block_given?
 
     return @settings
   end
@@ -557,12 +558,12 @@ class Traject::Indexer
         # We pass context in a block arg to properly 'capture' it, so
         # we don't accidentally share the local var under closure between
         # threads.
-        thread_pool.maybe_in_thread_pool(context) do |context|
-          map_to_context!(context)
+        thread_pool.maybe_in_thread_pool(context) do |t_context|
+          map_to_context!(t_context)
           if context.skip?
-            log_skip(context)
+            log_skip(t_context)
           else
-            writer.put context
+            writer.put t_context
           end
         end
       end
