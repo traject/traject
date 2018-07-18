@@ -16,7 +16,7 @@ Note that keys passed in as an initializer arg will "override" any settings set 
 
 ## Configuring an indexer
 
-Under standard use, a traject indexer is configured with mapping rules and other settings in a standalone configuration file. You can still do this with programmatic use if desired:
+Under standard use, a traject indexer is configured with mapping rules and other settings in a standalone configuration file. You can do this programmatically with `load_config_file`:
 
 ```ruby
 indexer.load_config_file(path_to_config)
@@ -24,7 +24,7 @@ indexer.load_config_file(path_to_config)
 
 This can be convenient for config files you can use either from the command line, or programmatically. Or for allowing other staff roles to write config files separately. You can call `load_config_file` multiple times, and order may matter -- exactly the same as command line configuration files.
 
-Alternately, you may instead want to do your configuration inline, using `configure` (which just does an `instance_eval`, but is encourage for clarity and forwards-compatibility:
+Alternately, you may instead want to do your configuration inline, using `configure` (which just does an `instance_eval`, but is encouraged for clarity and forwards-compatibility:
 
 ```ruby
 indexer.configure do
@@ -54,11 +54,11 @@ end
 
 The standard command-line traject uses the `Indexer#process(io_stream)` method to invoke processing. While you can use this method programmatically, it makes some assumptions that may make it inconvenient for programmatic use:
 
-* It automatically instantiates a reader and writer, and the reader and writer may not be safe to use more than once, so you can't call #process more than once for a given indexer instance.
+* It automatically instantiates a reader and writer, and the reader and writer may not be safe to use more than once, so you can't call #process more than once for a given indexer instance. This also means you can't call it concurrently on the same indexer.
 
 * It is optimized for millions+ records, for instance by default it uses internal threads, which you probably don't want -- and which can cause deadlock in some circumstances in a Rails5 app. You an set `processing_thread_pool` setting to `0` to ensure no additional threads created by indexer, but depending on the reader and writer involved, they may still be creating threads.
 
-* It has what is probably excessive logging (and in some cases progress-bar output), assuming use as a batch standalone job.
+* It has what is probably excessive logging (and in some cases progress-bar output), assuming use as standalone command-line execution.
 
 * It runs all `after_processing` steps, which you may not want in a few-records-at-a-time programmatic context.
 
@@ -91,6 +91,8 @@ This method can be thought of as sending a single record through the indexer's p
 indexer << source_record
 ```
 
+`process_record` should be safe to call concurrently on an indexer shared between threads -- so long as the configured writer is thread-safe, which all built-in writers are.
+
 You can (and may want/need to) manually call `indexer.complete` to run after_processing steps, and
 close/flush the writer.  After calling `complete`, the indexer can not be re-used for more `process_record` calls, as the writer has been closed.
 
@@ -98,11 +100,11 @@ close/flush the writer.  After calling `complete`, the indexer can not be re-use
 
 `process_with` is sort of a swiss-army-knife of processing records with a Traject::Indexer.
 
-You supply it with a reader and writer every time you call it, it does not use the instance-configured reader and writer. This means you can call it as many times as you want with the same indexer (as readers and writers are not always re-usable, and may not be safe to share between threads/invocations).
+You supply it with a reader and writer every time you call it, it does not use the instance-configured reader and writer. This means you can call it as many times as you want with the same indexer (as readers and writers are not always re-usable, and may not be safe to share between threads/invocations). `process_with` is also safe to call concurrently on an indexer shared between threads.
 
 Since a ruby Array of source methods counts as a Traject "reader" (it has an `each` yielding records), you can simply pass it an array of input.  You can use the Traject::ArrayWriter as a "writer", which simply accumulates output Traject::Indexer::Contexts in memory. Or you can pass `process_with` a block instead of (or inaddition to!) a passed writer arg, as a sort of inline writer. The block will recieve one arg, a Context.
 
-`process_with` does no logging, and does no concurrency (although be careful if you are using a pre-existing Writer that may do it's own threaded concurrency). It's a building block you can build whatever you like with.
+`process_with` does no logging, and does no concurrency (although the writer you are using may use multiple threads itself internally). It's a building block you can build whatever you like with.
 
 
 ```ruby
@@ -118,11 +120,24 @@ indexer.process_with([source_record, other_record]) do |context|
 end
 ```
 
-By default, any exceptions raised in processing are simply raised -- terminating processing -- for you to rescue and deal with as you like. Instead, you can provide a `rescue_with` argument with a proc/lambda that will be triggered on an exception processing a record. The proc will be passed two args, the Traject::Indexer::Context and the exception. You can choose to re-raise the exception or any other, or swallow it, or process it however you like.  If you do not raise, the indexer will continue processing subsequent records.
+By default, any exceptions raised in processing are simply raised -- terminating processing -- for you to rescue and deal with as you like. Instead, you can provide a `rescue_with` argument with a proc/lambda that will be triggered on an exception processing a record. The proc will be passed two args, the Traject::Indexer::Context and the exception. You can choose to re-raise the original exception or any other, or swallow it, or process it however you like.  If you do not raise, the indexer will continue processing subsequent records.
 
 Skipped records are skipped, but you can hook into them with a `on_skipped` proc arg.
 
+```ruby
+indexer.process_with([record1, record2, record3],
+                     Traject::ArrayWriter.new,
+                     on_skipped: proc do |context|
+                       puts "Skipped: #{context.record_inspect}"
+                     end,
+                     rescue_with: proc do |context, exception|
+                      puts "Error #{exception} in #{context.record_inspect}, continuing to process more"
+                     end)
+```
+
 `process_with` will *not* call any `after_processing` steps. Call them yourself if and when you want with `indexer.run_after_processing_steps`.
+
+Some writers have a `close` method to finalize/flush output. `process_with` will not call it, you can call `writer.close` yourself -- after calling `close` on a writer, it can generally not be re-used.
 
 ## Indexer performance, re-use, and concurrency
 
@@ -136,11 +151,11 @@ You may want to consider instead creating one or more configured "global" indexe
 
 ### Concurrency concerns
 
-* Your indexing rules should generally be thread-safe, unless you've done something odd mutating state outside of what was passed in in the args, in the indexing rule.
+* Indexing rules must be thread-safe. They generally will be naturally, but if you are refering to external state, you have to use thread-safe data structures. [concurrent-ruby](https://github.com/ruby-concurrency/concurrent-ruby), which is already a dependency of traject, has a variety of useful thread-safe and concurrent data structures.
 
-* The built-in Writers should be thread-safe for concurrent uses of `put`, which is what matters for the API above. The SolrJsonWriter qualifies.
+* Writers should be written in a thread-safe manner, assuming concurrent calls to `put`. The built-in Writers all should be. If you are writing a custom Writer, you should ensure it is thread-safe for concurrent calls to `put`.
 
-* Readers, and the Indexer#process method, are not thread-safe. So you will want to use `process_record`, `map_record`, or `process_with` as above, instead of an indexer-instance-configured Reader and #process.
+* Readers, and the Indexer#process method, are not thread-safe. Which is why using Indexer#process, which uses a fixed reader, is not threads-safe, and why when sharing a global idnexer we want to use `process_record`, `map_record`, or `process_with` as above.
 
 ### An example
 
@@ -150,11 +165,11 @@ For the simplest case, we want to turn off all built-in traject concurrency in a
 $traject_indexer = Traject::Indexer.new(
   # disable Indexer processing thread pool, to keep things simple and not interfering with Rails.
   "processing_thread_pool" => 0,
+  "solr_writer.thread_pool" => 0, # writing to solr is done inline, no threads
 
   "solr.url" => "http://whatever",
   "writer_class" => "SolrJsonWriter",
   "solr_writer.batch_size" => 1, #send to solr for each record, no batching
-  "solr_writer.thread_pool" => 0, # writing to solr is done inline, no threads
 ) do
   load_config_file("whatever/config.rb")
 end
@@ -163,6 +178,7 @@ end
 
 $traject_indexer << source_record
 ```
+
 `<<` is an alias for `process_record`. Above will take the source record, process it, and send it to the writer -- which has been configured to immediately send the `add` to solr. All of this will be done in the caller thread, with no additional threads used.
 
 If you'd like the indexing operation to be 'async' from wherever you are calling it (say, a model save), you may want to use your own concurrency/async logic (say a Concurrent::Future, or an ActiveJob) to execute the `$traject_indexer << source_record` -- no problem. We above disable concurrency inside of Traject so you can do whatever you want at your application layer instead.
@@ -181,3 +197,20 @@ end
 
 For instance, [Sunspot](https://github.com/sunspot/sunspot) does some [fancy stuff](https://github.com/sunspot/sunspot/blob/0cfa5d2a27cac383127233b846e6fed63db1dcbc/sunspot/lib/sunspot/batcher.rb) to try and batch Solr adds within a given bounded context. Perhaps something similar could be done on top of traject API if needed.
 
+### Rails concerns, and disabling concurrency
+
+Rails will auto-load and re-load classes in typical development configuration. Rails 5 for the first time made dev-mode auto/re-loading concurrency safe, but at the cost of requiring _all_ code using threads to use Rails-specific APIs, or risk deadlock.
+
+This makes things difficult for re-using non-rails-specific code that uses concurrency -- such as traject -- in a rails project.
+
+For more information see the Rails guide on [Threading and code execution](http://guides.rubyonrails.org/threading_and_code_execution.html), and [this issue on concurrent-ruby](https://github.com/ruby-concurrency/concurrent-ruby/issues/585).
+
+If you are using traject within Rails, and you have default dev-mode class auto/re-loading turned on, you may find that the execution locks up in a deadlock, involving Rails auto-loading.
+
+One solution would be turning off Rails class reloading even in development, with `config.eager_loading = true` and `config.config.cache_classes = true`.
+
+Another solution would be disabling all concurrency in Traject. You can do this with traject settings, but multiple settings may be required as different parts of traject each can use concurrency. For instance, as above, you need to set both `processing_thread_pool` and `solr_writer.thread_pool` to 0.
+
+Alternately, you can call `Traject::ThreadPool.disable_concurrency!` -- this disables all multi-threaded concurrency in traject, process-wide and irrevocably.  This can also be useful for temporary debugging.
+
+We may in the future explore making traject automatically use Rails concurrency API so concurrency can just work in Rails too, but it's a bit of a mess.
