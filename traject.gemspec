@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version  = Traject::VERSION
   spec.authors  = ["Jonathan Rochkind", "Bill Dueber"]
   spec.email    = ["none@nowhere.org"]
-  spec.summary  = %q{Index MARC to Solr; or generally process source records to hash-like structures}
+  spec.summary  = %q{An easy to use, high-performance, flexible and extensible metadata transformation system, focused on library-archives-museums input, and indexing to Solr as output.}
   spec.homepage = "http://github.com/traject/traject"
   spec.license  = "MIT"
 

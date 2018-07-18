@@ -11,8 +11,8 @@ module Traject::Macros
   # def specific to Marc21.
   module Marc21
 
-    # A combo function macro that will extract data from marc according to a string
-    # field/substring specification, then apply various optional post-processing to it too.
+    # A macro that will extract data from marc according to a string
+    # field/substring specification.
     #
     # First argument is a string spec suitable for the MarcExtractor, see
     # MarcExtractor::parse_string_spec.
@@ -20,25 +20,42 @@ module Traject::Macros
     # Second arg is optional options, including options valid on MarcExtractor.new,
     # and others. By default, will de-duplicate results, but see :allow_duplicates
     #
-    # * :first => true: take only first value
-    #
-    # * :translation_map => String: translate with named translation map looked up in load
-    #       path, uses Tranject::TranslationMap.new(translation_map_arg)
-    #
-    # * :trim_punctuation => true; trims leading/trailing punctuation using standard algorithms that
-    #     have shown themselves useful with Marc, using Marc21.trim_punctuation
-    #
-    # * :default => String: if otherwise empty, add default value
     #
     # * :allow_duplicates => boolean, default false, if set to true then will avoid
     #       de-duplicating the result array (array.uniq!)
     #
+    # * :separator: (default ' ' (space)), what to use when joining multiple subfield matches from
+    #   same field. Set to `nil` to leave them as separate values (which is actually default if only
+    #   one subfield is given in spec, like `100a`). See MarcExtractor docs for more info.
+    #
+    # * :alternate_script: (default true). True, automatically include
+    #   'alternate script' MARC 880 linked fields corresponding to matched specifications. `false`, do
+    #   not include.  `:only` include _only_ linked 880s corresponding to spec, not base tags.
+    #
+    # ## Soft-Deprecated options: post-processing transformations
+    #
+    # These don't produce a deprecation warning and there is no planned horizon for them to go away, but the
+    # alternative of using additional transformation macros (from Traject::Macros::Transformation) composed with
+    # extract_marc is recommended.
+    #
+    # * :first => true: take only first value. **Instead**, use `extract_marc(whatever), first_only`
+    #
+    # * :translation_map => String: translate with named translation map looked up in load
+    #       path, uses Tranject::TranslationMap.new(translation_map_arg).
+    #       **Instead**, use `extract_marc(whatever), translation_map(translation_map_arg)
+    #
+    # * :trim_punctuation => true; trims leading/trailing punctuation using standard algorithms that
+    #     have shown themselves useful with Marc, using Marc21.trim_punctuation. **Instead**, use
+    #    `extract_marc(whatever), trim_punctuation
+    #
+    # * :default => String: if otherwise empty, add default value. **Instead**, use `extract_marc(whatever), default("default value")`
+    #
     #
     # Examples:
     #
-    #     to_field("title"), extract_marc("245abcd", :trim_punctuation => true)
-    #     to_field("id"),    extract_marc("001", :first => true)
-    #     to_field("geo"),   extract_marc("040a", :separator => nil, :translation_map => "marc040")
+    #     to_field("title"), extract_marc("245abcd"), trim_punctuation
+    #     to_field("id"),    extract_marc("001"), first_only
+    #     to_field("geo"),   extract_marc("040a", :separator => nil), translation_map("marc040")
     #
     # If you'd like extract_marc functionality but you're not creating an indexer
     # step, see Traject::Macros::Marc21.extract_marc_from module method.
