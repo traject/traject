@@ -50,11 +50,24 @@ module Traject
   class ThreadPool
     attr_reader :pool_size, :queue_capacity
 
+    @@disable_concurrency = false
+
+    # Calling Traject::ThreadPool.disable_concurrency! permanently and irrevocably (for program execution)
+    # forces all ThreadPools to have a pool_size of 0 -- running all work inline -- so should disable all
+    # use of threads in Traject.
+    def self.disable_concurrency! ;  @@disable_concurrency = true ; end
+    def self.concurrency_disabled? ; @@disable_concurrency ; end
+
     # First arg is pool size, 0 or nil and we'll be a null/no-op pool which executes
     # work in caller thread.
     def initialize(pool_size)
       @thread_pool             = nil # assume we don't have one
       @exceptions_caught_queue = [] # start off without exceptions
+
+      if self.class.concurrency_disabled?
+        pool_size = 0
+      end
+
       unless pool_size.nil? || pool_size == 0
         @pool_size      = pool_size.to_i
         @queue_capacity = pool_size * 3
