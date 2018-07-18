@@ -28,7 +28,7 @@ Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (Univer
 
 ## Installation
 
-Traject runs under jruby (9.0.x or higher), MRI ruby (2.2.x or higher), or probably any other ruby platform.
+Traject runs under jruby (9.0.x or higher), MRI ruby (2.3.x or higher), or probably any other ruby platform.
 
 **Traject runs much faster on JRuby** where it can use multi-core parallelism, and the Java Marc4J marc reader. If performance is a concern, you should run traject on JRuby.
 
