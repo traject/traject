@@ -11,9 +11,9 @@ rvm:
 # avoid having travis install jdk on MRI builds where we don't need it.
 matrix:
   include:
-    - jdk: oraclejdk8
+    - jdk: openjdk8
       rvm: jruby-9.0.5.0
-    - jdk: oraclejdk8
+    - jdk: openjdk8
       rvm: jruby-9.2.0.0
   allow_failures:
     - rvm: "2.6.0-preview2"
