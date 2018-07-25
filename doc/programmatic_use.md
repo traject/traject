@@ -157,6 +157,8 @@ You may want to consider instead creating one or more configured "global" indexe
 
 * Readers, and the Indexer#process method, are not thread-safe. Which is why using Indexer#process, which uses a fixed reader, is not threads-safe, and why when sharing a global idnexer we want to use `process_record`, `map_record`, or `process_with` as above.
 
+It ought to be safe to use a global Indexer concurrently in several threads, with the `map_record`, `process_record` or `process_with` methods -- so long as your indexing rules and writers are thread-safe, as they usually will be and always ought to be. 
+
 ### An example
 
 For the simplest case, we want to turn off all built-in traject concurrency in a "global" indexer we create, and then send records to.
