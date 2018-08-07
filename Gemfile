@@ -12,4 +12,5 @@ group :debug do
   gem "byebug", :platform => "mri"
 end
 
- gem "traject-marc4j_reader", "~> 1.0"
+# No longer in our gemspec, but we need it for testing MARC under JRuby.
+gem "traject-marc4j_reader", "~> 1.0"
