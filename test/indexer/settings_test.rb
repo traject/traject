@@ -142,11 +142,11 @@ describe "Traject::Indexer#settings" do
 
     # This next one has the added effect of making sure the correct class
     # has actually been loaded -- otherwise the constant wouldn't be available
-    it "has the correct default indexer class based on platform" do
+    it "has the correct default reader class based on platform" do
       if defined? JRUBY_VERSION
-        assert_equal Traject::Marc4JReader, @indexer.reader_class
+        assert_equal "Traject::Marc4JReader", @indexer.reader_class.name
       else
-        assert_equal Traject::MarcReader, @indexer.reader_class
+        assert_equal "Traject::MarcReader", @indexer.reader_class.name
       end
     end
   end
