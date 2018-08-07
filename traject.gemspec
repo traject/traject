@@ -32,16 +32,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'marc-fastxmlwriter', '~>1.0' # fast marc->xml
   spec.add_dependency "nokogiri", "~> 1.0" # NokogiriIndexer
 
-  # If we're building the package under JRuby, add in the
-  # jruby-only gems and specify the platform.
-
-  if defined? JRUBY_VERSION
-    spec.platform = 'java'
-    spec.add_dependency "traject-marc4j_reader", "~> 1.0"
-  else
-    spec.platform = "ruby"
-  end
-
   spec.add_development_dependency "bundler", '~> 1.7'
 
   spec.add_development_dependency "rake"

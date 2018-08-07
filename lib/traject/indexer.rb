@@ -19,9 +19,6 @@ require 'traject/macros/transformation'
 
 require 'traject/indexer/marc_indexer'
 
-if defined? JRUBY_VERSION
-  require 'traject/marc4j_reader'
-end
 
 # This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output

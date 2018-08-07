@@ -11,3 +11,5 @@ group :debug do
   gem "ruby-debug", :platform => "jruby"
   gem "byebug", :platform => "mri"
 end
+
+ gem "traject-marc4j_reader", "~> 1.0"
