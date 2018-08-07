@@ -6,6 +6,8 @@
 
 * Placeholder
 
+* JRuby traject no longer includes `traject-marc4j_reader`, as a dependency, but the `Traject::Marc4JReader` contained there is still the JRuby MARC reading default. You will need to install that gem yourself, or add it to your Gemfile. See https://github.com/traject/traject/pull/187
+
 * `map_record` now returns `nil` if record was skipped.
 
 * The `Traject::Indexer` class no longer includes marc-specific settings and modules.

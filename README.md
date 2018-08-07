@@ -34,6 +34,8 @@ Some options for installing a ruby other than your system-provided one are [chru
 
 Once you have ruby, just `$ gem install traject`.
 
+**If you are using JRuby _and_ MARC processing**, also `$ gem install 'traject-marc4j_reader'`, to install the JRuby MARC reader used as default for MARC reading under JRuby.
+
 ## Configuration files
 
 traject is configured using configuration files. To get a sense of what they look like, you can take a look at our sample basic [MARC configuration file](./test/test_support/demo_config.rb) or [XML configuration file](./test/test_support/nokogiri_demo_config.rb). You could run traject with that configuration file as: `traject -c path/to/demo_config.rb marc_file.marc`.
