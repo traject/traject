@@ -297,17 +297,11 @@ class Traject::Indexer
     # include legacy Marc macros
     include Traject::Macros::Marc21
 
-    # alter default settings to be legacy including marc-specific
-    is_jruby = defined?(JRUBY_VERSION)
-
     # Reader defaults
     legacy_settings = {
-      "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
+      "reader_class_name"       => "Traject::MarcReader",
       "marc_source.type"        => "binary",
     }
-    if is_jruby
-      legacy_settings["marc4j_reader.permissive"] = true
-    end
 
     default_settings.merge!(legacy_settings)
 
@@ -721,21 +715,6 @@ class Traject::Indexer
   def reader_class
     unless defined? @reader_class
       reader_class_name = settings["reader_class_name"]
-
-      if reader_class_name == "Traject::Marc4JReader"
-        # special handling since this is JRuby MARC default, but is in another gem.
-        # It used to be a dependency of traject in Jruby, but isn't anymore, so we treat it
-        # extra-special gently in part for legacy reasons.
-        begin
-          require 'traject/marc4j_reader'
-        rescue LoadError => e
-          if e.path == 'traject/marc4j_reader'
-            raise ArgumentError.new("Trying to use 'Traject::Marc4JReader' as reader_class_name, but it is not available. Please install the 'traject-marc4j_reader' gem, or add it to your Gemfile.")
-          else
-            raise e
-          end
-        end
-      end
 
       @reader_class = qualified_const_get(reader_class_name)
     end

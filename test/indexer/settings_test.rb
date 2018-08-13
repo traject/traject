@@ -127,30 +127,6 @@ describe "Traject::Indexer#settings" do
     end
   end
 
-  describe "JRuby / MRI" do
-    before do
-      @indexer = Traject::Indexer::MarcIndexer.new
-    end
-
-    it "has the right indexer name" do
-      if defined? JRUBY_VERSION
-        assert_equal "Traject::Marc4JReader", @indexer.settings['reader_class_name']
-      else
-        assert_equal "Traject::MarcReader", @indexer.settings['reader_class_name']
-      end
-    end
-
-    # This next one has the added effect of making sure the correct class
-    # has actually been loaded -- otherwise the constant wouldn't be available
-    it "has the correct default reader class based on platform" do
-      if defined? JRUBY_VERSION
-        assert_equal "Traject::Marc4JReader", @indexer.reader_class.name
-      else
-        assert_equal "Traject::MarcReader", @indexer.reader_class.name
-      end
-    end
-  end
-
   describe "order of precedence" do
     it "args beat 'provides'" do
       # args come from command-line in typical use
