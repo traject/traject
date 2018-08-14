@@ -7,15 +7,10 @@ module Traject
 
       def self.default_settings
         @default_settings ||= begin
-          is_jruby = defined?(JRUBY_VERSION)
-
           marc_settings = {
-            "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
+            "reader_class_name"       => "Traject::MarcReader",
             "marc_source.type"        => "binary",
           }
-          if is_jruby
-            marc_settings["marc4j_reader.permissive"] = true
-          end
           super.merge(marc_settings)
         end
       end

@@ -28,7 +28,7 @@ settings are applied first of all. It's recommended you use `provide`.
 
 ### Reading (general)
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records.   Defaults to Traject::Marc4JReader (using the Java Marc4J library) on JRuby; Traject::MarcReader (using the ruby marc gem) otherwise. Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records.   Defaults is reader-specific: Traject::MarcReader (using the ruby marc gem) or Traject::NokogiriReader.Command-line shortcut `-r`
 
 ### Error handling
 
