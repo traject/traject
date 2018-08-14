@@ -57,7 +57,7 @@ describe "TranslationMap" do
 
     it "raises on syntax error in yaml" do
       exception = assert_raises(Psych::SyntaxError) do
-        found = @cache.lookup("bad_yaml")
+        _found = @cache.lookup("bad_yaml")
       end
 
       assert  exception.message.include?("bad_yaml.yaml"), "exception message includes source file"
@@ -65,7 +65,7 @@ describe "TranslationMap" do
 
     it "raises on syntax error in ruby" do
       exception = assert_raises(SyntaxError) do
-        found = @cache.lookup("bad_ruby")
+        _found = @cache.lookup("bad_ruby")
       end
       assert  exception.message.include?("bad_ruby.rb"), "exception message includes source file"
     end
@@ -118,7 +118,7 @@ describe "TranslationMap" do
 
     assert_equal "DEFAULT LITERAL", map["not in the map"]
   end
-  
+
   it "respects __default__ __passthrough__" do
     map = Traject::TranslationMap.new("default_passthrough")
 

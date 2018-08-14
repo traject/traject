@@ -15,7 +15,7 @@ describe "serialized_marc" do
   end
 
   it "serializes xml" do
-    @indexer.instance_eval do
+    @indexer.configure do
       to_field "marc_record", serialized_marc(:format => "xml")
     end
     output = @indexer.map_record(@record)
@@ -27,7 +27,7 @@ describe "serialized_marc" do
   end
 
   it "serializes binary UUEncoded" do
-    @indexer.instance_eval do
+    @indexer.configure do
       to_field "marc_record", serialized_marc(:format => "binary")
     end
     output = @indexer.map_record(@record)
@@ -42,7 +42,7 @@ describe "serialized_marc" do
   end
 
   it "serializes binary raw" do
-    @indexer.instance_eval do
+    @indexer.configure do
       to_field "marc_record", serialized_marc(:format => "binary", :binary_escape => false)
     end
     output = @indexer.map_record(@record)
@@ -55,7 +55,7 @@ describe "serialized_marc" do
   end
 
   it "serializes json" do
-    @indexer.instance_eval do
+    @indexer.configure do
       to_field "marc_record", serialized_marc(:format => "json")
     end
     output = @indexer.map_record(@record)

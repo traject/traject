@@ -1,6 +1,8 @@
 # Represents the context of a specific record being indexed, passed
 # to indexing logic blocks
 #
+# Arg source_record_id_proc is a lambda that takes one arg (indexer-specific source record),
+# and returns an ID for it suitable for use in log messages.
 class Traject::Indexer
   class Context
     def initialize(hash_init = {})
@@ -17,9 +19,13 @@ class Traject::Indexer
     end
 
     attr_accessor :clipboard, :output_hash, :logger
-    attr_accessor :index_step, :source_record, :settings
-    # 1-based position in stream of processed records.
+    attr_accessor :index_step, :source_record, :settings, :source_record_id_proc
+    # 'position' is a 1-based position in stream of processed records.
     attr_accessor :position
+    # sometimes we have multiple inputs, input_name describes the current one, and
+    # position_in_input the position of the record in the current input -- both can
+    # sometimes be blanl when we don't know.
+    attr_accessor :input_name, :position_in_input
 
     # Should we be skipping this record?
     attr_accessor :skipmessage
@@ -41,19 +47,39 @@ class Traject::Indexer
     # in output messages, especially since this method may sometimes
     # return empty string if info on record id is not available.
     #
-    # Returns MARC 001, then a slash, then output_hash["id"] -- if both
+    # Returns id from source_record (if we can get it from a source_record_id_proc),
+    # then a slash,then output_hash["id"] -- if both
     # are present. Otherwise may return just one, or even an empty string.
-    #
-    # Likely override this for a future XML or other source format version.
     def source_record_id
-      marc_id   = if self.source_record &&
-          self.source_record.kind_of?(MARC::Record) &&
-          self.source_record['001']
-                    self.source_record['001'].value
-                  end
-      output_id = self.output_hash["id"]
+      source_record_id_proc && source_record_id_proc.call(source_record)
+    end
 
-      return [marc_id, output_id].compact.join("/")
+    # a string label that can be used to refer to a particular record in log messages and
+    # exceptions. Includes various parts depending on what we got.
+    def record_inspect
+      str = "<"
+
+      str << "record ##{position}" if position
+
+      if input_name && position_in_input
+        str << " (#{input_name} ##{position_in_input}), "
+      elsif position
+        str << ", "
+      end
+
+      if source_id = source_record_id
+        str << "source_id:#{source_id} "
+      end
+
+      if output_id = self.output_hash["id"]
+        str << "output_id:#{[output_id].join(',')}"
+      end
+
+      str.chomp!(" ")
+      str.chomp!(",")
+      str << ">"
+
+      str
     end
 
   end

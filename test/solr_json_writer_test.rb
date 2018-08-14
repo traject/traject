@@ -7,8 +7,8 @@ require 'stringio'
 require 'logger'
 
 
-# Some basic tests, using a mocked HTTPClient so we can see what it did -- 
-# these tests do not run against a real solr server at present. 
+# Some basic tests, using a mocked HTTPClient so we can see what it did --
+# these tests do not run against a real solr server at present.
 describe "Traject::SolrJsonWriter" do
 
 
@@ -18,7 +18,7 @@ describe "Traject::SolrJsonWriter" do
 
   class FakeHTTPClient
     # Always reply with this status, normally 200, can
-    # be reset for testing error conditions. 
+    # be reset for testing error conditions.
     attr_accessor :response_status
     attr_accessor :allow_update_json_path
 
@@ -31,7 +31,7 @@ describe "Traject::SolrJsonWriter" do
     end
 
     def post(*args)
-      @mutex.synchronize do 
+      @mutex.synchronize do
         @post_args << args
       end
 
@@ -41,7 +41,7 @@ describe "Traject::SolrJsonWriter" do
       return resp
     end
 
-    def get (*args)
+    def get(*args)
       @mutex.synchronize do
         @get_args << args
       end
@@ -86,7 +86,7 @@ describe "Traject::SolrJsonWriter" do
       }.merge!(settings)
     @fake_http_client = settings["solr_json_writer.http_client"]
 
-    writer = Traject::SolrJsonWriter.new(settings)    
+    writer = Traject::SolrJsonWriter.new(settings)
 
     return writer
   end
@@ -97,7 +97,7 @@ describe "Traject::SolrJsonWriter" do
   # Later check for strio.string for contents
   def logger_to_strio(strio)
     # Yell makes this hard, let's do it with an ordinary logger, think
-    # it's okay. 
+    # it's okay.
     Logger.new(strio)
   end
 
@@ -126,7 +126,7 @@ describe "Traject::SolrJsonWriter" do
     refute_nil post_args[1]
     posted_json = JSON.parse(post_args[1])
 
-    assert_equal [{"id" => "one", "key" => ["value1", "value2"]}], posted_json    
+    assert_equal [{"id" => "one", "key" => ["value1", "value2"]}], posted_json
   end
 
   it "adds more than a batch in batches" do
@@ -142,6 +142,19 @@ describe "Traject::SolrJsonWriter" do
 
     assert_length Traject::SolrJsonWriter::DEFAULT_BATCH_SIZE, JSON.parse(post_args[0][1]), "first batch posted with batch size docs"
     assert_length 1, JSON.parse(post_args[1][1]), "second batch posted with last remaining doc"
+  end
+
+  it "can #flush" do
+    2.times do |i|
+      doc = {"id" => "doc_#{i}", "key" => "value"}
+      @writer.put context_with(doc)
+    end
+
+    assert_length 0, @fake_http_client.post_args, "Hasn't yet written"
+
+    @writer.flush
+
+    assert_length 1, @fake_http_client.post_args, "Has flushed to solr"
   end
 
   it "commits on close when set" do
@@ -171,7 +184,7 @@ describe "Traject::SolrJsonWriter" do
       logged = strio.string
 
       10.times do |i|
-        assert_match /ERROR.*Could not add record doc_#{i} at source file position : Solr error response: 500/, logged
+        assert_match(/ERROR.*Could not add record <output_id:doc_#{i}>: Solr error response: 500/, logged)
       end
     end
 
@@ -193,27 +206,10 @@ describe "Traject::SolrJsonWriter" do
       @writer = create_writer("solr_writer.max_skipped" => 0)
       @fake_http_client.response_status = 500
 
-      e = assert_raises(RuntimeError) do
+      _e = assert_raises(RuntimeError) do
         @writer.put context_with("id" => "doc_1", "key" => "value")
         @writer.close
       end
     end
-  end  
-
-  describe "auto-discovers proper update path" do
-    it "finds /update/json" do
-      assert_equal "http://example.com/solr/update/json", @writer.determine_solr_update_url
-    end
-
-    it "resorts to plain /update" do 
-      @fake_http_client = FakeHTTPClient.new
-      @fake_http_client.allow_update_json_path = false
-
-      @writer = create_writer("solr.url" => "http://example.com/solr", 
-        "solr_json_writer.http_client" => @fake_http_client)
-
-      assert_equal "http://example.com/solr/update", @writer.determine_solr_update_url
-    end
   end
-
 end

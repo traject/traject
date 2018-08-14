@@ -1,12 +1,19 @@
 language: ruby
 cache: bundler
-sudo: false
+# we don't really need `sudo: true`, but for some reason travis docker-based systems are unreliable
+# at downloading jruby, and
+sudo: true
 rvm:
-  - jruby-19mode
-  - jruby-9.0.4.0
-  - 1.9
-  - 2.2.8
-  - 2.3.5
-  - 2.4.2
-jdk:
-  - oraclejdk8
+  - 2.3.6
+  - 2.4.3
+  - 2.5.1
+  - "2.6.0-preview2"
+# avoid having travis install jdk on MRI builds where we don't need it.
+matrix:
+  include:
+    - jdk: openjdk8
+      rvm: jruby-9.0.5.0
+    - jdk: openjdk8
+      rvm: jruby-9.2.0.0
+  allow_failures:
+    - rvm: "2.6.0-preview2"

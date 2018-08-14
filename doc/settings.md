@@ -28,7 +28,34 @@ settings are applied first of all. It's recommended you use `provide`.
 
 ### Reading (general)
 
-* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records.   Defaults to Traject::Marc4JReader (using the Java Marc4J library) on JRuby; Traject::MarcReader (using the ruby marc gem) otherwise. Command-line shortcut `-r`
+* `reader_class_name`: a Traject Reader class, used by the indexer as a source of records.   Defaults is reader-specific: Traject::MarcReader (using the ruby marc gem) or Traject::NokogiriReader.Command-line shortcut `-r`
+
+### Error handling
+
+* `mapping_rescue`: Takes a proc/lambda/callable which accepts two arguments: A Traject::Context, and an exception.  Called if an unexpected error is raised when executing indexing rules. The default when this is unset, is to log and re-raise, which will halt execution. It usually means a bug in your mapping code, that you will want to know about.  See default logic at Traject::Indexer#default_mapping_rescue
+
+  You may instead want to skip the record and continue with indexing, or even conditionally
+  decide which to do. In a custom handler, if you want to halt execution, you should re-raise the
+  exception (or raise another). If you want to skip the record and continue, call `context.skip!`
+  and do not raise.
+
+  The "stabby lambda" syntax is useful for providing a lambda object with proper parsing
+  precedence to not need parentheses.
+
+      error_count = Concurrent::AtomicFixnum.new(0)
+      settings do
+        provide "mapping_rescue", -> (context, exception) {
+          error_count.increment
+          context.logger.error "Encountered exception: #{exception}, total errors #{error_count}"
+          if my_should_skip?(context, exception)
+            context.skip!
+          else
+            raise exception
+          end
+        }
+      end
+
+  At present `mapping_rescue` only handles exceptions in running mapping/indexing logic, unexpected raises in readers or writers may not be caught here.
 
 ### Threads
 

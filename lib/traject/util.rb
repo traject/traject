@@ -60,7 +60,6 @@ module Traject
           if line.start_with?(file_path)
             if m = /\A.*\:(\d+)\:in/.match(line)
               return m[1].to_i
-              break
             end
           end
         end
@@ -116,11 +115,24 @@ module Traject
           result << queue.deq(:raise_if_empty)
         end
       rescue ThreadError
-        # Need do nothing, queue was concurrently popped, no biggie
+        # Need do nothing, queue was concurrently popped, no biggie, but let's
+        # stop iterating and return what we've got.
+        return result
       end
 
       return result
     end
 
+    def self.is_jruby?
+      unless defined?(@is_jruby)
+        @is_jruby = defined?(JRUBY_VERSION)
+      end
+      @is_jruby
+    end
+    # How can we refer to an io object input in logs? For now, if it's a file-like
+    # object, we can use #path.
+    def self.io_name(io_like_object)
+      io_like_object.path if io_like_object.respond_to?(:path)
+    end
   end
 end

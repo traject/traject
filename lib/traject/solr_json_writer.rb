@@ -107,6 +107,18 @@ class Traject::SolrJsonWriter
     end
   end
 
+  # Not part of standard writer API.
+  #
+  # If we are batching adds, and have some not-yet-written ones queued up --
+  # flush em all to solr.
+  #
+  # This should be thread-safe to call, but the write does take place in
+  # the caller's thread, no threading is done for you here, regardless of setting
+  # of solr_writer.thread_pool
+  def flush
+    send_batch( Traject::Util.drain_queue(@batched_queue) )
+  end
+
   # Send the given batch of contexts. If something goes wrong, send
   # them one at a time.
   # @param [Array<Traject::Indexer::Context>] an array of contexts
@@ -149,7 +161,7 @@ class Traject::SolrJsonWriter
       else
         msg = "Solr error response: #{resp.status}: #{resp.body}"
       end
-      logger.error "Could not add record #{c.source_record_id} at source file position #{c.position}: #{msg}"
+      logger.error "Could not add record #{c.record_inspect}: #{msg}"
       logger.debug(c.source_record.to_s)
 
       @skipped_record_incrementer.increment
@@ -255,14 +267,7 @@ class Traject::SolrJsonWriter
       raise ArgumentError.new("#{self.class.name} setting `solr.url` doesn't look like a URL: `#{url}`")
     end
 
-    # First, try the /update/json handler
-    candidate = [url.chomp('/'), 'update', 'json'].join('/')
-    resp      = @http_client.get(candidate)
-    if resp.status == 404
-      candidate = [url.chomp('/'), 'update'].join('/')
-    end
-    candidate
+    # Assume the /update/json handler
+    return [url.chomp('/'), 'update', 'json'].join('/')
   end
-
-
 end

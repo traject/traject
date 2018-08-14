@@ -9,7 +9,7 @@ describe 'Simple output' do
   before do
     @record = MARC::Reader.new(support_file_path  "manufacturing_consent.marc").to_a.first
     @indexer = Traject::Indexer.new
-    @indexer.instance_eval do
+    @indexer.configure do
       to_field "id", extract_marc("001", :first => true)
       to_field "title", extract_marc("245ab")
     end
@@ -46,7 +46,7 @@ describe 'Simple output' do
         "record_num_1 title #{@title}",
     ]
     assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
-    assert_match /At least one record \(\#1\) doesn't define field 'id'/, logger_strio.string
+    assert_match(/At least one record \(<record #1>\) doesn't define field 'id'/, logger_strio.string)
     @writer.close
 
   end
@@ -68,7 +68,7 @@ describe 'Simple output' do
         "record_num_1 title #{@title}",
     ]
     assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
-    assert_match /At least one record \(\#1\) doesn't define field 'iden'/, logger_strio.string
+    assert_match(/At least one record \(<record #1, output_id:2710183>\) doesn't define field 'iden'/, logger_strio.string)
     writer.close
 
   end

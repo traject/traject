@@ -50,13 +50,13 @@ describe "Traject::MarcReader" do
       a245a = array.first['245']['a']
 
       assert a245a.encoding.name, "UTF-8"
-      assert a245a.valid_encoding?    
+      assert a245a.valid_encoding?
       assert_equal "Por uma outra globalização :", a245a
     end
 
     it "replaces unicode character reference in Marc8 transcode" do
       file = File.new(support_file_path("escaped_character_reference.marc8.marc"))
-      
+
       settings = Traject::Indexer::Settings.new("marc_source.encoding" => "MARC-8") # binary type is default
       record = Traject::MarcReader.new(file, settings).to_a.first
 
@@ -67,7 +67,7 @@ describe "Traject::MarcReader" do
       file = File.new(support_file_path "one-marc8.mrc")
       settings = Traject::Indexer::Settings.new("marc_source.encoding" => "ADFADFADF")
       assert_raises(ArgumentError) do
-        record = Traject::MarcReader.new(file, settings).to_a.first
+        _record = Traject::MarcReader.new(file, settings).to_a.first
       end
     end
 
@@ -78,7 +78,7 @@ describe "Traject::MarcReader" do
       reader = Traject::MarcReader.new(file, settings)
 
       record = reader.to_a.first
-      
+
       value = record['300']['a']
 
       assert_equal value.encoding.name, "UTF-8"

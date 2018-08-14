@@ -39,13 +39,13 @@ describe "Delimited/CSV Writers" do
     end
 
     it "outputs a header if asked to" do
-      dw = Traject::DelimitedWriter.new(@settings)
+      Traject::DelimitedWriter.new(@settings)
       @out.string.chomp.must_equal %w[four one two].join("\t")
     end
 
     it "doesn't output a header if asked not to" do
       @settings['delimited_writer.header'] = 'false'
-      dw                                   = Traject::DelimitedWriter.new(@settings)
+      Traject::DelimitedWriter.new(@settings)
       @out.string.must_be_empty
     end
 
@@ -69,7 +69,7 @@ describe "Delimited/CSV Writers" do
     end
 
     it "writes the header" do
-      cw = Traject::CSVWriter.new(@settings)
+      Traject::CSVWriter.new(@settings)
       @out.string.chomp.must_equal 'four,one,two'
     end
 

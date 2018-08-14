@@ -11,14 +11,14 @@ require 'traject/marc_reader'
 require 'traject/json_writer'
 require 'traject/solr_json_writer'
 require 'traject/debug_writer'
-
+require 'traject/array_writer'
 
 require 'traject/macros/marc21'
 require 'traject/macros/basic'
+require 'traject/macros/transformation'
 
-if defined? JRUBY_VERSION
-  require 'traject/marc4j_reader'
-end
+require 'traject/indexer/marc_indexer'
+
 
 # This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output
@@ -157,32 +157,38 @@ end
 # inconveient for you, we'd like to know your use case and improve things.
 #
 class Traject::Indexer
-
-  # Arity error on a passed block
-  class ArityError < ArgumentError;
-  end
-  class NamingError < ArgumentError;
-  end
-
+  CompletedStateError = Class.new(StandardError)
+  ArityError          = Class.new(ArgumentError)
+  NamingError         = Class.new(ArgumentError)
 
   include Traject::QualifiedConstGet
+  extend Traject::QualifiedConstGet
 
   attr_writer :reader_class, :writer_class, :writer
 
-  # For now we hard-code these basic macro's included
-  # TODO, make these added with extend per-indexer,
-  # added by default but easily turned off (or have other
-  # default macro modules provided)
-  include Traject::Macros::Marc21
   include Traject::Macros::Basic
+  include Traject::Macros::Transformation
 
 
   # optional hash or Traject::Indexer::Settings object of settings.
-  def initialize(arg_settings = {})
-    @settings               = Settings.new(arg_settings)
+  # optionally takes a block which is instance_eval'd in the indexer,
+  # intended for configuration simimlar to what would be in a config file.
+  def initialize(arg_settings = {}, &block)
+    @writer_class           = nil
+    @completed              = false
+    @settings               = Settings.new(arg_settings).with_defaults(self.class.default_settings)
     @index_steps            = []
     @after_processing_steps = []
+
+    instance_eval(&block) if block
   end
+
+  # Right now just does an `instance_eval`, but encouraged in case we change the underlying
+  # implementation later, and to make intent more clear.
+  def configure(&block)
+    instance_eval(&block)
+  end
+
 
   # Pass a string file path, a Pathname, or a File object, for
   # a config file to load into indexer.
@@ -234,16 +240,81 @@ class Traject::Indexer
   def settings(new_settings = nil, &block)
     @settings.merge!(new_settings) if new_settings
 
-    @settings.instance_eval &block if block_given?
+    @settings.instance_eval(&block) if block_given?
 
     return @settings
   end
 
+  # Hash is frozen to avoid inheritance-mutability confusion.
+  def self.default_settings
+    @default_settings ||= {
+        # Writer defaults
+        "writer_class_name"       => "Traject::SolrJsonWriter",
+        "solr_writer.batch_size"  => 100,
+        "solr_writer.thread_pool" => 1,
+
+        # Threading and logging
+        "processing_thread_pool"  => Traject::Indexer::Settings.default_processing_thread_pool,
+        "log.batch_size.severity" => "info",
+
+        # how to post-process the accumulator
+        "allow_nil_values"        => false,
+        "allow_duplicate_values"  => true,
+
+        "allow_empty_fields"      => false
+    }.freeze
+  end
+
+
+  # Not sure if allowing changing of default_settings is a good idea, but we do
+  # use it in test. For now we make it private to require extreme measures to do it,
+  # and advertise that this API could go away or change without a major version release,
+  # it is experimental and internal.
+  private_class_method def self.default_settings=(settings)
+    @default_settings = settings
+  end
+
+  # Sub-classes should override to return a _proc_ object that takes one arg,
+  # a source record, and returns an identifier for it that can be used in
+  # logged messages. This differs depending on input record format, is why we
+  # leave it to sub-classes.
+  def source_record_id_proc
+    if defined?(@@legacy_marc_mode) && @@legacy_marc_mode
+      return @source_record_id_proc ||= lambda do |source_marc_record|
+        if ( source_marc_record &&
+             source_marc_record.kind_of?(MARC::Record) &&
+             source_marc_record['001'] )
+          source_marc_record['001'].value
+        end
+      end
+    end
+
+    @source_record_id_proc ||= lambda { |source| nil }
+  end
+
+  def self.legacy_marc_mode!
+    @@legacy_marc_mode = true
+    # include legacy Marc macros
+    include Traject::Macros::Marc21
+
+    # Reader defaults
+    legacy_settings = {
+      "reader_class_name"       => "Traject::MarcReader",
+      "marc_source.type"        => "binary",
+    }
+
+    default_settings.merge!(legacy_settings)
+
+    self
+  end
+
   # Part of DSL, used to define an indexing mapping. Register logic
   # to be called for each record, and generate values for a particular
-  # output field.
-  def to_field(field_name, aLambda = nil, &block)
-    @index_steps << ToFieldStep.new(field_name, aLambda, block, Traject::Util.extract_caller_location(caller.first))
+  # output field. The first field_name argument can be a single string, or
+  # an array of multiple strings -- in the latter case, the processed values
+  # will be added to each field mentioned.
+  def to_field(field_name, *procs, &block)
+    @index_steps << ToFieldStep.new(field_name, procs, block, Traject::Util.extract_caller_location(caller.first))
   end
 
   # Part of DSL, register logic to be called for each record
@@ -313,14 +384,33 @@ class Traject::Indexer
   # this indexer. Returns the output hash (a hash whose keys are
   # string fields, and values are arrays of one or more values in that field)
   #
+  # If the record is marked `skip` as part of processing, this will return
+  # nil.
+  #
   # This is a convenience shortcut for #map_to_context! -- use that one
   # if you want to provide addtional context
   # like position, and/or get back the full context.
   def map_record(record)
-    context = Context.new(:source_record => record, :settings => settings)
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc => source_record_id_proc, :logger => logger)
     map_to_context!(context)
-    return context.output_hash
+    return context.output_hash unless context.skip?
   end
+
+  # Takes a single record, maps it, and sends it to the instance-configured
+  # writer. No threading, no logging, no error handling. Respects skipped
+  # records by not adding them. Returns the Traject::Indexer::Context.
+  #
+  # Aliased as #<<
+  def process_record(record)
+    check_uncompleted
+
+    context = Context.new(:source_record => record, :settings => settings, :source_record_id_proc =>  source_record_id_proc, :logger => logger)
+    map_to_context!(context)
+    writer.put( context ) unless context.skip?
+
+    return context
+  end
+  alias_method :<<, :process_record
 
   # Maps a single record INTO the second argument, a Traject::Indexer::Context.
   #
@@ -342,7 +432,7 @@ class Traject::Indexer
 
       # Set the index step for error reporting
       context.index_step = index_step
-      log_mapping_errors(context, index_step) do
+      handle_mapping_errors(context) do
         index_step.execute(context) # will always return [] for an each_record step
       end
 
@@ -353,31 +443,40 @@ class Traject::Indexer
     return context
   end
 
-  # just a wrapper that captures and records any unexpected
-  # errors raised in mapping, along with contextual information
-  # on record and location in source file of mapping rule.
-  #
-  # Re-raises error at the moment.
-  #
-  # log_mapping_errors(context, index_step) do
-  #    all_sorts_of_stuff # that will have errors logged
-  # end
-  def log_mapping_errors(context, index_step)
-    begin
-      yield
-    rescue Exception => e
-      msg = "Unexpected error on record id `#{context.source_record_id}` at file position #{context.position}\n"
-      msg += "    while executing #{index_step.inspect}\n"
-      msg += Traject::Util.exception_to_log_message(e)
 
-      logger.error msg
-      begin
-        logger.debug "Record: " + context.source_record.to_s
-      rescue Exception => marc_to_s_exception
-        logger.debug "(Could not log record, #{marc_to_s_exception})"
+  protected def default_mapping_rescue
+    @default_mapping_rescue ||= lambda do |context, exception|
+      msg = "Unexpected error on record #{context.record_inspect}\n"
+      msg += "    while executing #{context.index_step.inspect}\n"
+
+      msg += begin
+        "\n    Record: #{context.source_record.to_s}\n"
+      rescue StandardError => to_s_exception
+        "\n    (Could not log record, #{to_s_exception})\n"
       end
 
-      raise e
+      msg += Traject::Util.exception_to_log_message(exception)
+
+      context.logger.error(msg) if context.logger
+
+      raise exception
+    end
+  end
+
+  # just a wrapper that catches any errors, and handles them. By default, logs
+  # and re-raises. But you can set custom setting `mapping_rescue`
+  # to customize
+  #
+  #
+  # handle_mapping_errors(context, index_step) do
+  #    all_sorts_of_stuff # that will have errors logged
+  # end
+  protected def handle_mapping_errors(context)
+    begin
+      yield
+    rescue StandardError => e
+      error_handler = settings["mapping_rescue"] || default_mapping_rescue
+      error_handler.call(context, e)
     end
   end
 
@@ -385,67 +484,80 @@ class Traject::Indexer
   # mapping according to configured mapping rules, and then writing
   # to configured Writer.
   #
+  # You instead give it an _array_ of streams, as well.
+  #
   # returns 'false' as a signal to command line to return non-zero exit code
   # for some reason (reason found in logs, presumably). This particular mechanism
   # is open to complexification, starting simple. We do need SOME way to return
   # non-zero to command line.
   #
-  def process(io_stream)
+  # @param [#read, Array<#read>]
+  def process(io_stream_or_array)
+    check_uncompleted
+
     settings.fill_in_defaults!
 
     count      = 0
     start_time = batch_start_time = Time.now
-    logger.debug "beginning Indexer#process with settings: #{settings.inspect}"
-
-    reader = self.reader!(io_stream)
+    logger.debug "beginning Traject::Indexer#process with settings: #{settings.inspect}"
 
     processing_threads = settings["processing_thread_pool"].to_i
     thread_pool        = Traject::ThreadPool.new(processing_threads)
 
-    logger.info "   Indexer with #{processing_threads} processing threads, reader: #{reader.class.name} and writer: #{writer.class.name}"
+    logger.info "   Traject::Indexer with #{processing_threads} processing threads, reader: #{reader_class.name} and writer: #{writer.class.name}"
 
-    log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
+    #io_stream can now be an array of io_streams.
+    (io_stream_or_array.kind_of?(Array) ? io_stream_or_array : [io_stream_or_array]).each do |io_stream|
+      reader = self.reader!(io_stream)
+      input_name = Traject::Util.io_name(io_stream)
+      position_in_input = 0
 
-    reader.each do |record; position |
-      count    += 1
+      log_batch_size = settings["log.batch_size"] && settings["log.batch_size"].to_i
 
-      # have to use a block local var, so the changing `count` one
-      # doesn't get caught in the closure. Weird, yeah.
-      position = count
+      reader.each do |record; safe_count, safe_position_in_input |
+        count    += 1
+        position_in_input += 1
 
-      thread_pool.raise_collected_exception!
+        # have to use a block local var, so the changing `count` one
+        # doesn't get caught in the closure. Don't totally get it, but
+        # I think it's so.
+        safe_count, safe_position_in_input = count, position_in_input
 
-      if settings["debug_ascii_progress"].to_s == "true"
-        $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
-      end
+        thread_pool.raise_collected_exception!
 
-      context = Context.new(
-          :source_record => record,
-          :settings      => settings,
-          :position      => position,
-          :logger        => logger
-      )
-
-      if log_batch_size && (count % log_batch_size == 0)
-        batch_rps   = log_batch_size / (Time.now - batch_start_time)
-        overall_rps = count / (Time.now - start_time)
-        logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at id:#{context.source_record_id}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
-        batch_start_time = Time.now
-      end
-
-      # We pass context in a block arg to properly 'capture' it, so
-      # we don't accidentally share the local var under closure between
-      # threads.
-      thread_pool.maybe_in_thread_pool(context) do |context|
-        map_to_context!(context)
-        if context.skip?
-          log_skip(context)
-        else
-          writer.put context
+        if settings["debug_ascii_progress"].to_s == "true"
+          $stderr.write "." if count % settings["solr_writer.batch_size"].to_i == 0
         end
 
-      end
+        context = Context.new(
+            :source_record => record,
+            :source_record_id_proc => source_record_id_proc,
+            :settings      => settings,
+            :position      => safe_count,
+            :input_name    => input_name,
+            :position_in_input => safe_position_in_input,
+            :logger        => logger
+        )
 
+        if log_batch_size && (count % log_batch_size == 0)
+          batch_rps   = log_batch_size / (Time.now - batch_start_time)
+          overall_rps = count / (Time.now - start_time)
+          logger.send(settings["log.batch_size.severity"].downcase.to_sym, "Traject::Indexer#process, read #{count} records at: #{context.source_inspect}; #{'%.0f' % batch_rps}/s this batch, #{'%.0f' % overall_rps}/s overall")
+          batch_start_time = Time.now
+        end
+
+        # We pass context in a block arg to properly 'capture' it, so
+        # we don't accidentally share the local var under closure between
+        # threads.
+        thread_pool.maybe_in_thread_pool(context) do |t_context|
+          map_to_context!(t_context)
+          if context.skip?
+            log_skip(t_context)
+          else
+            writer.put t_context
+          end
+        end
+      end
     end
     $stderr.write "\n" if settings["debug_ascii_progress"].to_s == "true"
 
@@ -455,39 +567,156 @@ class Traject::Indexer
 
     thread_pool.raise_collected_exception!
 
-
-    writer.close if writer.respond_to?(:close)
-
-    @after_processing_steps.each do |step|
-      begin
-        step.execute
-      rescue Exception => e
-        logger.fatal("Unexpected exception #{e} when executing #{step}")
-        raise e
-      end
-    end
+    complete
 
     elapsed = Time.now - start_time
     avg_rps = (count / elapsed)
-    logger.info "finished Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
+    logger.info "finished Traject::Indexer#process: #{count} records in #{'%.3f' % elapsed} seconds; #{'%.1f' % avg_rps} records/second overall."
 
     if writer.respond_to?(:skipped_record_count) && writer.skipped_record_count > 0
-      logger.error "Indexer#process returning 'false' due to #{writer.skipped_record_count} skipped records."
+      logger.error "Traject::Indexer#process returning 'false' due to #{writer.skipped_record_count} skipped records."
       return false
     end
 
     return true
   end
 
+  def completed?
+    @completed
+  end
+
+  # Instance variable readers and writers are not generally re-usble.
+  # The writer may have been closed. The reader does it's thing and doesn't
+  # rewind. If we're completed, as a sanity check don't let someone do
+  # something with the indexer that uses the reader or writer and isn't gonna work.
+  protected def check_uncompleted
+    if completed?
+      raise CompletedStateError.new("This Traject::Indexer has been completed, and it's reader and writer are not in a usable state")
+    end
+  end
+
+  # Closes the writer (which may flush/save/finalize buffered records),
+  # and calls run_after_processing_steps
+  def complete
+    writer.close if writer.respond_to?(:close)
+    run_after_processing_steps
+
+    # after an indexer has been completed, it is not really usable anymore,
+    # as the writer has been closed.
+    @completed = true
+  end
+
+  def run_after_processing_steps
+    @after_processing_steps.each do |step|
+      begin
+        step.execute
+      rescue StandardError => e
+        logger.fatal("Unexpected exception #{e} when executing #{step}")
+        raise e
+      end
+    end
+  end
+
+  # A light-weight process method meant for programmatic use, generally
+  # intended for only a "few" (not milliions) of records.
+  #
+  # It does _not_ use instance-configured reader or writer, instead taking
+  # a source/reader and destination/writer as arguments to this call.
+  #
+  # The reader can be anything that has an #each returning source
+  # records. This includes an ordinary array of source records, or any
+  # traject Reader.
+  #
+  # The writer can be anything with a #put method taking a Traject::Indexer::Context.
+  # For convenience, see the Traject::ArrayWriter that just collects output in an array.
+  #
+  # Return value of process_with is the writer passed as second arg, for your convenience.
+  #
+  # This does much less than the full #process method, to be more flexible
+  # and make fewer assumptions:
+  #
+  #  * Will never use any additional threads (unless writer does). Wrap in your own threading if desired.
+  #  * Will not do any standard logging or progress bars, regardless of indexer settings.
+  #    Log yourself if desired.
+  #  * Will _not_ call any `after_processing` steps. Call yourself with `indexer.run_after_processing_steps` as desired.
+  #  * WILL by default call #close on the writer, IF the writer has a #close method.
+  #    pass `:close_writer => false` to not do so.
+  #  * exceptions will just raise out, unless you pass in a rescue: option, value is a proc/lambda
+  #    that will receive two args, context and exception. If the rescue proc doesn't re-raise,
+  #    `process_with` will continue to process subsequent records.
+  #
+  # @example
+  #     array_writer_instance = indexer.process_with([record1, record2], Traject::ArrayWriter.new)
+  #
+  # @example With a block, in addition to or instead of a writer.
+  #
+  #     indexer.process_with([record]) do |context|
+  #       do_something_with(context.output_hash)
+  #     end
+  #
+  # @param source [#each]
+  # @param destination [#put]
+  # @param close_writer whether the destination should have #close called on it, if it responds to.
+  # @param rescue_with [Proc] to call on errors, taking two args: A Traject::Indexer::Context and an exception.
+  #   If nil (default), exceptions will be raised out. If set, you can raise or handle otherwise if you like.
+  # @param on_skipped [Proc] will be called for any skipped records, with one arg Traject::Indexer::Context
+  def process_with(source, destination = nil, close_writer: true, rescue_with: nil, on_skipped: nil)
+    unless destination || block_given?
+      raise ArgumentError, "Need either a second arg writer/destination, or a block"
+    end
+
+    settings.fill_in_defaults!
+
+    position = 0
+    input_name = Traject::Util.io_name(source)
+    source.each do |record |
+      begin
+        position += 1
+
+        context = Context.new(
+            :source_record          => record,
+            :source_record_id_proc  => source_record_id_proc,
+            :settings               => settings,
+            :position               => position,
+            :position_in_input      => (position if input_name),
+            :logger                 => logger
+        )
+
+        map_to_context!(context)
+
+        if context.skip?
+          on_skipped.call(context) if on_skipped
+        else
+          destination.put(context) if destination
+          yield(context) if block_given?
+        end
+      rescue StandardError => e
+        if rescue_with
+          rescue_with.call(context, e)
+        else
+          raise e
+        end
+      end
+    end
+
+    if close_writer && destination.respond_to?(:close)
+      destination.close
+    end
+
+    return destination
+  end
+
   # Log that the current record is being skipped, using
   # data in context.position and context.skipmessage
   def log_skip(context)
-    logger.debug "Skipped record #{context.position}: #{context.skipmessage}"
+    logger.debug "Skipped record #{context.record_inspect}: #{context.skipmessage}"
   end
 
   def reader_class
     unless defined? @reader_class
-      @reader_class = qualified_const_get(settings["reader_class_name"])
+      reader_class_name = settings["reader_class_name"]
+
+      @reader_class = qualified_const_get(reader_class_name)
     end
     return @reader_class
   end

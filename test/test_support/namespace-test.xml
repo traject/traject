@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<top xmlns="http://example.org/top" xmlns:a="http://example.org/a" xmlns:b="http://example.org/b" xmlns:unused="http://example.org/unused">
+  <record>
+    <a:something>a:something</a:something>
+    <b:something>b:something</b:something>
+  </record>
+</top>

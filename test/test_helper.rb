@@ -2,6 +2,8 @@ gem 'minitest' # I feel like this messes with bundler, but only way to get minit
 require 'minitest/autorun'
 require 'minitest/spec'
 
+require 'webmock/minitest'
+
 require 'traject'
 require 'marc'
 
@@ -12,8 +14,12 @@ STDERR.sync = true
 
 # Hacky way to turn off Indexer logging by default, say only
 # log things higher than fatal, which is nothing.
-require 'traject/indexer/settings'
-Traject::Indexer::Settings.defaults["log.level"] = "gt.fatal"
+Traject::Indexer.singleton_class.prepend(Module.new do
+  def default_settings
+    super.merge("log.level" => "gt.fatal")
+  end
+end)
+
 
 def support_file_path(relative_path)
   return File.expand_path(File.join("test_support", relative_path), File.dirname(__FILE__))

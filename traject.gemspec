@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version  = Traject::VERSION
   spec.authors  = ["Jonathan Rochkind", "Bill Dueber"]
   spec.email    = ["none@nowhere.org"]
-  spec.summary  = %q{Index MARC to Solr; or generally process source records to hash-like structures}
+  spec.summary  = %q{An easy to use, high-performance, flexible and extensible metadata transformation system, focused on library-archives-museums input, and indexing to Solr as output.}
   spec.homepage = "http://github.com/traject/traject"
   spec.license  = "MIT"
 
@@ -28,20 +28,13 @@ Gem::Specification.new do |spec|
   spec.add_dependency "yell" # logging
   spec.add_dependency "dot-properties", ">= 0.1.1" # reading java style .properties
   spec.add_dependency "httpclient", "~> 2.5"
+  spec.add_dependency "http", "~> 3.0" # used in oai_pmh_reader, may use more extensively in future instead of httpclient
   spec.add_dependency 'marc-fastxmlwriter', '~>1.0' # fast marc->xml
-
-  # If we're building the package under JRuby, add in the
-  # jruby-only gems and specify the platform.
-
-  if defined? JRUBY_VERSION
-    spec.platform = 'java'
-    spec.add_dependency "traject-marc4j_reader", "~> 1.0"
-  else
-    spec.platform = "ruby"
-  end
+  spec.add_dependency "nokogiri", "~> 1.0" # NokogiriIndexer
 
   spec.add_development_dependency "bundler", '~> 1.7'
 
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
+  spec.add_development_dependency "rspec-mocks", '~> 3.4'
 end

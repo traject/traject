@@ -30,15 +30,15 @@ class Traject::Indexer
     # Set the arity of the lambda expression just once, when we define it
     def lambda=(lam)
       @lambda_arity = 0 # assume
+      @lambda = lam
+
       return unless lam
 
-      @lambda = lam
       if @lambda.is_a?(Proc)
         @lambda_arity = @lambda.arity
       else
         raise NamingError.new("argument to each_record must be a block/lambda, not a #{lam.class} #{self.inspect}")
       end
-
     end
 
     # raises if bad data
@@ -89,17 +89,17 @@ class Traject::Indexer
   end
 
 
-# An indexing step definition for a "to_field" step to specific
-# field.
+  # An indexing step definition for a "to_field" step to specific
+  # field. The first field name argument can be an array of multiple field
+  # names, the processed values will be added to each one.
   class ToFieldStep
-    attr_accessor :field_name, :block, :source_location
-    attr_reader :lambda
+    attr_reader :field_name, :block, :source_location, :procs
 
-    def initialize(fieldname, lambda, block, source_location)
-      self.field_name      = fieldname.freeze
-      self.lambda          = lambda
-      self.block           = block
-      self.source_location = source_location
+    def initialize(field_name, procs, block, source_location)
+      @field_name      = field_name.freeze
+      @procs           = procs.freeze
+      @block           = block.freeze
+      @source_location = source_location.freeze
 
       validate!
     end
@@ -108,18 +108,13 @@ class Traject::Indexer
       true
     end
 
-    def lambda=(lam)
-      @lambda       = lam
-      @lambda_arity = @lambda ? @lambda.arity : 0
-    end
-
     def validate!
 
-      if self.field_name.nil? || !self.field_name.is_a?(String) || self.field_name.empty?
-        raise NamingError.new("to_field requires the field name (as a string) as the first argument at #{self.source_location})")
+      unless (field_name.is_a?(String) && ! field_name.empty?) || (field_name.is_a?(Array) && field_name.all? { |f| f.is_a?(String) && ! f.empty? })
+        raise NamingError.new("to_field requires the field name (as a string), or an array of such, as the first argument at #{self.source_location})")
       end
 
-      [self.lambda, self.block].each do |proc|
+      [*self.procs, self.block].each do |proc|
         # allow negative arity, meaning variable/optional, trust em on that.
         # but for positive arrity, we need 2 or 3 args
         if proc && (proc.arity == 0 || proc.arity == 1 || proc.arity > 3)
@@ -130,25 +125,21 @@ class Traject::Indexer
 
     # Override inspect for developer debug messages
     def inspect
-      "(to_field #{self.field_name} at #{self.source_location})"
+      "(to_field #{self.field_name.inspect} at #{self.source_location})"
     end
 
     def execute(context)
       accumulator = []
-      sr          = context.source_record
+      source_record = context.source_record
 
-      if @lambda
-        if @lambda_arity == 2
-          @lambda.call(sr, accumulator)
+      [*self.procs, self.block].each do |aProc|
+        next unless aProc
+        if aProc.arity == 2
+          aProc.call(source_record, accumulator)
         else
-          @lambda.call(sr, accumulator, context)
+          aProc.call(source_record, accumulator, context)
         end
       end
-
-      if @block
-        @block.call(sr, accumulator, context)
-      end
-
 
       add_accumulator_to_context!(accumulator, context)
       return accumulator
@@ -165,10 +156,13 @@ class Traject::Indexer
       accumulator.compact! unless context.settings[ALLOW_NIL_VALUES]
       return if accumulator.empty? and not (context.settings[ALLOW_EMPTY_FIELDS])
 
-      context.output_hash[field_name] ||= []
+      # field_name can actually be an array of field names
+      Array(field_name).each do |a_field_name|
+        context.output_hash[a_field_name] ||= []
 
-      existing_accumulator = context.output_hash[field_name].concat(accumulator)
-      existing_accumulator.uniq! unless context.settings[ALLOW_DUPLICATE_VALUES]
+        existing_accumulator = context.output_hash[a_field_name].concat(accumulator)
+        existing_accumulator.uniq! unless context.settings[ALLOW_DUPLICATE_VALUES]
+      end
     end
   end
 

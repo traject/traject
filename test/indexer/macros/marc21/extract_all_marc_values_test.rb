@@ -31,7 +31,7 @@ describe "The extract_all_marc_values macro" do
   end
 
   it "#extract_all_marc_values" do
-    @indexer.instance_eval do
+    @indexer.configure do
       to_field "text", extract_all_marc_values
     end
     output = @indexer.map_record(@record)

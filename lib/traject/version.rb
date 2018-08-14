@@ -1,3 +1,3 @@
 module Traject
-  VERSION = "2.3.4"
+  VERSION = "3.0.0.alpha.1"
 end

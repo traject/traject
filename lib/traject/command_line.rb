@@ -19,6 +19,12 @@ module Traject
     attr_accessor :indexer
     attr_accessor :console
 
+    @@indexer_class_shortcuts = {
+      "basic" => "Traject::Indexer",
+      "marc"  => "Traject::Indexer::MarcIndexer",
+      "xml"   => "Traject::Indexer::NokogiriIndexer"
+    }
+
     def initialize(argv=ARGV)
       self.console = $stderr
 
@@ -135,37 +141,23 @@ module Traject
       return true
     end
 
+    # @return (Array<#read>, String)
     def get_input_io(argv)
-      # ARGF might be perfect for this, but problems with it include:
-      # * jruby is broken, no way to set it's encoding, leads to encoding errors reading non-ascii
-      #   https://github.com/jruby/jruby/issues/891
-      # * It's apparently not enough like an IO object for at least one of the ruby-marc XML
-      #   readers:
-      #   NoMethodError: undefined method `to_inputstream' for ARGF:Object
-      #      init at /Users/jrochkind/.gem/jruby/1.9.3/gems/marc-0.5.1/lib/marc/xml_parsers.rb:369
-      #
-      # * It INSISTS on reading from ARGFV, making it hard to test, or use when you want to give
-      #   it a list of files on something other than ARGV.
-      #
-      # So for now we do just one file, or stdin if specified. Sorry!
-
       filename = nil
+      io_arr = nil
       if options[:stdin]
         indexer.logger.info("Reading from standard input")
-        io = $stdin
-      elsif argv.length > 1
-        self.console.puts "Sorry, traject can only handle one input file at a time right now. `#{argv}` Exiting..."
-        exit 1
+        io_arr = [$stdin]
       elsif argv.length == 0
-        io = File.open(File::NULL, 'r')
+        io_arr = [File.open(File::NULL, 'r')]
         indexer.logger.info("Warning, no file input given. Use command-line argument '--stdin' to use standard input ")
       else
-        io = File.open(argv.first, 'r')
-        filename = argv.first
+        io_arr = argv.collect { |path| File.open(path, 'r') }
+        filename = argv.join(",")
         indexer.logger.info "Reading from #{filename}"
       end
 
-      return io, filename
+      return io_arr, filename
     end
 
     def load_configuration_files!(my_indexer, conf_files)
@@ -250,6 +242,7 @@ module Traject
         on 'd', 'debug', "Include debug log, -s log.level=debug"
         on 'h', 'help', "print usage information to stderr"
         on 'c', 'conf', 'configuration file path (repeatable)', :argument => true, :as => Array
+        on :i, 'indexer', "Traject indexer class name or shortcut", :argument => true, default: "marc"
         on :s, :setting, "settings: `-s key=value` (repeatable)", :argument => true, :as => Array
         on :r, :reader, "Set reader class, shortcut for -s reader_class_name=", :argument => true
         on :o, "output_file", "output file for Writer classes that write to files", :argument => true
@@ -266,7 +259,10 @@ module Traject
     end
 
     def initialize_indexer!
-      indexer = Traject::Indexer.new self.assemble_settings_hash(self.options)
+      indexer_class_name = @@indexer_class_shortcuts[options[:indexer]] || options[:indexer]
+      klass = Traject::Indexer.qualified_const_get(indexer_class_name)
+
+      indexer = klass.new self.assemble_settings_hash(self.options)
       load_configuration_files!(indexer, options[:conf])
 
       return indexer
