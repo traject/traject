@@ -4,8 +4,6 @@
 
 ### Changed/Backwards Incompatibilities
 
-* Placeholder
-
 * `map_record` now returns `nil` if record was skipped.
 
 * The `Traject::Indexer` class no longer includes marc-specific settings and modules.
@@ -19,8 +17,6 @@
 
 
 ### Added
-
-* Placeholder
 
 * Traject::Indexer#configure is available, and recommended instead of raw `instance_eval`. It just does an instance_eval, but is clearer and safer for future changes.
 
