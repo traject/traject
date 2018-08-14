@@ -19,9 +19,6 @@ require 'traject/macros/transformation'
 
 require 'traject/indexer/marc_indexer'
 
-if defined? JRUBY_VERSION
-  require 'traject/marc4j_reader'
-end
 
 # This class does indexing for traject: Getting input records from a Reader
 # class, mapping the input records to an output hash, and then sending the output
@@ -300,17 +297,11 @@ class Traject::Indexer
     # include legacy Marc macros
     include Traject::Macros::Marc21
 
-    # alter default settings to be legacy including marc-specific
-    is_jruby = defined?(JRUBY_VERSION)
-
     # Reader defaults
     legacy_settings = {
-      "reader_class_name"       => is_jruby ? "Traject::Marc4JReader" : "Traject::MarcReader",
+      "reader_class_name"       => "Traject::MarcReader",
       "marc_source.type"        => "binary",
     }
-    if is_jruby
-      legacy_settings["marc4j_reader.permissive"] = true
-    end
 
     default_settings.merge!(legacy_settings)
 
@@ -723,7 +714,9 @@ class Traject::Indexer
 
   def reader_class
     unless defined? @reader_class
-      @reader_class = qualified_const_get(settings["reader_class_name"])
+      reader_class_name = settings["reader_class_name"]
+
+      @reader_class = qualified_const_get(reader_class_name)
     end
     return @reader_class
   end

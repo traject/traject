@@ -28,11 +28,12 @@ Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (Univer
 
 Traject runs under jruby (9.0.x or higher), MRI ruby (2.3.x or higher), or probably any other ruby platform.
 
-We think, at least for MARC input, **traject should run much faster on JRuby** where it can use multi-core parallelism, and the Java Marc4J marc reader. If performance is a concern, you should measure timing running traject on JRuby. (This likely does not apply to XML input)
+Once you have ruby installed, just `$ gem install traject`.
+
+**If you are processing MARC input, you will probably get significant performance improvements on JRuby.** If you are processing Marc-XML (rather than binary Marc21), you should additionally get even more performance improvements by using the [traject-marc4j_reader](https://github.com/traject/traject-marc4j_reader) gem on JRuby (see installation instructions there). If performance is a concern, and you are processing MARC, we recommend benchmarking traject on JRuby. (JRuby is not currently recommended for non-MARC XML input.)
 
 Some options for installing a ruby other than your system-provided one are [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install#readme).
 
-Once you have ruby, just `$ gem install traject`.
 
 ## Configuration files
 
@@ -73,8 +74,8 @@ settings do
   provide "solr_writer.commit_on_close", "true"
 
   # The default writer is the Traject::SolrJsonWriter. In the default MARC mode,
-  # the default reader is Marc4JReader (using Java Marc4J library) on Jruby,
-  # MarcReader (using ruby-marc) otherwise. In XML mode, it is the NokogiriReader.
+  # the default reader in MARC mode is MarcReader (using ruby-marc).
+  # In XML mode, it is the NokogiriReader.
 end
 ~~~
 
@@ -499,8 +500,7 @@ Own Code](./doc/extending.md)
   * [traject_horizon](https://github.com/jrochkind/traject_horizon): Export MARC records directly from a Horizon ILS rdbms, as serialized MARC or to  index into Solr.
   * [traject_umich_format](https://github.com/billdueber/traject_umich_format/): opinionated code and associated macros to extract format (book, audio file, etc.) and types (bibliography, conference report, etc.) from a MARC record. Code mirrors that used by the University of Michigan, and is an alternate approach to that taken by the `marc_formats` macro in `Traject::Macros::MarcFormatClassifier`.
   * [traject-solrj_writer](https://github.com/traject/traject-solrj_writer): a jruby-only writer that uses the solrj .jar to talk directly to solr. Your only option for speaking to a solr version < 3.2, which is when the json handler was added to solr.
-  * [traject_marc4j_reader](https://github.com/traject/traject-marc4j_reader): Packaged with traject automatically on jruby. A JRuby-only reader for
-  reading marc records using the Marc4J library, fastest MARC reading on JRuby.
+  * [traject_marc4j_reader](https://github.com/traject/traject-marc4j_reader): A JRuby-only reader for reading marc records using the Marc4J library, fastest MARC-XML reading on JRuby.
   * [traject_sequel_writer](https://github.com/traject/traject_sequel_writer) A writer for sending to an rdbms via [Sequel](https://github.com/jeremyevans/sequel)
 
 # Development
@@ -519,9 +519,6 @@ and/or extra files in ./docs -- as appropriate for what needs to be docs.
 online api docs has a `--markup markdown` specified -- inline class/method docs are in markdown, not rdoc.
 
 Bundler rake tasks included for gem releases: `rake release`
-* Every traject release needs to be done once when running MRI, and switch to JRuby
-and do the same release again. The JRuby release is identical but for including
-a gemspec dependency on the Marc4JReader gem.
 
 ## TODO: Possible future enhancements
 

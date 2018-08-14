@@ -4,6 +4,8 @@
 
 ### Changed/Backwards Incompatibilities
 
+* JRuby traject no longer includes `traject-marc4j_reader` as a dependency or default reader, although it may provide faster MARC-XML reading on JRuby. To use it manually, see https://github.com/traject/traject-marc4j_reader . See https://github.com/traject/traject/pull/187
+
 * `map_record` now returns `nil` if record was skipped.
 
 * The `Traject::Indexer` class no longer includes marc-specific settings and modules.
