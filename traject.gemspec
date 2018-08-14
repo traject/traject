@@ -12,7 +12,8 @@ Gem::Specification.new do |spec|
   spec.homepage = "http://github.com/traject/traject"
   spec.license  = "MIT"
 
-  spec.files         = `git ls-files`.split($/)
+  # everything in git, but not ./index_bench/, cause that has some giant source files in there.
+  spec.files         = `git ls-files`.split($/).find_all { |path| path !~ %r{^index_bench/} }
   spec.executables   = ["traject"]
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
