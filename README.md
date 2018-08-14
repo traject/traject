@@ -520,7 +520,9 @@ online api docs has a `--markup markdown` specified -- inline class/method docs 
 
 Bundler rake tasks included for gem releases: `rake release`
 
-## TODO: Possible future enhancements
+The standard [bundle console](https://bundler.io/v1.7/bundle_console.html) command may be useful for getting an `irb` console with the gem and it's dependencies loaded.
+
+## TODO: Possible future improvements
 
 * Incorporate more inspired by [TrajectPlus](https://github.com/sul-dlss/traject_plus), possibly including `compose` for building nested hash output.
 

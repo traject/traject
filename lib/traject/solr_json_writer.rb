@@ -270,6 +270,4 @@ class Traject::SolrJsonWriter
     # Assume the /update/json handler
     return [url.chomp('/'), 'update', 'json'].join('/')
   end
-
-
 end
