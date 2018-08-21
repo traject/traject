@@ -204,5 +204,27 @@ describe "Traject::SolrJsonWriter" do
         @writer.close
       end
     end
+
+
+    it "when catching additional skip errors, raise RuntimeError" do
+      strio = StringIO.new
+      @writer = create_writer(
+        "solr_writer.max_skipped" => 0,
+        "logger" => logger_to_strio(strio),
+        "solr_writer.skippable_exceptions" => [ArgumentError]
+      )
+      @fake_http_client.response_status = 200
+       # Stub an error to be raised
+      def @fake_http_client.post(*args)
+        raise ArgumentError.new('bad stuff')
+      end
+       _e = assert_raises(Traject::SolrJsonWriter::MaxSkippedRecordsExceeded) do
+        @writer.put context_with("id" => "doc_1", "key" => "value")
+        @writer.close
+      end
+       logged = strio.string
+      assert_includes logged, 'ArgumentError: bad stuff'
+    end
+
   end
 end
