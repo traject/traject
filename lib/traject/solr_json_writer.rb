@@ -167,7 +167,8 @@ class Traject::SolrJsonWriter
         msg = "Solr error response: #{resp.status}: #{resp.body}"
       end
       logger.error "Could not add record #{c.record_inspect}: #{msg}"
-      logger.debug(c.source_record.to_s)
+      logger.debug("\t" + exception.backtrace.join("\n\t")) if exception
+      logger.debug(c.source_record.to_s) if c.source_record
 
       @skipped_record_incrementer.increment
       if @max_skipped and skipped_record_count > @max_skipped
