@@ -8,8 +8,15 @@ module Traject
       msg = indent + "Exception: " + e.class.name + ": " + e.message + "\n"
       msg += indent + e.backtrace.first + "\n"
 
-      if (e.respond_to?(:getRootCause) && e.getRootCause && e != e.getRootCause)
+      caused_by = e.cause
+      # JRuby Java exception might have getRootCause
+      if caused_by == nil && e.respond_to?(:getRootCause) && e.getRootCause
         caused_by = e.getRootCause
+      end
+      if caused_by == e
+        caused_by = nil
+      end
+      if caused_by
         msg       += indent + "Caused by\n"
         msg       += indent + caused_by.class.name + ": " + caused_by.message + "\n"
         msg       += indent + caused_by.backtrace.first + "\n"
