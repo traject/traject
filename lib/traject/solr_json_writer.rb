@@ -171,7 +171,7 @@ class Traject::SolrJsonWriter
 
       @skipped_record_incrementer.increment
       if @max_skipped and skipped_record_count > @max_skipped
-        raise RuntimeError.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
+        raise MaxSkippedRecordsExceeded.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
       end
 
     end
@@ -275,6 +275,9 @@ class Traject::SolrJsonWriter
     # Assume the /update/json handler
     return [url.chomp('/'), 'update', 'json'].join('/')
   end
+
+  class MaxSkippedRecordsExceeded < RuntimeError ; end
+
 
   private
 
