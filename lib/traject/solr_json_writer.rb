@@ -42,6 +42,10 @@ require 'concurrent' # for atomic_fixnum
 #
 # * solr_json_writer.http_client Mainly intended for testing, set your own HTTPClient
 #   or mock object to be used for HTTP.
+#
+# * solr_json_writer.skippable_exceptions: Additional exceptions that will be caught and
+#   reported but will not fail the indexing process. Exceptions should be passed as an
+#   Array of Exceptions. Example: [ArgumentError, StandardError]
 
 
 class Traject::SolrJsonWriter
@@ -51,9 +55,12 @@ class Traject::SolrJsonWriter
 
   DEFAULT_MAX_SKIPPED = 0
   DEFAULT_BATCH_SIZE  = 100
+  DEFAULT_SKIPPABLE_EXCEPTIONS = [
+    HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED
+  ].freeze
 
   # The passed-in settings
-  attr_reader :settings, :thread_pool_size
+  attr_reader :settings, :thread_pool_size, :skippable_exceptions
 
   # A queue to hold documents before sending to solr
   attr_reader :batched_queue
@@ -66,6 +73,10 @@ class Traject::SolrJsonWriter
     if @max_skipped < 0
       @max_skipped = nil
     end
+
+    @skippable_exceptions = Array.new(
+      [DEFAULT_SKIPPABLE_EXCEPTIONS, @settings['solr_json_writer.skippable_exceptions']]
+    ).flatten.compact
 
     @http_client = @settings["solr_json_writer.http_client"] || HTTPClient.new
 
@@ -152,7 +163,7 @@ class Traject::SolrJsonWriter
       resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
       # Catch Timeouts and network errors as skipped records, but otherwise
       # allow unexpected errors to propagate up.
-    rescue HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED => exception
+    rescue *skippable_exceptions => exception
     end
 
     if exception || resp.status != 200
