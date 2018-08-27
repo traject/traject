@@ -20,13 +20,11 @@ describe "Traject::SolrJsonWriter" do
     # Always reply with this status, normally 200, can
     # be reset for testing error conditions.
     attr_accessor :response_status
-    attr_accessor :allow_update_json_path
 
     def initialize(*args)
       @post_args = []
       @get_args  = []
       @response_status = 200
-      @allow_update_json_path = true
       @mutex = Monitor.new
     end
 
@@ -48,11 +46,6 @@ describe "Traject::SolrJsonWriter" do
 
       resp = HTTP::Message.new_response("")
       resp.status = self.response_status
-
-      if args.first.end_with?("/update/json") && ! self.allow_update_json_path
-        # Need to test auto-detection of /update/json being available
-        resp.status = 404
-      end
 
       return resp
     end
@@ -211,5 +204,27 @@ describe "Traject::SolrJsonWriter" do
         @writer.close
       end
     end
+
+
+    it "when catching additional skip errors, raise RuntimeError" do
+      strio = StringIO.new
+      @writer = create_writer(
+        "solr_writer.max_skipped" => 0,
+        "logger" => logger_to_strio(strio),
+        "solr_writer.skippable_exceptions" => [ArgumentError]
+      )
+      @fake_http_client.response_status = 200
+       # Stub an error to be raised
+      def @fake_http_client.post(*args)
+        raise ArgumentError.new('bad stuff')
+      end
+       _e = assert_raises(Traject::SolrJsonWriter::MaxSkippedRecordsExceeded) do
+        @writer.put context_with("id" => "doc_1", "key" => "value")
+        @writer.close
+      end
+       logged = strio.string
+      assert_includes logged, 'ArgumentError: bad stuff'
+    end
+
   end
 end

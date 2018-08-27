@@ -33,6 +33,10 @@ require 'concurrent' # for atomic_fixnum
 #   bail out with a fatal error? Set to -1 for unlimited skips. Default 0,
 #   raise and abort on a single record that could not be added to Solr.
 #
+# * solr_writer.skippable_exceptions: List of classes that will be rescued internal to
+#   SolrJsonWriter, and handled with max_skipped logic. Defaults to
+#   `[HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED]`
+#
 # * solr_writer.commit_on_close: Set to true (or "true") if you want to commit at the
 #   end of the indexing run. (Old "solrj_writer.commit_on_close" supported for backwards
 #   compat only.)
@@ -152,7 +156,8 @@ class Traject::SolrJsonWriter
       resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
       # Catch Timeouts and network errors as skipped records, but otherwise
       # allow unexpected errors to propagate up.
-    rescue HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED => exception
+    rescue *skippable_exceptions => exception
+      # no body, local variable exception set above will be used below
     end
 
     if exception || resp.status != 200
@@ -162,11 +167,12 @@ class Traject::SolrJsonWriter
         msg = "Solr error response: #{resp.status}: #{resp.body}"
       end
       logger.error "Could not add record #{c.record_inspect}: #{msg}"
-      logger.debug(c.source_record.to_s)
+      logger.debug("\t" + exception.backtrace.join("\n\t")) if exception
+      logger.debug(c.source_record.to_s) if c.source_record
 
       @skipped_record_incrementer.increment
       if @max_skipped and skipped_record_count > @max_skipped
-        raise RuntimeError.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
+        raise MaxSkippedRecordsExceeded.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
       end
 
     end
@@ -269,5 +275,14 @@ class Traject::SolrJsonWriter
 
     # Assume the /update/json handler
     return [url.chomp('/'), 'update', 'json'].join('/')
+  end
+
+  class MaxSkippedRecordsExceeded < RuntimeError ; end
+
+
+  private
+
+  def skippable_exceptions
+    @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED])
   end
 end
