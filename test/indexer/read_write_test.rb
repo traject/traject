@@ -152,4 +152,27 @@ describe "Traject::Indexer#process" do
       assert output_hashes.all? { |hash| hash["title"].length > 0 }
     end
   end
+
+  describe "setting log.batch_size" do
+    before do
+      @indexer = Traject::Indexer::MarcIndexer.new(
+        "writer_class_name" => "Traject::NullWriter",
+        "log.batch_size" => 1,
+      ) do
+        to_field "title", extract_marc("245")
+      end
+
+      @log_output = StringIO.new
+      logger = Logger.new(@log_output)
+      @indexer.logger = logger
+
+      @file = File.open(support_file_path "test_data.utf8.mrc")
+    end
+
+    it "outputs batch completion to log" do
+      @indexer.process(@file)
+
+      assert_includes @log_output.string, "Traject::Indexer#process, read 1 records at"
+    end
+  end
 end
