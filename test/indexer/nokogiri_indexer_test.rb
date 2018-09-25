@@ -56,6 +56,17 @@ describe "Traject::NokogiriIndexer" do
     refute_empty results.last["rights"]
   end
 
+  it "exposes nokogiri.namespaces setting in default_namespaces" do
+    namespaces = @namespaces
+    @indexer.configure do
+      settings do
+        provide "nokogiri.namespaces", namespaces
+      end
+    end
+    @indexer.settings.fill_in_defaults!
+    assert_equal namespaces, @indexer.default_namespaces
+  end
+
   describe "xpath to non-terminal element" do
     before do
       @xml = <<-EOS
