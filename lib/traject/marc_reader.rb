@@ -9,12 +9,12 @@ require 'traject/ndj_reader'
 # the gem traject-marc4j_reader.
 #
 # By default assumes binary MARC encoding, please set marc_source.type setting
-# for XML or json. If binary, please set marc_source.encoding with char encoding. 
+# for XML or json. If binary, please set marc_source.encoding with char encoding.
 #
 # ## Settings
 
 # * "marc_source.type":  serialization type. default 'binary'
-#       * "binary". standard ISO 2709 "binary" MARC format, 
+#       * "binary". standard ISO 2709 "binary" MARC format,
 #           will use ruby-marc MARC::Reader (Note, if you are using
 #          type 'binary', you probably want to also set 'marc_source.encoding')
 #       * "xml", MarcXML, will use ruby-marc MARC::XMLReader
@@ -23,15 +23,16 @@ require 'traject/ndj_reader'
 #         allowed, and no unescpaed internal newlines allowed in the json
 #         objects -- we just read line by line, and assume each line is a
 #         marc-in-json. http://dilettantes.code4lib.org/blog/2010/09/a-proposal-to-serialize-marc-in-json/
-#         will use Traject::NDJReader which uses MARC::Record.new_from_hash. 
+#         will use Traject::NDJReader which uses MARC::Record.new_from_hash.
 # * "marc_source.encoding": Only used for marc_source.type 'binary', character encoding
 #         of the source marc records. Can be any
 #         encoding recognized by ruby, OR 'MARC-8'.  For 'MARC-8', content will
-#         be transcoded (by ruby-marc) to UTF-8 in internal MARC::Record Strings. 
+#         be transcoded (by ruby-marc) to UTF-8 in internal MARC::Record Strings.
 #         Default nil, meaning let MARC::Reader use it's default, which will
-#         probably be Encoding.default_internal, which will probably be UTF-8. 
+#         be your system's Encoding.default_external, which will probably be UTF-8.
+#         (but may be something unexpected/undesired on Windows, where you may want to set this explicitly.)
 #         Right now Traject::MarcReader is hard-coded to transcode to UTF-8 as
-#         an internal encoding. 
+#         an internal encoding.
 # * "marc_reader.xml_parser": For XML type, which XML parser to tell Marc::Reader
 #         to use. Anything recognized by [Marc::Reader :parser
 #         argument](http://rdoc.info/github/ruby-marc/ruby-marc/MARC/XMLReader).
@@ -75,7 +76,7 @@ class Traject::MarcReader
           Traject::NDJReader.new(self.input_stream, settings)
         else
           args = { :invalid => :replace }
-          args[:external_encoding] = settings["marc_source.encoding"]          
+          args[:external_encoding] = settings["marc_source.encoding"]
           MARC::Reader.new(self.input_stream, args)
         end
     end
