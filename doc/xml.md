@@ -58,6 +58,14 @@ to_field "title", extract_xpath("/oai:record/oai:metadata/oai:dc/dc:title", ns: 
 })
 ```
 
+If you are accessing a nokogiri method directly, like in `some_record.xpath`, the registered default namespaces aren't known by nokogiri -- but they are available in the indexer as `default_namespaces`, so can be referenced and passed into the nokogiri method:
+
+```ruby
+each_record do |record|
+   log( record.xpath("//dc:title"), default_namespaces )
+end
+```
+
 You can use all the standard transforation macros in Traject::Macros::Transformation:
 
 ```ruby
