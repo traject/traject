@@ -26,7 +26,7 @@ Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (Univer
 
 ## Installation
 
-Traject runs under jruby (9.0.x or higher), MRI ruby (2.3.x or higher), or probably any other ruby platform.
+Traject runs under jruby (9.1.x or higher), MRI ruby (2.3.x or higher), or probably any other ruby platform.
 
 Once you have ruby installed, just `$ gem install traject`.
 
