@@ -135,12 +135,6 @@ For the syntax and complete possibilities of the specification string argument t
 
 To see all options for `extract_marc`, see the [extract_marc](http://rdoc.info/gems/traject/Traject/Macros/Marc21:extract_marc) method documentation.
 
-There is one special MARC-specific transformation macro, that strips punctuation from beginning and end of values using heuristics designed for AACR2 in MARC:
-
-```ruby
-    to_field "title", extract_marc("245abc"), trim_punctuation
-```
-
 ### XML mode, extract_xml
 
 See our [xml guide](./doc/xml.md) for more XML examples, but you will usually use extract_xpath.
@@ -190,15 +184,15 @@ Example:
 to_field "something", extract_xpath("//value"), strip, default("no value"), prepend("Extracted value: ")
 ```
 
-### Other built-in utility macros
+### Some more MARC-specific utility methods
 
-Other built-in methods that can be used with `to_field` include:
+Other built-in methods that can be used with `to_field` for MARC specifically include:
 
-a hard-coded literal string:
+Strip punctuation from beginning and end of values using heuristics designed for AACR2 in MARC:
 
-~~~ruby
-    to_field "source", literal("LIB_CATALOG")
-~~~
+```ruby
+    to_field "title", extract_marc("245abc"), trim_punctuation
+```
 
 the current record serialized back out as MARC, in binary, XML, or json:
 
@@ -218,7 +212,7 @@ text of all fields in a range:
 
 All of these methods are defined at [Traject::Macros::Marc21](./lib/traject/macros/marc21.rb) ([rdoc](http://rdoc.info/gems/traject/Traject/Macros/Marc21))
 
-## More complex canned MARC semantic logic
+### More complex canned MARC semantic logic
 
 Some more complex (and opinionated/subjective) algorithms for deriving semantics from Marc are also packaged with Traject, but not available by default. To make them available to your indexing, you just need to use ruby `require` and `extend`.
 
