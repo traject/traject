@@ -259,7 +259,7 @@ in a configuration file, using a ruby block, which looks like this:
 ~~~
 
 `do |record, accumulator| ... ` is the definition of a ruby block taking
-two arguments.  The first one passed in will be a MARC record. The
+two arguments.  The first one passed in will be a source record (eg MARC or XML). The
 second is an array, you add values to the array to send them to
 output.
 
@@ -289,6 +289,17 @@ use ruby methods like `map!` to modify it:
 
 If you find yourself repeating boilerplate code in your custom logic, you can
 even create your own 'macros' (like `extract_marc`). `extract_marc`, `translation_map`, `first_only` and other macros are nothing more than methods that return ruby lambda objects of the same format as the blocks you write for custom logic.
+
+In fact, in addition to a literal block on the end, you can pass as many `proc` objects as you want to transform data.
+
+```ruby
+to_field( "something", extract_xpath("//title"),
+          ->(record, acc) { acc << "extra value" },
+          method_that_returns_a_proc
+        ) do |rec, acc|
+     whatever_to(acc)
+end
+```
 
 For tips, gotchas, and a more complete explanation of how this works, see
 additional documentation page on [Indexing Rules: Macros and Custom Logic](./doc/indexing_rules.md)
