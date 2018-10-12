@@ -4,15 +4,14 @@ cache: bundler
 # at downloading jruby, and
 sudo: true
 rvm:
-  - 2.3.6
-  - 2.4.3
+  - 2.4.4
   - 2.5.1
   - "2.6.0-preview2"
 # avoid having travis install jdk on MRI builds where we don't need it.
 matrix:
   include:
     - jdk: openjdk8
-      rvm: jruby-9.0.5.0
+      rvm: jruby-9.1.17.0
     - jdk: openjdk8
       rvm: jruby-9.2.0.0
   allow_failures:
