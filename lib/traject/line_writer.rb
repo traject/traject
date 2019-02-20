@@ -57,7 +57,7 @@ class Traject::LineWriter
   end
 
   def close
-    @output_file.close unless (@output_file.nil? || @output_file.tty?)
+    @output_file.close unless @output_file.nil? || @output_file.tty? || @output_file == $stdout
   end
 
 end
