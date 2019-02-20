@@ -6,13 +6,13 @@ sudo: true
 rvm:
   - 2.4.4
   - 2.5.1
-  - "2.6.0-preview2"
+  - 2.6.1
 # avoid having travis install jdk on MRI builds where we don't need it.
 matrix:
   include:
     - jdk: openjdk8
       rvm: jruby-9.1.17.0
     - jdk: openjdk8
-      rvm: jruby-9.2.0.0
+      rvm: jruby-9.2.6.0
   allow_failures:
-    - rvm: "2.6.0-preview2"
+    - rvm: 2.6.1
