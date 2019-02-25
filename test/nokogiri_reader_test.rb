@@ -139,7 +139,15 @@ describe "Traject::NokogiriReader" do
 
     assert_length manually_extracted.size, yielded_records
     assert yielded_records.all? {|r| r.kind_of? Nokogiri::XML::Document }
-    assert_equal manually_extracted.collect(&:to_xml), yielded_records.collect(&:root).collect(&:to_xml)
+
+    expected_xml = manually_extracted.collect(&:to_xml)
+    actual_xml   = yielded_records.collect(&:root).collect(&:to_xml)
+
+    expected_xml.size.times do |i|
+      assert_equal expected_xml[i-1], actual_xml[i-1]
+    end
+
+    #assert_equal manually_extracted.collect(&:to_xml), yielded_records.collect(&:root).collect(&:to_xml)
   end
 
   describe "without each_record_xpath" do
