@@ -133,6 +133,8 @@ The NokogiriReader parser should be relatively performant though, allowing you t
 
 (There is a half-finished `ExperimentalStreamingNokogiriReader` available, but it is experimental, half-finished, may disappear or change in backwards compat at any time, problematic, not recommended for production use, etc.)
 
+Note also that in Jruby, when using `each_record_xpath` with the NokogiriReader, the extracted individual documents may have xmlns declerations in different places than you may expect, although they will still be semantically equivalent for namespace processing. This is due to Nokogiri JRuby implementation, and we could find no good way to ensure consistent behavior with MRI. See: https://github.com/sparklemotion/nokogiri/issues/1875
+
 ### Jruby
 
 It may be that nokogiri JRuby is just much slower than nokogiri MRI (at least when namespaces are involved?)  It may be that our workaround to a [JRuby bug involving namespaces on moving nodes](https://github.com/sparklemotion/nokogiri/issues/1774) doesn't help.
