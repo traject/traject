@@ -25,6 +25,18 @@ require 'thread'
 #
 # If neither are supplied, will write to `$stdout`.
 #
+# ## Closing the output stream
+#
+# The LineWriter tries to guess on whether it should call `close` on the output
+# stream it's writing to, when the LineWriter instance is closed. For instance,
+# if you passed in a `settings["output_file"]` with a path, and the LineWriter
+# opened up a `File` object for you, it should close it for you.
+#
+# But for historical reasons, LineWriter doesn't just use that signal, but tries
+# to guess generally on when to call close. If for some reason it gets it wrong,
+# just use `settings["close_output_on_close"]` set to `true` or `false`.
+# (String `"true"` or `"false"` are also acceptable, for convenience in setting
+# options on command line)
 class Traject::LineWriter
   attr_reader :settings
   attr_reader :write_mutex, :output_file
@@ -68,7 +80,16 @@ class Traject::LineWriter
   end
 
   def close
-    @output_file.close unless @output_file.nil? || @output_file.tty? || @output_file == $stdout
+    @output_file.close if should_close_stream?
   end
+
+  def should_close_stream?
+    if settings["close_output_on_close"].nil?
+      (@output_file.nil? || @output_file.tty? || @output_file == $stdout || $output_file == $stderr)
+    else
+      settings["close_output_on_close"].to_s == "true"
+    end
+  end
+
 
 end
