@@ -1,6 +1,12 @@
 require 'test_helper'
 require 'traject/nokogiri_reader'
 
+# Note that JRuby Nokogiri can treat namespaces differently than MRI nokogiri.
+# Particularly when we extract elements from a larger document with `each_record_xpath`,
+# and put them in their own document, in JRuby nokogiri the xmlns declarations
+# can end up on different elements than expected, although the document should
+# be semantically equivalent to an XML-namespace-aware processor. See:
+# https://github.com/sparklemotion/nokogiri/issues/1875
 describe "Traject::NokogiriReader" do
   describe "with namespaces" do
     before do
@@ -80,8 +86,22 @@ describe "Traject::NokogiriReader" do
         assert yielded_records.length > 0
 
         expected_namespaces = {"xmlns"=>"http://example.org/top", "xmlns:a"=>"http://example.org/a", "xmlns:b"=>"http://example.org/b"}
-        yielded_records.each do |rec|
-          assert_equal expected_namespaces, rec.namespaces
+
+        if !Traject::Util.is_jruby?
+          yielded_records.each do |rec|
+            assert_equal expected_namespaces, rec.namespaces
+          end
+        else
+          # jruby nokogiri shuffles things around, all we can really do is test that the namespaces
+          # are somehwere in the doc :( We rely on other tests to test semantic equivalence.
+          yielded_records.each do |rec|
+            assert_equal expected_namespaces, rec.collect_namespaces
+          end
+
+          whole_doc = Nokogiri::XML.parse(File.open(support_file_path("namespace-test.xml")))
+          whole_doc.xpath("//mytop:record", mytop: "http://example.org/top").each_with_index do |original_el, i|
+            assert ns_semantic_equivalent_xml?(original_el, yielded_records[i])
+          end
         end
       end
     end
@@ -140,14 +160,39 @@ describe "Traject::NokogiriReader" do
     assert_length manually_extracted.size, yielded_records
     assert yielded_records.all? {|r| r.kind_of? Nokogiri::XML::Document }
 
-    expected_xml = manually_extracted.collect(&:to_xml)
-    actual_xml   = yielded_records.collect(&:root).collect(&:to_xml)
+    expected_xml = manually_extracted
+    actual_xml   = yielded_records.collect(&:root)
 
     expected_xml.size.times do |i|
-      assert_equal expected_xml[i-1], actual_xml[i-1]
+      if !Traject::Util.is_jruby?
+        assert_equal expected_xml[i-1].to_xml, actual_xml[i-1].to_xml
+      else
+        # jruby shuffles the xmlns declarations around, but they should
+        # be semantically equivalent to an namespace-aware processor
+        assert ns_semantic_equivalent_xml?(expected_xml[i-1], actual_xml[i-1])
+      end
     end
+  end
 
-    #assert_equal manually_extracted.collect(&:to_xml), yielded_records.collect(&:root).collect(&:to_xml)
+  # Jruby nokogiri can shuffle around where the `xmlns:ns` declarations appear, although it
+  # _ought_ not to be semantically different for a namespace-aware parser -- nodes are still in
+  # same namespaces.  JRuby may differ from what MRI does with same code, and may differ from
+  # the way an element appeared in input when extracting records from a larger input doc.
+  # There isn't much we can do about this, but we can write a recursive method
+  # that hopefully compares XML to make sure it really is semantically equivalent to
+  # a namespace, and hope we got that right.
+  def ns_semantic_equivalent_xml?(noko_a, noko_b)
+    noko_a = noko_a.root if noko_a.kind_of?(Nokogiri::XML::Document)
+    noko_b = noko_b.root if noko_b.kind_of?(Nokogiri::XML::Document)
+
+    noko_a.name == noko_b.name &&
+      noko_a.namespace&.prefix == noko_b.namespace&.prefix &&
+      noko_a.namespace&.href   == noko_b.namespace&.href &&
+      noko_a.attributes        == noko_b.attributes &&
+      noko_a.children.length   == noko_b.children.length &&
+      noko_a.children.each_with_index.all? do |a_child, index|
+        ns_semantic_equivalent_xml?(a_child, noko_b.children[index])
+      end
   end
 
   describe "without each_record_xpath" do
