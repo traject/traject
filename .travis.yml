@@ -14,5 +14,3 @@ matrix:
       rvm: jruby-9.1.17.0
     - jdk: openjdk8
       rvm: jruby-9.2.6.0
-  allow_failures:
-    - rvm: 2.6.1
