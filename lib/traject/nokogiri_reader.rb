@@ -118,34 +118,25 @@ module Traject
     private
 
 
-    # In MRI Nokogiri, this is as simple as `new_parent_doc.root = node`
+    # We simply do `new_parent_doc.root = node`
     # It seemed maybe safer to dup the node as well as remove the original from the original doc,
     # but I believe this will result in double memory usage, as unlinked nodes aren't GC'd until
     # their doc is.  I am hoping this pattern results in less memory usage.
     # https://github.com/sparklemotion/nokogiri/issues/1703
     #
-    # However, in JRuby it's a different story, JRuby doesn't properly preserve namespaces
-    # when re-parenting a node.
+    # We used to have to do something different in Jruby to work around bug:
     # https://github.com/sparklemotion/nokogiri/issues/1774
     #
-    # The nodes within the tree re-parented _know_ they are in the correct namespaces,
-    # and xpath queries require that namespace, but the appropriate xmlns attributes
-    # aren't included in the serialized XML. This JRuby-specific code seems to get
-    # things back to a consistent state.
+    # But as of nokogiri 1.9, that does not work, and is not necessary if we accept
+    # that Jruby nokogiri may put xmlns declerations on different elements than MRI,
+    # although it should be semantically equivalent for a namespace-aware parser.
+    # https://github.com/sparklemotion/nokogiri/issues/1875
+    #
+    # This as a separate method now exists largely as a historical artifact, and for this
+    # documentation.
     def reparent_node_to_root(new_parent_doc, node)
-      if Traject::Util.is_jruby?
-        original_ns_scopes = node.namespace_scopes
-      end
 
       new_parent_doc.root = node
-
-      if Traject::Util.is_jruby?
-        original_ns_scopes.each do |ns|
-          if new_parent_doc.at_xpath("//#{ns.prefix}:*", ns.prefix => ns.href)
-            new_parent_doc.root.add_namespace(ns.prefix, ns.href)
-          end
-        end
-      end
 
       return new_parent_doc
     end
