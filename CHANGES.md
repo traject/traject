@@ -1,5 +1,9 @@
 # Changes
 
+## NEXT
+
+* Nokogiri dependency for the NokogiriReader increased to `~> 1.9`. When using Jruby `each_record_xpath`, resulting yielded documents may have xmlns declarations on different nodes than in MRI (and previous versions of nokogiri), but we could find now way around this with nokogiri >= 1.9.0. The documents should still be semantically equivalent for namespace use.
+
 ## 3.0.0
 
 ### Changed/Backwards Incompatibilities
