@@ -19,7 +19,7 @@ Initially by Jonathan Rochkind (Johns Hopkins Libraries) and Bill Dueber (Univer
 * Basic configuration files can be easily written even by non-rubyists,  with a few simple directives traject provides. But config files are 'ruby all the way down', so we can provide a gradual slope to more complex needs, with the full power of ruby.
 * Easy to program, easy to read, easy to modify.
 * Fast. Traject by default indexes using multiple threads, on multiple cpu cores, when the underlying ruby implementation (i.e., JRuby) allows it, and can use a separate thread for communication with solr even under MRI. Traject is intended to be usable to process millions of records.
-* Composed of decoupled components, for flexibility and extensibility.
+* Composed of decoupled components, for flexibility and extensibility.f?
 * Designed to support local code and configuration that's maintainable and testable, and can be shared between projects as ruby gems.
 * Easy to split configuration between multiple files, for simple "pick-and-choose" command line options that can combine to deal with any of your local needs.
 
@@ -405,7 +405,7 @@ writer class in question.
 
 ## The traject command Line
 
-(If you are interested in running traject in an embedded/programmatic context instead of as a standalone command-line batch process, please see docs on [Programmatic Use](./docs/programmatic_use.md) )
+(If you are interested in running traject in an embedded/programmatic context instead of as a standalone command-line batch process, please see docs on [Programmatic Use](./doc/programmatic_use.md) )
 
 The simplest invocation is:
 
