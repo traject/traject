@@ -135,7 +135,7 @@ For the syntax and complete possibilities of the specification string argument t
 
 To see all options for `extract_marc`, see the [extract_marc](http://rdoc.info/gems/traject/Traject/Macros/Marc21:extract_marc) method documentation.
 
-### XML mode, extract_xml
+### XML mode, extract_xpath
 
 See our [xml guide](./doc/xml.md) for more XML examples, but you will usually use extract_xpath.
 
