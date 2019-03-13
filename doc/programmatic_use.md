@@ -48,6 +48,28 @@ indexer = Traject::Indexer.new(settings) do
 end
 ```
 
+### Configuring indexer subclasses
+
+Indexing step configuration is historically done in traject at the indexer _instance_ level. Either programmatically or by applying a "configuration file" to an indexer instance.
+
+But you can also define your own indexer sub-class with indexing steps built-in, using the class-level `configure` method.
+
+```ruby
+class MyIndexer < Traject::Indexer
+  configure do
+    settings do
+      provide "solr.url", Rails.application.config.my_solr_url
+    end
+
+    to_field "our_name", literal("University of Whatever")
+  end
+end
+```
+
+These setting and indexing steps are now "hard-coded" into that subclass. You can still provide additional configuration at the instance level, as normal. You can also make a subclass of that `MyIndexer` class, that will inherit configuration from MyIndexer, and can supply it's own additional class-level configuration too.
+
+Note that due to how implementation is done, instantiating an indexer is still _relatively_ expensive. (Class-level configuration is only actually executed on instantiation). You will still get better performance by re-using a global instance of your indexer subclass, instead of, say, instantiating one per object to be indexed.
+
 ## Running the indexer
 
 ### process: probably not what you want
@@ -157,7 +179,7 @@ You may want to consider instead creating one or more configured "global" indexe
 
 * Readers, and the Indexer#process method, are not thread-safe. Which is why using Indexer#process, which uses a fixed reader, is not threads-safe, and why when sharing a global idnexer we want to use `process_record`, `map_record`, or `process_with` as above.
 
-It ought to be safe to use a global Indexer concurrently in several threads, with the `map_record`, `process_record` or `process_with` methods -- so long as your indexing rules and writers are thread-safe, as they usually will be and always ought to be. 
+It ought to be safe to use a global Indexer concurrently in several threads, with the `map_record`, `process_record` or `process_with` methods -- so long as your indexing rules and writers are thread-safe, as they usually will be and always ought to be.
 
 ### An example
 
