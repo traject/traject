@@ -1,6 +1,9 @@
 require 'test_helper'
 
 describe "Class-level configuration of Indexer sub-class" do
+  # Declaring a class inline in minitest isn't great, this really is a globally
+  # available class now, other tests shouldn't re-use this class name. But it works
+  # for testing for now.
   class TestIndexerSubclass < Traject::Indexer
     configure do
       to_field "field", literal("value")
