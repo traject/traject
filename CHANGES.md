@@ -6,6 +6,9 @@
 
 * LineWriter guesses better about when to auto-close, and provides an optional explicit setting in case it guesses wrong. https://github.com/traject/traject/pull/211
 
+* Class-level indexer configuration, for custom indexer subclasses, now available with class-level `configure` method. https://github.com/traject/traject/pull/213
+
+
 ## 3.0.0
 
 ### Changed/Backwards Incompatibilities

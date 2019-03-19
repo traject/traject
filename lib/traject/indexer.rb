@@ -180,6 +180,7 @@ class Traject::Indexer
     @index_steps            = []
     @after_processing_steps = []
 
+    self.class.apply_class_configure_block(self)
     instance_eval(&block) if block
   end
 
@@ -188,6 +189,26 @@ class Traject::Indexer
   def configure(&block)
     instance_eval(&block)
   end
+
+  ## Class level configure block accepted too, and applied at instantiation
+  #  before instance-level configuration.
+  #
+  #  EXPERIMENTAL, implementation may change in ways that effect some uses.
+  #  https://github.com/traject/traject/pull/213
+  def self.configure(&block)
+    @class_configure_block = block
+  end
+
+  def self.apply_class_configure_block(instance)
+    # Make sure we inherit from superclass that has a class-level ivar @class_configure_block
+    if self.superclass.respond_to?(:apply_class_configure_block)
+      self.superclass.apply_class_configure_block(instance)
+    end
+    if @class_configure_block
+      instance.configure(&@class_configure_block)
+    end
+  end
+
 
 
   # Pass a string file path, a Pathname, or a File object, for
