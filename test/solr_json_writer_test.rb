@@ -225,6 +225,23 @@ describe "Traject::SolrJsonWriter" do
        logged = strio.string
       assert_includes logged, 'ArgumentError: bad stuff'
     end
+  end
 
+  describe "#delete" do
+    it "deletes" do
+      id = "123456"
+      @writer.delete(id)
+
+      post_args = @fake_http_client.post_args.first
+      assert_equal "http://example.com/solr/update/json", post_args[0]
+      assert_equal JSON.generate({"delete" => id}), post_args[1]
+    end
+
+    it "raises on non-200 http response" do
+      @fake_http_client.response_status = 500
+      assert_raises(RuntimeError) do
+        @writer.delete("12345")
+      end
+    end
   end
 end

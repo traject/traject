@@ -174,9 +174,28 @@ class Traject::SolrJsonWriter
       if @max_skipped and skipped_record_count > @max_skipped
         raise MaxSkippedRecordsExceeded.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
       end
-
     end
+  end
 
+
+  # Very beginning of a delete implementation. POSTs a delete request to solr
+  # for id in arg (value of Solr UniqueID field, usually `id` field).
+  #
+  # Right now, does it inline and immediately, no use of background threads or batching.
+  # This could change.
+  #
+  # Right now, if unsuccesful for any reason, will raise immediately out of here.
+  # Could raise any of the `skippable_exceptions` (timeouts, network errors), an
+  # exception will be raised right out of here.
+  #
+  # There is no built-in way to direct a record to be deleted from an indexing config
+  # file at the moment, this is just a loose method on the writer.
+  def delete(id)
+    json_package = {delete: id}
+    resp = @http_client.post @solr_update_url, JSON.generate(json_package), "Content-type" => "application/json"
+    if resp.status != 200
+      raise RuntimeError.new("Could not delete #{id.inspect}, http response #{resp.status}: #{resp.body}")
+    end
   end
 
 
