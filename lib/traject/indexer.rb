@@ -192,6 +192,9 @@ class Traject::Indexer
 
   ## Class level configure block accepted too, and applied at instantiation
   #  before instance-level configuration.
+  #
+  #  EXPERIMENTAL, implementation may change in ways that effect some uses.
+  #  https://github.com/traject/traject/pull/213
   def self.configure(&block)
     @class_configure_block = block
   end

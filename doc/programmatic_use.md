@@ -54,6 +54,8 @@ Indexing step configuration is historically done in traject at the indexer _inst
 
 But you can also define your own indexer sub-class with indexing steps built-in, using the class-level `configure` method.
 
+This is an EXPERIMENTAL feature, implementation may change. https://github.com/traject/traject/pull/213
+
 ```ruby
 class MyIndexer < Traject::Indexer
   configure do
