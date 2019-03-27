@@ -8,6 +8,8 @@
 
 * Class-level indexer configuration, for custom indexer subclasses, now available with class-level `configure` method. https://github.com/traject/traject/pull/213
 
+* SolrJsonWriter has a `delete(solr-unique-key)` method. Does not currently use any batching or threading. https://github.com/traject/traject/pull/214
+
 
 ## 3.0.0
 
