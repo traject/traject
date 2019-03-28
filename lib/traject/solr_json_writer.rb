@@ -16,7 +16,30 @@ require 'concurrent' # for atomic_fixnum
 # This should work under both MRI and JRuby, with JRuby getting much
 # better performance due to the threading model.
 #
-# Relevant settings
+# Solr updates are by default sent with no commit params. This will definitely
+# maximize your performance, and *especially* for bulk/batch indexing is recommended --
+# use Solr auto commit in your Solr configuration instead, possibly with `commit_on_close`
+# setting here.
+#
+# However, if you want the writer to send `commitWithin=true`, `commit=true`,
+# `softCommit=true`, or any other URL parameters valid for Solr update handlers,
+# you can configure this with `solr_writer.solr_update_args` setting. See:
+# https://lucene.apache.org/solr/guide/7_0/near-real-time-searching.html#passing-commit-and-commitwithin-parameters-as-part-of-the-url
+# Eg:
+#
+#     settings do
+#       provide "solr_writer.solr_update_args", { commitWithin: 1000 }
+#     end
+#
+#  (That it's a hash makes it infeasible to set/override on command line, if this is
+#  annoying for you let us know)
+#
+#  `solr_update_args` will apply to batch and individual update requests, but
+#  not to commit sent if `commit_on_close`. You can also instead set
+#   `solr_writer.solr_commit_args` for that (or pass in an arg to #commit if calling
+#   manually)
+#
+# ## Relevant settings
 #
 # * solr.url (optional if solr.update_url is set) The URL to the solr core to index into
 #
@@ -36,6 +59,10 @@ require 'concurrent' # for atomic_fixnum
 # * solr_writer.skippable_exceptions: List of classes that will be rescued internal to
 #   SolrJsonWriter, and handled with max_skipped logic. Defaults to
 #   `[HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED]`
+#
+# * solr_writer.solr_update_args: A _hash_ of query params to send to solr update url.
+#   Will be sent with every update request. Eg `{ softCommit: true }` or `{ commitWithin: 1000 }`.
+#   See also `solr_writer.solr_commit_args`
 #
 # * solr_writer.commit_on_close: Set to true (or "true") if you want to commit at the
 #   end of the indexing run. (Old "solrj_writer.commit_on_close" supported for backwards
@@ -96,6 +123,8 @@ class Traject::SolrJsonWriter
     # Figure out where to send updates
     @solr_update_url = self.determine_solr_update_url
 
+    @solr_update_args = settings["solr_writer.solr_update_args"]
+
     logger.info("   #{self.class.name} writing to '#{@solr_update_url}' in batches of #{@batch_size} with #{@thread_pool_size} bg threads")
   end
 
@@ -123,14 +152,24 @@ class Traject::SolrJsonWriter
     send_batch( Traject::Util.drain_queue(@batched_queue) )
   end
 
+  # configured update url, with settings @solr_update_args added to it
+  def solr_update_url_with_query(query_params = nil)
+    if query_params && ! query_params.empty?
+      @solr_update_url + '?' + URI.encode_www_form((@solr_update_args || {}).merge(query_params))
+    else
+      @solr_update_url
+    end
+  end
+
   # Send the given batch of contexts. If something goes wrong, send
   # them one at a time.
   # @param [Array<Traject::Indexer::Context>] an array of contexts
   def send_batch(batch)
     return if batch.empty?
     json_package = JSON.generate(batch.map { |c| c.output_hash })
+
     begin
-      resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
+      resp = @http_client.post solr_update_url_with_query(@solr_update_args), json_package, "Content-type" => "application/json"
     rescue StandardError => exception
     end
 
@@ -153,7 +192,7 @@ class Traject::SolrJsonWriter
   def send_single(c)
     json_package = JSON.generate([c.output_hash])
     begin
-      resp = @http_client.post @solr_update_url, json_package, "Content-type" => "application/json"
+      resp = @http_client.post solr_update_url_with_query(@solr_update_args), json_package, "Content-type" => "application/json"
       # Catch Timeouts and network errors as skipped records, but otherwise
       # allow unexpected errors to propagate up.
     rescue *skippable_exceptions => exception
@@ -188,11 +227,13 @@ class Traject::SolrJsonWriter
   # Could raise any of the `skippable_exceptions` (timeouts, network errors), an
   # exception will be raised right out of here.
   #
+  # Will use `solr_writer.solr_update_args` settings.
+  #
   # There is no built-in way to direct a record to be deleted from an indexing config
   # file at the moment, this is just a loose method on the writer.
   def delete(id)
     json_package = {delete: id}
-    resp = @http_client.post @solr_update_url, JSON.generate(json_package), "Content-type" => "application/json"
+    resp = @http_client.post solr_update_url_with_query(@solr_update_args), JSON.generate(json_package), "Content-type" => "application/json"
     if resp.status != 200
       raise RuntimeError.new("Could not delete #{id.inspect}, http response #{resp.status}: #{resp.body}")
     end

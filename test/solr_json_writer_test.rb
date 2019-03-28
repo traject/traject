@@ -161,6 +161,34 @@ describe "Traject::SolrJsonWriter" do
     assert_equal( {"commit" => "true"}, last_solr_get[1] )
   end
 
+  describe "solr_writer.solr_update_args" do
+    before do
+      @writer = create_writer("solr_writer.solr_update_args" => { softCommit: true } )
+    end
+
+    it "sends update args" do
+      @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
+      @writer.close
+
+      assert_equal 1, @fake_http_client.post_args.count
+
+      post_args = @fake_http_client.post_args.first
+
+      assert_equal "http://example.com/solr/update/json?softCommit=true", post_args[0]
+    end
+
+    it "sends update args with delete" do
+      @writer.delete("test-id")
+      @writer.close
+
+      assert_equal 1, @fake_http_client.post_args.count
+
+      post_args = @fake_http_client.post_args.first
+
+      assert_equal "http://example.com/solr/update/json?softCommit=true", post_args[0]
+    end
+  end
+
   describe "skipped records" do
     it "skips and reports under max_skipped" do
       strio = StringIO.new
