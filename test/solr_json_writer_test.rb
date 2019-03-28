@@ -137,6 +137,26 @@ describe "Traject::SolrJsonWriter" do
     assert_length 1, JSON.parse(post_args[1][1]), "second batch posted with last remaining doc"
   end
 
+  it "retries batch as individual records on failure" do
+    @writer = create_writer("solr_writer.batch_size" => 2, "solr_writer.max_skipped" => 10)
+    @fake_http_client.response_status = 500
+
+    2.times do |i|
+      @writer.put context_with({"id" => "doc_#{i}", "key" => "value"})
+    end
+    @writer.close
+
+    # 1 batch, then 2 for re-trying each individually
+    assert_length 3, @fake_http_client.post_args
+
+    batch_update = @fake_http_client.post_args.first
+    assert_length 2, JSON.parse(batch_update[1])
+
+    individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
+    assert_length 1, JSON.parse(individual_update1[1])
+    assert_length 1, JSON.parse(individual_update2[1])
+  end
+
   it "can #flush" do
     2.times do |i|
       doc = {"id" => "doc_#{i}", "key" => "value"}
