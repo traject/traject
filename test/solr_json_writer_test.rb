@@ -178,16 +178,22 @@ describe "Traject::SolrJsonWriter" do
 
       last_solr_get = @fake_http_client.get_args.last
 
-      assert_equal "http://example.com/update/json", last_solr_get[0]
-      assert_equal( {"commit" => "true"}, last_solr_get[1] )
+      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
     end
 
     it "can manually send commit" do
       @writer = create_writer("solr.url" => "http://example.com")
       @writer.commit
+
       last_solr_get = @fake_http_client.get_args.last
-      assert_equal "http://example.com/update/json", last_solr_get[0]
-      assert_equal( {"commit" => "true"}, last_solr_get[1] )
+      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
+    end
+
+    it "can manually send commit with specified args" do
+      @writer = create_writer("solr.url" => "http://example.com")
+      @writer.commit(softCommit: true, optimize: true, waitFlush: false)
+      last_solr_get = @fake_http_client.get_args.last
+      assert_equal "http://example.com/update/json?softCommit=true&optimize=true&waitFlush=false", last_solr_get[0]
     end
   end
 

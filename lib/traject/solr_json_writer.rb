@@ -280,14 +280,26 @@ class Traject::SolrJsonWriter
 
 
   # Send a commit
-  def commit
+  #
+  # Called automatially by `close_on_commit` setting, but also can be called manually.
+  #
+  # Optional query_params argument is the actual args to send, you must be sure
+  # to make it include "commit: true" or "softCommit: true" for it to actually commit!
+  # But you may want to include other params too, like optimize etc.
+  #
+  # @param [Hash] query_params optional query params to send to solr update. Default {"commit" => "true"}
+  #
+  # @example @writer.commit
+  # @example @writer.commit(softCommit: true)
+  # @example @writer.commit(commit: true, optimize: true, waitFlush: false)
+  def commit(query_params = {"commit" => "true"})
     logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}..."
 
     original_timeout = @http_client.receive_timeout
 
     @http_client.receive_timeout = (settings["commit_timeout"] || (10 * 60)).to_i
 
-    resp = @http_client.get(@solr_update_url, {"commit" => 'true'})
+    resp = @http_client.get(solr_update_url_with_query(query_params))
     unless resp.status == 200
       raise RuntimeError.new("Could not commit to Solr: #{resp.status} #{resp.body}")
     end
