@@ -207,6 +207,27 @@ describe "Traject::SolrJsonWriter" do
 
       assert_equal "http://example.com/solr/update/json?softCommit=true", post_args[0]
     end
+
+    it "sends update args on individual-retry after batch failure" do
+      @writer = create_writer(
+        "solr_writer.batch_size" => 2,
+        "solr_writer.max_skipped" => 10,
+        "solr_writer.solr_update_args" => { softCommit: true }
+      )
+      @fake_http_client.response_status = 500
+
+      2.times do |i|
+        @writer.put context_with({"id" => "doc_#{i}", "key" => "value"})
+      end
+      @writer.close
+
+      # 1 batch, then 2 for re-trying each individually
+      assert_length 3, @fake_http_client.post_args
+
+      individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
+      assert_equal "http://example.com/solr/update/json?softCommit=true", individual_update1[0]
+      assert_equal "http://example.com/solr/update/json?softCommit=true", individual_update2[0]
+    end
   end
 
   describe "skipped records" do
