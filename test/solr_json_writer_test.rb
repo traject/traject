@@ -181,6 +181,20 @@ describe "Traject::SolrJsonWriter" do
       assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
     end
 
+    it "commits on close with commit_solr_update_args" do
+      @writer = create_writer(
+        "solr.url" => "http://example.com",
+        "solr_writer.commit_on_close" => "true",
+        "solr_writer.commit_solr_update_args" => { softCommit: true }
+      )
+      @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
+      @writer.close
+
+      last_solr_get = @fake_http_client.get_args.last
+
+      assert_equal "http://example.com/update/json?softCommit=true", last_solr_get[0]
+    end
+
     it "can manually send commit" do
       @writer = create_writer("solr.url" => "http://example.com")
       @writer.commit
@@ -194,6 +208,28 @@ describe "Traject::SolrJsonWriter" do
       @writer.commit(softCommit: true, optimize: true, waitFlush: false)
       last_solr_get = @fake_http_client.get_args.last
       assert_equal "http://example.com/update/json?softCommit=true&optimize=true&waitFlush=false", last_solr_get[0]
+    end
+
+    it "uses commit_solr_update_args settings by default" do
+      @writer = create_writer(
+        "solr.url" => "http://example.com",
+        "solr_writer.commit_solr_update_args" => { softCommit: true }
+      )
+      @writer.commit
+
+      last_solr_get = @fake_http_client.get_args.last
+      assert_equal "http://example.com/update/json?softCommit=true", last_solr_get[0]
+    end
+
+    it "overrides commit_solr_update_args with method arg" do
+      @writer = create_writer(
+        "solr.url" => "http://example.com",
+        "solr_writer.commit_solr_update_args" => { softCommit: true, foo: "bar" }
+      )
+      @writer.commit(commit: true)
+
+      last_solr_get = @fake_http_client.get_args.last
+      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
     end
   end
 

@@ -68,6 +68,12 @@ require 'concurrent' # for atomic_fixnum
 #   end of the indexing run. (Old "solrj_writer.commit_on_close" supported for backwards
 #   compat only.)
 #
+# * solr_writer.commit_solr_update_args: A hash of query params to send when committing.
+#   Will be used for automatic `close_on_commit`, as well as any manual calls to #commit.
+#   If set, must include {"commit" => "true"} or { "softCommit" => "true" } if you actually
+#   want commits to happen when SolrJsonWriter tries to commit! But can be used to switch to softCommits
+#   (hard commits default), or specify additional params like optimize etc.
+#
 # * solr_writer.commit_timeout: If commit_on_close, how long to wait for Solr before
 #   giving up as a timeout. Default 10 minutes. Solr can be slow.
 #
@@ -124,6 +130,7 @@ class Traject::SolrJsonWriter
     @solr_update_url = self.determine_solr_update_url
 
     @solr_update_args = settings["solr_writer.solr_update_args"]
+    @commit_solr_update_args = settings["solr_writer.commit_solr_update_args"]
 
     logger.info("   #{self.class.name} writing to '#{@solr_update_url}' in batches of #{@batch_size} with #{@thread_pool_size} bg threads")
   end
@@ -283,16 +290,22 @@ class Traject::SolrJsonWriter
   #
   # Called automatially by `close_on_commit` setting, but also can be called manually.
   #
+  # If settings `solr_writer.commit_solr_update_args` is set, will be used by default.
+  # That setting needs `{ commit: true }` or  `{softCommit: true}` if you want it to
+  # actually do a commit!
+  #
   # Optional query_params argument is the actual args to send, you must be sure
   # to make it include "commit: true" or "softCommit: true" for it to actually commit!
-  # But you may want to include other params too, like optimize etc.
+  # But you may want to include other params too, like optimize etc. query_param
+  # argument replaces setting `solr_writer.commit_solr_update_args`, they are not merged.
   #
   # @param [Hash] query_params optional query params to send to solr update. Default {"commit" => "true"}
   #
   # @example @writer.commit
   # @example @writer.commit(softCommit: true)
   # @example @writer.commit(commit: true, optimize: true, waitFlush: false)
-  def commit(query_params = {"commit" => "true"})
+  def commit(query_params = nil)
+    query_params ||= @commit_solr_update_args || {"commit" => "true"}
     logger.info "#{self.class.name} sending commit to solr at url #{@solr_update_url}..."
 
     original_timeout = @http_client.receive_timeout
