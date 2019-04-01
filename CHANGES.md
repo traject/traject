@@ -10,6 +10,9 @@
 
 * SolrJsonWriter has a `delete(solr-unique-key)` method. Does not currently use any batching or threading. https://github.com/traject/traject/pull/214
 
+* SolrJsonWriter has new settings to control commit semantics. `solr_writer.solr_update_args` and `solr_writer.commit_solr_update_args`, both have hash values that are Solr update handler query params. https://github.com/traject/traject/pull/215
+
+
 
 ## 3.0.0
 

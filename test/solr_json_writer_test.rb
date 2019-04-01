@@ -137,6 +137,26 @@ describe "Traject::SolrJsonWriter" do
     assert_length 1, JSON.parse(post_args[1][1]), "second batch posted with last remaining doc"
   end
 
+  it "retries batch as individual records on failure" do
+    @writer = create_writer("solr_writer.batch_size" => 2, "solr_writer.max_skipped" => 10)
+    @fake_http_client.response_status = 500
+
+    2.times do |i|
+      @writer.put context_with({"id" => "doc_#{i}", "key" => "value"})
+    end
+    @writer.close
+
+    # 1 batch, then 2 for re-trying each individually
+    assert_length 3, @fake_http_client.post_args
+
+    batch_update = @fake_http_client.post_args.first
+    assert_length 2, JSON.parse(batch_update[1])
+
+    individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
+    assert_length 1, JSON.parse(individual_update1[1])
+    assert_length 1, JSON.parse(individual_update2[1])
+  end
+
   it "can #flush" do
     2.times do |i|
       doc = {"id" => "doc_#{i}", "key" => "value"}
@@ -150,15 +170,116 @@ describe "Traject::SolrJsonWriter" do
     assert_length 1, @fake_http_client.post_args, "Has flushed to solr"
   end
 
-  it "commits on close when set" do
-    @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_on_close" => "true")
-    @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
-    @writer.close
+  describe "commit" do
+    it "commits on close when set" do
+      @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_on_close" => "true")
+      @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
+      @writer.close
 
-    last_solr_get = @fake_http_client.get_args.last
+      last_solr_get = @fake_http_client.get_args.last
 
-    assert_equal "http://example.com/update/json", last_solr_get[0]
-    assert_equal( {"commit" => "true"}, last_solr_get[1] )
+      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
+    end
+
+    it "commits on close with commit_solr_update_args" do
+      @writer = create_writer(
+        "solr.url" => "http://example.com",
+        "solr_writer.commit_on_close" => "true",
+        "solr_writer.commit_solr_update_args" => { softCommit: true }
+      )
+      @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
+      @writer.close
+
+      last_solr_get = @fake_http_client.get_args.last
+
+      assert_equal "http://example.com/update/json?softCommit=true", last_solr_get[0]
+    end
+
+    it "can manually send commit" do
+      @writer = create_writer("solr.url" => "http://example.com")
+      @writer.commit
+
+      last_solr_get = @fake_http_client.get_args.last
+      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
+    end
+
+    it "can manually send commit with specified args" do
+      @writer = create_writer("solr.url" => "http://example.com")
+      @writer.commit(softCommit: true, optimize: true, waitFlush: false)
+      last_solr_get = @fake_http_client.get_args.last
+      assert_equal "http://example.com/update/json?softCommit=true&optimize=true&waitFlush=false", last_solr_get[0]
+    end
+
+    it "uses commit_solr_update_args settings by default" do
+      @writer = create_writer(
+        "solr.url" => "http://example.com",
+        "solr_writer.commit_solr_update_args" => { softCommit: true }
+      )
+      @writer.commit
+
+      last_solr_get = @fake_http_client.get_args.last
+      assert_equal "http://example.com/update/json?softCommit=true", last_solr_get[0]
+    end
+
+    it "overrides commit_solr_update_args with method arg" do
+      @writer = create_writer(
+        "solr.url" => "http://example.com",
+        "solr_writer.commit_solr_update_args" => { softCommit: true, foo: "bar" }
+      )
+      @writer.commit(commit: true)
+
+      last_solr_get = @fake_http_client.get_args.last
+      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
+    end
+  end
+
+  describe "solr_writer.solr_update_args" do
+    before do
+      @writer = create_writer("solr_writer.solr_update_args" => { softCommit: true } )
+    end
+
+    it "sends update args" do
+      @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
+      @writer.close
+
+      assert_equal 1, @fake_http_client.post_args.count
+
+      post_args = @fake_http_client.post_args.first
+
+      assert_equal "http://example.com/solr/update/json?softCommit=true", post_args[0]
+    end
+
+    it "sends update args with delete" do
+      @writer.delete("test-id")
+      @writer.close
+
+      assert_equal 1, @fake_http_client.post_args.count
+
+      post_args = @fake_http_client.post_args.first
+
+      assert_equal "http://example.com/solr/update/json?softCommit=true", post_args[0]
+    end
+
+    it "sends update args on individual-retry after batch failure" do
+      @writer = create_writer(
+        "solr_writer.batch_size" => 2,
+        "solr_writer.max_skipped" => 10,
+        "solr_writer.solr_update_args" => { softCommit: true }
+      )
+      @fake_http_client.response_status = 500
+
+      2.times do |i|
+        @writer.put context_with({"id" => "doc_#{i}", "key" => "value"})
+      end
+      @writer.close
+
+      # 1 batch, then 2 for re-trying each individually
+      assert_length 3, @fake_http_client.post_args
+
+      individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
+      assert_equal "http://example.com/solr/update/json?softCommit=true", individual_update1[0]
+      assert_equal "http://example.com/solr/update/json?softCommit=true", individual_update2[0]
+    end
   end
 
   describe "skipped records" do
