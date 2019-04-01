@@ -58,7 +58,7 @@ require 'concurrent' # for atomic_fixnum
 #
 # * solr_writer.skippable_exceptions: List of classes that will be rescued internal to
 #   SolrJsonWriter, and handled with max_skipped logic. Defaults to
-#   `[HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED]`
+#   `[HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter::BadHttpResponse]`
 #
 # * solr_writer.solr_update_args: A _hash_ of query params to send to solr update url.
 #   Will be sent with every update request. Eg `{ softCommit: true }` or `{ commitWithin: 1000 }`.
@@ -200,24 +200,28 @@ class Traject::SolrJsonWriter
     json_package = JSON.generate([c.output_hash])
     begin
       resp = @http_client.post solr_update_url_with_query(@solr_update_args), json_package, "Content-type" => "application/json"
-      # Catch Timeouts and network errors as skipped records, but otherwise
-      # allow unexpected errors to propagate up.
-    rescue *skippable_exceptions => exception
-      # no body, local variable exception set above will be used below
-    end
 
-    if exception || resp.status != 200
-      if exception
-        msg = Traject::Util.exception_to_log_message(exception)
-      else
-        msg = "Solr error response: #{resp.status}: #{resp.body}"
+      unless resp.status == 200
+        raise BadHttpResponse.new("Unexpected HTTP response status #{resp.status}", resp)
       end
+
+      # Catch Timeouts and network errors -- as well as non-200 http responses --
+      # as skipped records, but otherwise allow unexpected errors to propagate up.
+    rescue *skippable_exceptions => exception
+      msg = if exception.kind_of?(BadHttpResponse)
+        "Solr error response: #{exception.response.status}: #{exception.response.body}"
+      else
+        Traject::Util.exception_to_log_message(exception)
+      end
+
       logger.error "Could not add record #{c.record_inspect}: #{msg}"
       logger.debug("\t" + exception.backtrace.join("\n\t")) if exception
       logger.debug(c.source_record.to_s) if c.source_record
 
       @skipped_record_incrementer.increment
       if @max_skipped and skipped_record_count > @max_skipped
+        # re-raising in rescue means the last encountered error will be available as #cause
+        # on raised exception, a feature in ruby 2.1+.
         raise MaxSkippedRecordsExceeded.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
       end
     end
@@ -364,10 +368,24 @@ class Traject::SolrJsonWriter
 
   class MaxSkippedRecordsExceeded < RuntimeError ; end
 
+  # Adapted from HTTPClient::BadResponseError.
+  # It's got a #response accessor that will give you the HTTPClient
+  # Response object that had a bad status, although relying on that
+  # would tie you to our HTTPClient implementation that maybe should
+  # be considered an implementation detail, so I dunno.
+  class BadHttpResponse < RuntimeError
+    # HTTP::Message:: a response
+    attr_reader :response
+
+    def initialize(msg, response = nil) # :nodoc:
+      super(msg)
+      @response = response
+    end
+  end
 
   private
 
   def skippable_exceptions
-    @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED])
+    @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter::BadHttpResponse])
   end
 end
