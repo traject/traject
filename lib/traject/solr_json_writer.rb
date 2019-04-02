@@ -74,13 +74,16 @@ require 'concurrent' # for atomic_fixnum
 #   want commits to happen when SolrJsonWriter tries to commit! But can be used to switch to softCommits
 #   (hard commits default), or specify additional params like optimize etc.
 #
+# * solr_writer.http_timeout: Value in seconds, will be set on the httpclient as connect/receive/send
+#   timeout. No way to set them individually at present. Default nil, use HTTPClient defaults
+#   (60 for connect/recieve, 120 for send).
+#
 # * solr_writer.commit_timeout: If commit_on_close, how long to wait for Solr before
-#   giving up as a timeout. Default 10 minutes. Solr can be slow.
+#   giving up as a timeout (http client receive_timeout). Default 10 minutes. Solr can be slow at commits. Overrides solr_writer.timeout
 #
 # * solr_json_writer.http_client Mainly intended for testing, set your own HTTPClient
 #   or mock object to be used for HTTP.
-
-
+#
 class Traject::SolrJsonWriter
   include Traject::QualifiedConstGet
 
@@ -104,7 +107,15 @@ class Traject::SolrJsonWriter
       @max_skipped = nil
     end
 
-    @http_client = @settings["solr_json_writer.http_client"] || HTTPClient.new
+    @http_client = if @settings["solr_json_writer.http_client"]
+      @settings["solr_json_writer.http_client"]
+    else
+      client = HTTPClient.new
+      if @settings["solr_writer.http_timeout"]
+        client.connect_timeout = client.receive_timeout = client.send_timeout = @settings["solr_writer.http_timeout"]
+      end
+      client
+    end
 
     @batch_size = (settings["solr_writer.batch_size"] || DEFAULT_BATCH_SIZE).to_i
     @batch_size = 1 if @batch_size < 1
