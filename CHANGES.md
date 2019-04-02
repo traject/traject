@@ -17,6 +17,8 @@
 
 * Traject::Indexer will now use a Logger(-compatible) instance passed in in setting 'logger' https://github.com/traject/traject/pull/217
 
+* SolrJsonWriter now respects a `solr_writer.http_timeout` setting, in seconds, to be passed to HTTPClient instance. https://github.com/traject/traject/pull/219
+
 ## 3.0.0
 
 ### Changed/Backwards Incompatibilities
