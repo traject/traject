@@ -6,7 +6,7 @@
 
 * LineWriter guesses better about when to auto-close, and provides an optional explicit setting in case it guesses wrong. https://github.com/traject/traject/pull/211
 
-* Class-level indexer configuration, for custom indexer subclasses, now available with class-level `configure` method. https://github.com/traject/traject/pull/213
+* Class-level indexer configuration, for custom indexer subclasses, now available with class-level `configure` method. Warning, Indexers are still expensive to instantiate though. https://github.com/traject/traject/pull/213
 
 * SolrJsonWriter has a `delete(solr-unique-key)` method. Does not currently use any batching or threading. https://github.com/traject/traject/pull/214
 
@@ -15,6 +15,7 @@
 * SolrJsonWriter error handling/reporting
   * when MaxSkippedRecordsExceeded is raised, it will have a #cause that is the last error, which resulted in MaxSkippedRecordsExceeded. Some error reporting systems, including Rails, will automatically log #cause, so that's helpful. https://github.com/traject/traject/pull/216
 
+* Traject::Indexer will now use a Logger(-compatible) instance passed in in setting 'logger' https://github.com/traject/traject/pull/217
 
 ## 3.0.0
 
