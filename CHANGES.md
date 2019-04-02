@@ -12,6 +12,8 @@
 
 * SolrJsonWriter has new settings to control commit semantics. `solr_writer.solr_update_args` and `solr_writer.commit_solr_update_args`, both have hash values that are Solr update handler query params. https://github.com/traject/traject/pull/215
 
+* SolrJsonWriter error handling/reporting
+  * when MaxSkippedRecordsExceeded is raised, it will have a #cause that is the last error, which resulted in MaxSkippedRecordsExceeded. Some error reporting systems, including Rails, will automatically log #cause, so that's helpful. https://github.com/traject/traject/pull/216
 
 
 ## 3.0.0
