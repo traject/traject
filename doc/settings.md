@@ -119,6 +119,8 @@ settings are applied first of all. It's recommended you use `provide`.
 
 * `log.batch_size.severity`: If `log.batch_size` is set, what logger severity level to log to. Default "INFO", set to "DEBUG" etc if desired.
 
+* 'logger': Ignore all the other logger settings, just pass a `Logger` compatible logger instance in directly.
+
 
 
 

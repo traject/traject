@@ -370,6 +370,10 @@ class Traject::Indexer
 
   # Create logger according to settings
   def create_logger
+    if settings["logger"]
+      # none of the other settings matter, we just got a logger
+      return settings["logger"]
+    end
 
     logger_level  = settings["log.level"] || "info"
 

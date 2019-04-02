@@ -56,4 +56,22 @@ describe 'Custom mapping error handler' do
 
     assert_nil indexer.map_record({})
   end
+
+  it "uses logger from settings" do
+    desired_logger = Logger.new("/dev/null")
+    set_logger = nil
+    indexer.configure do
+      settings do
+        provide "logger", desired_logger
+        provide "mapping_rescue", -> (ctx, e) {
+          set_logger = ctx.logger
+        }
+      end
+      to_field 'id' do |_context , _exception|
+        raise 'this was always going to fail'
+      end
+    end
+    indexer.map_record({})
+    assert_equal desired_logger.object_id, set_logger.object_id
+  end
 end
