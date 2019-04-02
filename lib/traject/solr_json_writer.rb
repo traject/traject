@@ -159,10 +159,11 @@ class Traject::SolrJsonWriter
     send_batch( Traject::Util.drain_queue(@batched_queue) )
   end
 
-  # configured update url, with settings @solr_update_args added to it
-  def solr_update_url_with_query(query_params = nil)
-    if query_params && ! query_params.empty?
-      @solr_update_url + '?' + URI.encode_www_form((@solr_update_args || {}).merge(query_params))
+  # configured update url, with either settings @solr_update_args or passed in
+  # query_params added to it
+  def solr_update_url_with_query(query_params)
+    if query_params
+      @solr_update_url + '?' + URI.encode_www_form(query_params)
     else
       @solr_update_url
     end

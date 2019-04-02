@@ -204,10 +204,10 @@ describe "Traject::SolrJsonWriter" do
     end
 
     it "can manually send commit with specified args" do
-      @writer = create_writer("solr.url" => "http://example.com")
-      @writer.commit(softCommit: true, optimize: true, waitFlush: false)
+      @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_solr_update_args" => { softCommit: true })
+      @writer.commit(commit: true, optimize: true, waitFlush: false)
       last_solr_get = @fake_http_client.get_args.last
-      assert_equal "http://example.com/update/json?softCommit=true&optimize=true&waitFlush=false", last_solr_get[0]
+      assert_equal "http://example.com/update/json?commit=true&optimize=true&waitFlush=false", last_solr_get[0]
     end
 
     it "uses commit_solr_update_args settings by default" do
