@@ -195,6 +195,10 @@ class Traject::Indexer
   #
   #  EXPERIMENTAL, implementation may change in ways that effect some uses.
   #  https://github.com/traject/traject/pull/213
+  #
+  #  Note that settings set by 'provide' in subclass can not really be overridden
+  #  by 'provide' in a next level subclass. Use self.default_settings instead, with
+  #  call to super.
   def self.configure(&block)
     @class_configure_block = block
   end

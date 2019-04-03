@@ -6,11 +6,22 @@ describe "Class-level configuration of Indexer sub-class" do
   # for testing for now.
   class TestIndexerSubclass < Traject::Indexer
     configure do
+      settings do
+        provide "class_level", "TestIndexerSubclass"
+      end
+
       to_field "field", literal("value")
       each_record do |rec, context|
         context.output_hash["from_each_record"] ||= []
         context.output_hash["from_each_record"] << "value"
       end
+    end
+
+    def self.default_settings
+      @default_settings ||= super.merge(
+        "set_by_default_setting_no_override" => "TestIndexerSubclass",
+        "set_by_default_setting" => "TestIndexerSubclass"
+      )
     end
   end
 
@@ -39,13 +50,34 @@ describe "Class-level configuration of Indexer sub-class" do
   describe "with multi-level subclass" do
     class TestIndexerSubclassSubclass < TestIndexerSubclass
       configure do
+        settings do
+          provide "class_level", "TestIndexerSubclassSubclass"
+        end
+
         to_field "field", literal("from-sub-subclass")
         to_field "subclass_field", literal("from-sub-subclass")
       end
+
+      def self.default_settings
+        @default_settings ||= super.merge(
+          "set_by_default_setting" => "TestIndexerSubclassSubclass"
+        )
+      end
+
     end
 
     before do
       @indexer = TestIndexerSubclassSubclass.new
+    end
+
+    it "lets subclass override settings 'provide'" do
+      skip("This would be nice but is currently architecturally hard")
+      assert_equal "TestIndexerSubclassSubclass", @indexer.settings["class_level"]
+    end
+
+    it "lets subclass override default settings" do
+      assert_equal "TestIndexerSubclassSubclass", @indexer.settings["set_by_default_setting"]
+      assert_equal "TestIndexerSubclass", @indexer.settings["set_by_default_setting_no_override"]
     end
 
     it "uses configuraton from all inheritance" do
