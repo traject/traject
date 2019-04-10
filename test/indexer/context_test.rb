@@ -74,6 +74,32 @@ describe "Traject::Indexer::Context" do
       assert_equal @context.output_hash, { "key" => ["value1", "value1"] }
     end
 
+    it "ignores nil values by default" do
+      @context.add_output(:key, "value1", nil, "value2")
+      assert_equal @context.output_hash, { "key" => ["value1", "value2"] }
+    end
+
+    it "allows nil values if allow_nil_values" do
+      @context.settings = { Traject::Indexer::ToFieldStep::ALLOW_NIL_VALUES => true }
+
+      @context.add_output(:key, "value1", nil, "value2")
+      assert_equal @context.output_hash, { "key" => ["value1", nil, "value2"] }
+    end
+
+    it "ignores empty array by default" do
+      @context.add_output(:key)
+      @context.add_output(:key, nil)
+
+      assert_nil @context.output_hash["key"]
+    end
+
+    it "allows empty field if allow_empty_fields" do
+      @context.settings = { Traject::Indexer::ToFieldStep::ALLOW_EMPTY_FIELDS => true }
+
+      @context.add_output(:key, nil)
+      assert_equal @context.output_hash, { "key" => [] }
+    end
+
     it "can add to multiple fields" do
       @context.add_output(["field1", "field2"], "value1", "value2")
       assert_equal @context.output_hash, { "field1" => ["value1", "value2"], "field2" => ["value1", "value2"] }
