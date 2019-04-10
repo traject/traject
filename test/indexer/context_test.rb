@@ -38,8 +38,40 @@ describe "Traject::Indexer::Context" do
 
       assert_equal "<record ##{@position} (#{@input_name} ##{@position_in_input}), source_id:#{@record_001} output_id:output_id>", @context.record_inspect
     end
-
   end
 
+  describe "#add_output" do
+    before do
+      @context = Traject::Indexer::Context.new
+    end
+    it "adds one value to nil" do
+      @context.add_output(:key, "value")
+      assert_equal @context.output_hash, { "key" => ["value"] }
+    end
 
+    it "adds multiple values to nil" do
+      @context.add_output(:key, "value1", "value2")
+      assert_equal @context.output_hash, { "key" => ["value1", "value2"] }
+    end
+
+    it "adds one value to existing accumulator" do
+      @context.output_hash["key"] = ["value1"]
+      @context.add_output(:key, "value2")
+      assert_equal @context.output_hash, { "key" => ["value1", "value2"] }
+    end
+
+    it "uniqs by default" do
+      @context.output_hash["key"] = ["value1"]
+      @context.add_output(:key, "value1")
+      assert_equal @context.output_hash, { "key" => ["value1"] }
+    end
+
+    it "does not unique if allow_duplicate_values" do
+      @context.settings = { Traject::Indexer::ToFieldStep::ALLOW_DUPLICATE_VALUES => true }
+      @context.output_hash["key"] = ["value1"]
+
+      @context.add_output(:key, "value1")
+      assert_equal @context.output_hash, { "key" => ["value1", "value1"] }
+    end
+  end
 end

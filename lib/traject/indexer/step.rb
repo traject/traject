@@ -158,10 +158,7 @@ class Traject::Indexer
 
       # field_name can actually be an array of field names
       Array(field_name).each do |a_field_name|
-        context.output_hash[a_field_name] ||= []
-
-        existing_accumulator = context.output_hash[a_field_name].concat(accumulator)
-        existing_accumulator.uniq! unless context.settings[ALLOW_DUPLICATE_VALUES]
+        context.add_output(a_field_name, *accumulator)
       end
     end
   end
