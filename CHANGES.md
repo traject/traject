@@ -2,6 +2,12 @@
 
 ## NEXT
 
+* Context#add_output is added, convenient for custom ruby code.
+      each_record do |record, context|
+         context.add_output "key", something_from(record)
+      end
+  https://github.com/traject/traject/pull/220
+
 * Nokogiri dependency for the NokogiriReader increased to `~> 1.9`. When using Jruby `each_record_xpath`, resulting yielded documents may have xmlns declarations on different nodes than in MRI (and previous versions of nokogiri), but we could find now way around this with nokogiri >= 1.9.0. The documents should still be semantically equivalent for namespace use. https://github.com/traject/traject/pull/209
 
 * LineWriter guesses better about when to auto-close, and provides an optional explicit setting in case it guesses wrong. https://github.com/traject/traject/pull/211

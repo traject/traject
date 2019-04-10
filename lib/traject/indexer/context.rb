@@ -82,6 +82,51 @@ class Traject::Indexer
       str
     end
 
+    # Add values to an array in context.output_hash with the specified key/field_name(s).
+    # Creates array in output_hash if currently nil.
+    #
+    # Post-processing/filtering:
+    #
+    # * uniqs accumulator, unless settings["allow_dupicate_values"] is set.
+    # * Removes nil values unless settings["allow_nil_values"] is set.
+    # * Will not add an empty array to output_hash (will leave it nil instead)
+    #   unless settings["allow_empty_fields"] is set.
+    #
+    # Multiple values can be added with multiple arguments (we avoid an array argument meaning
+    # multiple values to accomodate odd use cases where array itself is desired in output_hash value)
+    #
+    # @param field_name [String,Symbol,Array<String>,Array[<Symbol>]] A key to set in output_hash, or
+    #   an array of such keys.
+    #
+    # @example add one value
+    #   context.add_output(:additional_title, "a title")
+    #
+    # @example add multiple values as multiple params
+    #   context.add_output("additional_title", "a title", "another title")
+    #
+    # @example add multiple values as multiple params from array using ruby spread operator
+    #   context.add_output(:some_key, *array_of_values)
+    #
+    # @example add to multiple keys in output hash
+    #   context.add_output(["key1", "key2"], "value")
+    #
+    # @return [Traject::Context] self
+    #
+    # Note for historical reasons relevant settings key *names* are in constants in Traject::Indexer::ToFieldStep,
+    # but the settings don't just apply to ToFieldSteps
+    def add_output(field_name, *values)
+      values.compact! unless self.settings && self.settings[Traject::Indexer::ToFieldStep::ALLOW_NIL_VALUES]
+
+      return self if values.empty? and not (self.settings && self.settings[Traject::Indexer::ToFieldStep::ALLOW_EMPTY_FIELDS])
+
+      Array(field_name).each do |key|
+        accumulator = (self.output_hash[key.to_s] ||= [])
+        accumulator.concat values
+        accumulator.uniq! unless self.settings && self.settings[Traject::Indexer::ToFieldStep::ALLOW_DUPLICATE_VALUES]
+      end
+
+      return self
+    end
   end
 
 

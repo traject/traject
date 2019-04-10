@@ -247,13 +247,12 @@ each_record do |record, context|
 end
 
 each_record do |record, context|
-  (val1, val2) = calculate_two_things_from(record)
+  if eligible_for_things?(record)
+    (val1, val2) = calculate_two_things_from(record)
 
-  context.output_hash["first_field"] ||= []
-  context.output_hash["first_field"] << val1
-
-  context.output_hash["second_field"] ||= []
-  context.output_hash["second_field"] << val2
+    context.add_output("first_field", val1)
+    context.add_output("second_field", val2)
+  end
 end
 ~~~
 

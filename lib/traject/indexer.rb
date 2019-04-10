@@ -283,10 +283,9 @@ class Traject::Indexer
         "log.batch_size.severity" => "info",
 
         # how to post-process the accumulator
-        "allow_nil_values"        => false,
-        "allow_duplicate_values"  => true,
-
-        "allow_empty_fields"      => false
+        Traject::Indexer::ToFieldStep::ALLOW_NIL_VALUES => false,
+        Traject::Indexer::ToFieldStep::ALLOW_DUPLICATE_VALUES  => true,
+        Traject::Indexer::ToFieldStep::ALLOW_EMPTY_FIELDS => false
     }.freeze
   end
 

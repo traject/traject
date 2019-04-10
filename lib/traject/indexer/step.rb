@@ -145,24 +145,20 @@ class Traject::Indexer
       return accumulator
     end
 
-    # Add the accumulator to the context with the correct field name
-    # Do post-processing on the accumulator (remove nil values, allow empty
-    # fields, etc)
+
+    # These constqnts here for historical/legacy reasons, they really oughta
+    # live in Traject::Context, but in case anyone is referring to them
+    # we'll leave them here for now.
     ALLOW_NIL_VALUES       = "allow_nil_values".freeze
     ALLOW_EMPTY_FIELDS     = "allow_empty_fields".freeze
     ALLOW_DUPLICATE_VALUES = "allow_duplicate_values".freeze
 
+    # Add the accumulator to the context with the correct field name(s).
+    # Do post-processing on the accumulator (remove nil values, allow empty
+    # fields, etc)
     def add_accumulator_to_context!(accumulator, context)
-      accumulator.compact! unless context.settings[ALLOW_NIL_VALUES]
-      return if accumulator.empty? and not (context.settings[ALLOW_EMPTY_FIELDS])
-
       # field_name can actually be an array of field names
-      Array(field_name).each do |a_field_name|
-        context.output_hash[a_field_name] ||= []
-
-        existing_accumulator = context.output_hash[a_field_name].concat(accumulator)
-        existing_accumulator.uniq! unless context.settings[ALLOW_DUPLICATE_VALUES]
-      end
+      context.add_output(field_name, *accumulator)
     end
   end
 
