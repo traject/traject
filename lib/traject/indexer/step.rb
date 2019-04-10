@@ -157,9 +157,7 @@ class Traject::Indexer
       return if accumulator.empty? and not (context.settings[ALLOW_EMPTY_FIELDS])
 
       # field_name can actually be an array of field names
-      Array(field_name).each do |a_field_name|
-        context.add_output(a_field_name, *accumulator)
-      end
+      context.add_output(field_name, *accumulator)
     end
   end
 

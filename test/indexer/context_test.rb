@@ -73,5 +73,10 @@ describe "Traject::Indexer::Context" do
       @context.add_output(:key, "value1")
       assert_equal @context.output_hash, { "key" => ["value1", "value1"] }
     end
+
+    it "can add to multiple fields" do
+      @context.add_output(["field1", "field2"], "value1", "value2")
+      assert_equal @context.output_hash, { "field1" => ["value1", "value2"], "field2" => ["value1", "value2"] }
+    end
   end
 end

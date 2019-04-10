@@ -82,7 +82,7 @@ class Traject::Indexer
       str
     end
 
-    # Add values to an array in context.output_hash with the specified key/field_name
+    # Add values to an array in context.output_hash with the specified key/field_name(s)
     #
     # * creates array in output_hash if currently nil.
     # * uniqs accumulator, unless settings["allow_dupicate_values"] is set.
@@ -92,16 +92,23 @@ class Traject::Indexer
     #
     # @example add one value
     #   context.add_output(:additional_title, "a title")
+    #
     # @example add multiple values as multiple params
     #   context.add_output("additional_title", "a title", "another title")
+    #
     # @example add multiple values as multiple params from array using ruby spread operator
     #   context.add_output(:some_key, *array_of_values)
     #
+    # @example add to multiple keys in output hash
+    #   context.add_output(["key1", "key2"], "value")
+    #
     # @return [Traject::Context] self
-    def add_output(key, *values)
-      accumulator = (self.output_hash[key.to_s] ||= [])
-      accumulator.concat values
-      accumulator.uniq! unless self.settings && self.settings[Traject::Indexer::ToFieldStep::ALLOW_DUPLICATE_VALUES]
+    def add_output(field_name, *values)
+      Array(field_name).each do |key|
+        accumulator = (self.output_hash[key.to_s] ||= [])
+        accumulator.concat values
+        accumulator.uniq! unless self.settings && self.settings[Traject::Indexer::ToFieldStep::ALLOW_DUPLICATE_VALUES]
+      end
 
       return self
     end
