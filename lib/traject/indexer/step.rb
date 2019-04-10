@@ -153,7 +153,7 @@ class Traject::Indexer
     ALLOW_EMPTY_FIELDS     = "allow_empty_fields".freeze
     ALLOW_DUPLICATE_VALUES = "allow_duplicate_values".freeze
 
-    # Add the accumulator to the context with the correct field name
+    # Add the accumulator to the context with the correct field name(s).
     # Do post-processing on the accumulator (remove nil values, allow empty
     # fields, etc)
     def add_accumulator_to_context!(accumulator, context)
