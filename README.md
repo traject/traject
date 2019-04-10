@@ -311,11 +311,14 @@ like `to_field`, is executed for every record, but without being tied
 to a specific output field.
 
 `each_record` can be used for logging or notifiying, computing intermediate
-results, or writing to more than one field at once.
+results, or more complex ruby logic.
 
 ~~~ruby
   each_record do |record|
     some_custom_logging(record)
+  end
+  each_record do |record, context|
+    context.add_output(:some_value, extract_some_value_from_record(record))
   end
 ~~~
 
