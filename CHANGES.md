@@ -1,29 +1,34 @@
 # Changes
 
-## NEXT
+## 3.1.0
+
+### Added
 
 * Context#add_output is added, convenient for custom ruby code.
-      each_record do |record, context|
-         context.add_output "key", something_from(record)
-      end
+
+        each_record do |record, context|
+           context.add_output "key", something_from(record)
+        end
+
   https://github.com/traject/traject/pull/220
 
-* Nokogiri dependency for the NokogiriReader increased to `~> 1.9`. When using Jruby `each_record_xpath`, resulting yielded documents may have xmlns declarations on different nodes than in MRI (and previous versions of nokogiri), but we could find now way around this with nokogiri >= 1.9.0. The documents should still be semantically equivalent for namespace use. https://github.com/traject/traject/pull/209
+* SolrJsonWriter
 
-* LineWriter guesses better about when to auto-close, and provides an optional explicit setting in case it guesses wrong. https://github.com/traject/traject/pull/211
+  * Class-level indexer configuration, for custom indexer subclasses, now available with class-level `configure` method. Warning, Indexers are still expensive to instantiate though. https://github.com/traject/traject/pull/213
 
-* Class-level indexer configuration, for custom indexer subclasses, now available with class-level `configure` method. Warning, Indexers are still expensive to instantiate though. https://github.com/traject/traject/pull/213
+  * SolrJsonWriter has new settings to control commit semantics. `solr_writer.solr_update_args` and `solr_writer.commit_solr_update_args`, both have hash values that are Solr update handler query params. https://github.com/traject/traject/pull/215
 
-* SolrJsonWriter has a `delete(solr-unique-key)` method. Does not currently use any batching or threading. https://github.com/traject/traject/pull/214
+  * SolrJsonWriter has a `delete(solr-unique-key)` method. Does not currently use any batching or threading. https://github.com/traject/traject/pull/214
 
-* SolrJsonWriter has new settings to control commit semantics. `solr_writer.solr_update_args` and `solr_writer.commit_solr_update_args`, both have hash values that are Solr update handler query params. https://github.com/traject/traject/pull/215
+  * SolrJsonWriter, when MaxSkippedRecordsExceeded is raised, it will have a #cause that is the last error, which resulted in MaxSkippedRecordsExceeded. Some error reporting systems, including Rails, will automatically log #cause, so that's helpful. https://github.com/traject/traject/pull/216
 
-* SolrJsonWriter error handling/reporting
-  * when MaxSkippedRecordsExceeded is raised, it will have a #cause that is the last error, which resulted in MaxSkippedRecordsExceeded. Some error reporting systems, including Rails, will automatically log #cause, so that's helpful. https://github.com/traject/traject/pull/216
+  * SolrJsonWriter now respects a `solr_writer.http_timeout` setting, in seconds, to be passed to HTTPClient instance. https://github.com/traject/traject/pull/219
+
+* Nokogiri dependency for the NokogiriReader increased to `~> 1.9`. When using Jruby `each_record_xpath`, resulting yielded documents may have xmlns declarations on different nodes than in MRI (and previous versions of nokogiri), but we could find now way around this with nokogiri >= 1.9.0. The documents should still be semantically equivalent for namespace use. This was necessary to keep JRuby Nokogiri XML working with recent Nokogiri releases.  https://github.com/traject/traject/pull/209
+
+* LineWriter guesses better about when to auto-close, and provides an optional explicit setting in case it guesses wrong. (thanks @justinlittman) https://github.com/traject/traject/pull/211
 
 * Traject::Indexer will now use a Logger(-compatible) instance passed in in setting 'logger' https://github.com/traject/traject/pull/217
-
-* SolrJsonWriter now respects a `solr_writer.http_timeout` setting, in seconds, to be passed to HTTPClient instance. https://github.com/traject/traject/pull/219
 
 ## 3.0.0
 
