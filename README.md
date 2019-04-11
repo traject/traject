@@ -175,6 +175,8 @@ TranslationMap use above is just one example of a transformation macro, that tra
 * `append("--after each value")`
 * `gsub(/regex/, "replacement")`
 * `split(" ")`: take values and split them, possibly result in multiple values.
+* `transform(proc)`: transform each existing macro using a proc, kind of like `map`.
+   eg `to_field "something", extract_xml("//author"), transform( ->(author) { "#{author.last}, #{author.first}" })
 
 You can add on as many transformation macros as you want, they will be applied to output in order.
 
