@@ -282,14 +282,16 @@ class Traject::SolrJsonWriter
       @thread_pool.maybe_in_thread_pool { send_batch(batch) }
     end
 
-    # Wait for shutdown, and time it.
-    logger.debug "#{self.class.name}: Shutting down thread pool, waiting if needed..."
-    elapsed = @thread_pool.shutdown_and_wait
-    if elapsed > 60
-      logger.warn "Waited #{elapsed} seconds for all threads, you may want to increase solr_writer.thread_pool (currently #{@settings["solr_writer.thread_pool"]})"
+    if @thread_pool_size && @thread_pool_size > 0
+      # Wait for shutdown, and time it.
+      logger.debug "#{self.class.name}: Shutting down thread pool, waiting if needed..."
+      elapsed = @thread_pool.shutdown_and_wait
+      if elapsed > 60
+        logger.warn "Waited #{elapsed} seconds for all threads, you may want to increase solr_writer.thread_pool (currently #{@settings["solr_writer.thread_pool"]})"
+      end
+      logger.debug "#{self.class.name}: Thread pool shutdown complete"
+      logger.warn "#{self.class.name}: #{skipped_record_count} skipped records" if skipped_record_count > 0
     end
-    logger.debug "#{self.class.name}: Thread pool shutdown complete"
-    logger.warn "#{self.class.name}: #{skipped_record_count} skipped records" if skipped_record_count > 0
 
     # check again now that we've waited, there could still be some
     # that didn't show up before.
