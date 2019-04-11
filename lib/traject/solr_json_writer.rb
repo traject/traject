@@ -185,6 +185,9 @@ class Traject::SolrJsonWriter
   # @param [Array<Traject::Indexer::Context>] an array of contexts
   def send_batch(batch)
     return if batch.empty?
+
+    logger.debug("#{self.class.name}: sending batch of #{batch.size} to Solr")
+
     json_package = JSON.generate(batch.map { |c| c.output_hash })
 
     begin
@@ -209,6 +212,8 @@ class Traject::SolrJsonWriter
   # Send a single context to Solr, logging an error if need be
   # @param [Traject::Indexer::Context] c The context whose document you want to send
   def send_single(c)
+    logger.debug("#{self.class.name}: sending single record to Solr: #{c.output_hash}")
+
     json_package = JSON.generate([c.output_hash])
     begin
       resp = @http_client.post solr_update_url_with_query(@solr_update_args), json_package, "Content-type" => "application/json"
