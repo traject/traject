@@ -216,10 +216,11 @@ class Traject::SolrJsonWriter
 
     json_package = JSON.generate([c.output_hash])
     begin
-      resp = @http_client.post solr_update_url_with_query(@solr_update_args), json_package, "Content-type" => "application/json"
+      post_url = solr_update_url_with_query(@solr_update_args)
+      resp = @http_client.post post_url, json_package, "Content-type" => "application/json"
 
       unless resp.status == 200
-        raise BadHttpResponse.new("Unexpected HTTP response status #{resp.status}", resp)
+        raise BadHttpResponse.new("Unexpected HTTP response status #{resp.status} from POST #{post_url}", resp)
       end
 
       # Catch Timeouts and network errors -- as well as non-200 http responses --
