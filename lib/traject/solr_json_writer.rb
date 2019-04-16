@@ -261,6 +261,8 @@ class Traject::SolrJsonWriter
   # There is no built-in way to direct a record to be deleted from an indexing config
   # file at the moment, this is just a loose method on the writer.
   def delete(id)
+    logger.debug("#{self.class.name}: Sending delete to Solr for #{id}")
+
     json_package = {delete: id}
     resp = @http_client.post solr_update_url_with_query(@solr_update_args), JSON.generate(json_package), "Content-type" => "application/json"
     if resp.status != 200
