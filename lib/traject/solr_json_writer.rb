@@ -240,7 +240,7 @@ class Traject::SolrJsonWriter
       if @max_skipped and skipped_record_count > @max_skipped
         # re-raising in rescue means the last encountered error will be available as #cause
         # on raised exception, a feature in ruby 2.1+.
-        raise MaxSkippedRecordsExceeded.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting")
+        raise MaxSkippedRecordsExceeded.new("#{self.class.name}: Exceeded maximum number of skipped records (#{@max_skipped}): aborting: #{exception.message}")
       end
     end
   end
