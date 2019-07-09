@@ -270,6 +270,13 @@ class Traject::SolrJsonWriter
     end
   end
 
+  # Send a delete all query.
+  #
+  # This method takes no params and will not automatically commit the deletes.
+  # @example @writer.delete_all!
+  def delete_all!
+    delete(query: "*:*")
+  end
 
   # Get the logger from the settings, or default to an effectively null logger
   def logger
