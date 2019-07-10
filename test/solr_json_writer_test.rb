@@ -365,4 +365,13 @@ describe "Traject::SolrJsonWriter" do
       end
     end
   end
+
+  describe "#delete_all!" do
+    it "deletes all" do
+      @writer.delete_all!
+      post_args = @fake_http_client.post_args.first
+      assert_equal "http://example.com/solr/update/json", post_args[0]
+      assert_equal JSON.generate({"delete" => { "query" => "*:*"}}), post_args[1]
+    end
+  end
 end
