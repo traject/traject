@@ -134,6 +134,16 @@ describe "Traject::NokogiriReader" do
     end
   end
 
+  describe "strict_mode" do
+    it "raises on non-well-formed" do
+      # invalid because two sibling root nodes, XML requiers one root node
+      reader = Traject::NokogiriReader.new(StringIO.new("<doc></doc><doc></doc>"), {"nokogiri.strict_mode" => "true" })
+      assert_raises(Nokogiri::XML::SyntaxError) {
+        reader.each { |r| }
+      }
+    end
+  end
+
 
   def shared_tests
     @reader = Traject::NokogiriReader.new(File.open(@xml_sample_path), {

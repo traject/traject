@@ -21,6 +21,9 @@ module Traject
   #   If you need to use namespaces here, you need to have them registered with
   #   `nokogiri.default_namespaces`. If your source docs use namespaces, you DO need
   #   to use them in your each_record_xpath.
+  # * nokogiri.strict_mode: if set to `true` or `"true"`, ask Nokogiri to parse in 'strict'
+  #   mode, it will raise a `Nokogiri::XML::SyntaxError` if the XML is not well-formed, instead
+  #   of trying to take it's best-guess correction. https://nokogiri.org/tutorials/ensuring_well_formed_markup.html
   # * nokogiri_reader.extra_xpath_hooks: Experimental in progress, see below.
   #
   # ## nokogiri_reader.extra_xpath_hooks: For handling nodes outside of your each_record_xpath
@@ -87,7 +90,11 @@ module Traject
     end
 
     def each
-      whole_input_doc = Nokogiri::XML.parse(input_stream)
+      config_proc = if settings["nokogiri.strict_mode"]
+        proc { |config| config.strict }
+      end
+
+      whole_input_doc = Nokogiri::XML.parse(input_stream, &config_proc)
 
       if each_record_xpath
         whole_input_doc.xpath(each_record_xpath, default_namespaces).each do |matching_node|

@@ -1,5 +1,9 @@
 # Changes
 
+## Next
+
+* NokogiriReader has a "nokogiri.strict_mode" setting. Set to true or string 'true' to ask Nokogori to parse in strict mode, so it will immediately raise on ill-formed XML, instead of nokogiri's default to do what it can with it.
+
 ## 3.1.0
 
 ### Added
