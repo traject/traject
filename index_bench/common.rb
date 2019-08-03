@@ -131,6 +131,6 @@ to_field "edition", extract_marc('250a')
 
 to_field 'language', marc_languages("008[35-37]:041a:041d:041e:041j")
 to_field 'language008', extract_marc('008[35-37]') do |r, acc|
-  acc.reject! {|x| !(/\S/.match(x)} # ditch all-spaces values
+  acc.reject! {|x| !(/\S/.match(x)) } # ditch all-spaces values
   acc.uniq!
 end
