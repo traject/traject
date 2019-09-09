@@ -4,6 +4,8 @@
 
 * NokogiriReader has a "nokogiri.strict_mode" setting. Set to true or string 'true' to ask Nokogori to parse in strict mode, so it will immediately raise on ill-formed XML, instead of nokogiri's default to do what it can with it.
 
+* Allow basic auth configuration of the default http client via `solr_writer.basic_auth_user` and `solr_writer.basic_auth_password`.
+
 ## 3.1.0
 
 ### Added
