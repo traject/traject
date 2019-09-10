@@ -8,6 +8,9 @@
 
   * Utility method `delete_all!` sends a delete all query to the Solr URL endpoint.
 
+  * Allow basic auth configuration of the default http client via `solr_writer.basic_auth_user` and `solr_writer.basic_auth_password`.
+
+
 ## 3.1.0
 
 ### Added

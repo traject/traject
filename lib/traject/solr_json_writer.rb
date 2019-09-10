@@ -114,6 +114,12 @@ class Traject::SolrJsonWriter
       if @settings["solr_writer.http_timeout"]
         client.connect_timeout = client.receive_timeout = client.send_timeout = @settings["solr_writer.http_timeout"]
       end
+
+      if @settings["solr_writer.basic_auth_user"] &&
+          @settings["solr_writer.basic_auth_password"]
+        client.set_auth(@settings["solr.url"], @settings["solr_writer.basic_auth_user"], @settings["solr_writer.basic_auth_password"])
+      end
+
       client
     end
 
