@@ -93,6 +93,8 @@ settings are applied first of all. It's recommended you use `provide`.
 
 * `solr_writer.thread_pool`: defaults to 1 (single bg thread). A thread pool is used for submitting docs to solr. Set to 0 or nil to disable threading. Set to 1, there will still be a single bg thread doing the adds. May make sense to set higher than number of cores on your indexing machine, as these threads will mostly be waiting on Solr. Speed/capacity of your solr might be more relevant. Note that processing_thread_pool threads can end up submitting to solr too, if solr_json_writer.thread_pool is full.
 
+* `solr_writer.basic_auth_user`, `solr_writer.basic_auth_password`: Not set by default but when both are set the default writer is configured with basic auth.
+
 
 ### Dealing with MARC data
 

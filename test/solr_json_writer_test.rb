@@ -170,6 +170,27 @@ describe "Traject::SolrJsonWriter" do
     assert_length 1, @fake_http_client.post_args, "Has flushed to solr"
   end
 
+  it "defaults to not setting basic authentication" do
+    settings = { "solr.url" => "http://example.com/solr/foo" }
+    writer = Traject::SolrJsonWriter.new(settings)
+    auth = writer.instance_variable_get("@http_client")
+      .www_auth.basic_auth.instance_variable_get("@auth")
+    assert(auth.empty?)
+  end
+
+  it "allows basic authentication setup" do
+    settings = {
+      "solr.url" => "http://example.com/solr/foo",
+      "solr_writer.basic_auth_user" => "foo",
+      "solr_writer.basic_auth_password" => "bar",
+    }
+
+    writer = Traject::SolrJsonWriter.new(settings)
+    auth = writer.instance_variable_get("@http_client")
+      .www_auth.basic_auth.instance_variable_get("@auth")
+    assert(!auth.empty?)
+  end
+
   describe "commit" do
     it "commits on close when set" do
       @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_on_close" => "true")
