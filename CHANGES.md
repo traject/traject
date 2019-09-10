@@ -4,6 +4,10 @@
 
 * NokogiriReader has a "nokogiri.strict_mode" setting. Set to true or string 'true' to ask Nokogori to parse in strict mode, so it will immediately raise on ill-formed XML, instead of nokogiri's default to do what it can with it.
 
+* SolrJsonWriter
+
+  * Utility method `delete_all!` sends a delete all query to the Solr URL endpoint.
+
 ## 3.1.0
 
 ### Added
