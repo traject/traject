@@ -2,13 +2,21 @@
 
 ## Next
 
-* NokogiriReader has a "nokogiri.strict_mode" setting. Set to true or string 'true' to ask Nokogori to parse in strict mode, so it will immediately raise on ill-formed XML, instead of nokogiri's default to do what it can with it.
+*
+
+*
+
+*
+
+## 3.2.0
+
+* NokogiriReader has a "nokogiri.strict_mode" setting. Set to true or string 'true' to ask Nokogori to parse in strict mode, so it will immediately raise on ill-formed XML, instead of nokogiri's default to do what it can with it. https://github.com/traject/traject/pull/226
 
 * SolrJsonWriter
 
-  * Utility method `delete_all!` sends a delete all query to the Solr URL endpoint.
+  * Utility method `delete_all!` sends a delete all query to the Solr URL endpoint. https://github.com/traject/traject/pull/227
 
-  * Allow basic auth configuration of the default http client via `solr_writer.basic_auth_user` and `solr_writer.basic_auth_password`.
+  * Allow basic auth configuration of the default http client via `solr_writer.basic_auth_user` and `solr_writer.basic_auth_password`. https://github.com/traject/traject/pull/231
 
 
 ## 3.1.0
