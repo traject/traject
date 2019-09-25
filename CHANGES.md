@@ -2,11 +2,8 @@
 
 ## Next
 
-*
-
-*
-
-*
+* SolrJsonWriter
+  * Do not raise errors for 409 response status if `solr_writer.ignore_409` is set to true. https://github.com/traject/traject/pull/232
 
 ## 3.2.0
 

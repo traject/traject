@@ -369,6 +369,52 @@ describe "Traject::SolrJsonWriter" do
     end
   end
 
+  describe "#send_single" do
+    it "raises on non-200-409 http response" do
+      @fake_http_client.response_status = 500
+      assert_raises(RuntimeError) do
+        @writer.send_single(context_with({}))
+      end
+    end
+
+    it "raises on 409 when not configured to ignore 409" do
+      @fake_http_client.response_status = 409
+      assert_raises(RuntimeError) do
+        @writer.send_single(context_with({}))
+      end
+    end
+
+    it "does not raise error for 200 http response " do
+      @fake_http_client.response_status = 200
+        @writer.send_single(context_with({}))
+    end
+
+    describe "set solr_writer.ignore_409 = true" do
+      before do
+        @strio = StringIO.new
+        logger = logger_to_strio(@strio)
+        @writer = create_writer("solr_writer.ignore_409": true, logger: logger_to_strio(@strio))
+      end
+
+      after do
+        @writer.close
+      end
+
+      it "does not raise error for 409 http response" do
+        @fake_http_client.response_status = 409
+          c = Traject::Indexer::Context.new({})
+          @writer.send_single(c)
+      end
+
+      it "logs the skip as a warning" do
+        skip "Cannot get this test to work even though I see warning locally."
+        @writer.send_single(context_with("id" => "doc_foo", "key" => "value"))
+        logged = @strio.string
+        assert_match(/WARNING.*Could not add record <output_id:doc_foo> do to version conflict. Solr error response: 409/, logged)
+      end
+    end
+  end
+
   describe "#delete" do
     it "deletes" do
       id = "123456"

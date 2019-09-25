@@ -91,6 +91,7 @@ class Traject::SolrJsonWriter
 
   DEFAULT_MAX_SKIPPED = 0
   DEFAULT_BATCH_SIZE  = 100
+  DEFAULT_VALID_RESPONSE_STATUSES = [200]
 
   # The passed-in settings
   attr_reader :settings, :thread_pool_size
@@ -106,6 +107,14 @@ class Traject::SolrJsonWriter
     if @max_skipped < 0
       @max_skipped = nil
     end
+
+    # Ignore 409 errors
+    @valid_response_codes =
+      if @settings["solr_writer.ignore_409"]
+        DEFAULT_VALID_RESPONSE_STATUSES + [409]
+      else
+        DEFAULT_VALID_RESPONSE_STATUSES
+      end
 
     @http_client = if @settings["solr_json_writer.http_client"]
       @settings["solr_json_writer.http_client"]
@@ -225,8 +234,13 @@ class Traject::SolrJsonWriter
       post_url = solr_update_url_with_query(@solr_update_args)
       resp = @http_client.post post_url, json_package, "Content-type" => "application/json"
 
-      unless resp.status == 200
-        raise BadHttpResponse.new("Unexpected HTTP response status #{resp.status} from POST #{post_url}", resp)
+      unless @valid_response_codes.include?(resp.status)
+       raise BadHttpResponse.new("Unexpected HTTP response status #{resp.status} from POST #{post_url}", resp)
+      end
+
+      if resp.status == 409
+        # log 409s responses even if ignoring them.
+        logger.warn "Could not add record #{c.record_inspect} do to version conflict: Solr error response 409."
       end
 
       # Catch Timeouts and network errors -- as well as non-200 http responses --
@@ -271,7 +285,7 @@ class Traject::SolrJsonWriter
 
     json_package = {delete: id}
     resp = @http_client.post solr_update_url_with_query(@solr_update_args), JSON.generate(json_package), "Content-type" => "application/json"
-    if resp.status != 200
+    if !@valid_response_codes.include?(resp.status)
       raise RuntimeError.new("Could not delete #{id.inspect}, http response #{resp.status}: #{resp.body}")
     end
   end
@@ -352,7 +366,7 @@ class Traject::SolrJsonWriter
     @http_client.receive_timeout = (settings["commit_timeout"] || (10 * 60)).to_i
 
     resp = @http_client.get(solr_update_url_with_query(query_params))
-    unless resp.status == 200
+    unless @valid_response_codes.include?(resp.status)
       raise RuntimeError.new("Could not commit to Solr: #{resp.status} #{resp.body}")
     end
 

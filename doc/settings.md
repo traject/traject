@@ -95,6 +95,8 @@ settings are applied first of all. It's recommended you use `provide`.
 
 * `solr_writer.basic_auth_user`, `solr_writer.basic_auth_password`: Not set by default but when both are set the default writer is configured with basic auth.
 
+* `solr_writer.ignore_409`: Set to `true` If you want traject not to error out when Solr responds with a 409 error. The skipped records will be logged as a warning.
+
 
 ### Dealing with MARC data
 
