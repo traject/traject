@@ -197,6 +197,10 @@ describe "Traject::Macros::Marc21Semantics" do
       # we take the first date. And need to deal with the u.
       assert_equal 1845, Marc21Semantics.publication_date(@record)
     end
+    it "resorts to 264c" do
+      @record = MARC::Reader.new(support_file_path  "date_resort_to_264.marc").to_a.first
+      assert_equal 2015, Marc21Semantics.publication_date(@record)
+    end
     it "resorts to 260c" do
       @record = MARC::Reader.new(support_file_path  "date_resort_to_260.marc").to_a.first
       assert_equal 1980, Marc21Semantics.publication_date(@record)

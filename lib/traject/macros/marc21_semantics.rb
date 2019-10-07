@@ -26,19 +26,19 @@ module Traject::Macros
         accumulator.concat list.uniq if list
       end
     end
-   
+
     # If a num begins with a known OCLC prefix, return it without the prefix.
     # otherwise nil.
     #
-    # Allow (OCoLC) and/or ocn/ocm/on 
-    
+    # Allow (OCoLC) and/or ocn/ocm/on
+
     OCLCPAT = /
       \A\s*
       (?:(?:\(OCoLC\)) |
          (?:\(OCoLC\))?(?:(?:ocm)|(?:ocn)|(?:on))
          )(\d+)
          /x
-         
+
     def self.oclcnum_extract(num)
       if m = OCLCPAT.match(num)
         return m[1]
@@ -364,13 +364,16 @@ module Traject::Macros
           end
         end
       end
-      # Okay, nothing from 008, try 260
+      # Okay, nothing from 008, first try 264, then try 260
       if found_date.nil?
+        v264c = MarcExtractor.cached("264c", :separator => nil).extract(record).first
         v260c = MarcExtractor.cached("260c", :separator => nil).extract(record).first
         # just try to take the first four digits out of there, we're not going to try
         # anything crazy.
-        if m = /(\d{4})/.match(v260c)
+        if m = /(\d{4})/.match(v264c)
           found_date = m[1].to_i
+        elsif m = /(\d{4})/.match(v260c)
+            found_date = m[1].to_i
         end
       end
 
@@ -519,11 +522,11 @@ module Traject::Macros
 
     # Extracts LCSH-carrying fields, and formatting them
     # as a pre-coordinated LCSH string, for instance suitable for including
-    # in a facet. 
+    # in a facet.
     #
     # You can supply your own list of fields as a spec, but for significant
     # customization you probably just want to write your own method in
-    # terms of the Marc21Semantics.assemble_lcsh method. 
+    # terms of the Marc21Semantics.assemble_lcsh method.
     def marc_lcsh_formatted(options = {})
       spec            = options[:spec] || "600:610:611:630:648:650:651:654:662"
       subd_separator  = options[:subdivison_separator] || " — "
@@ -540,17 +543,17 @@ module Traject::Macros
     end
 
     # Takes a MARC::Field and formats it into a pre-coordinated LCSH string
-    # with subdivision seperators in the right place. 
+    # with subdivision seperators in the right place.
     #
     # For 600 fields especially, need to not just join with subdivision seperator
     # to take acount of $a$d$t -- for other fields, might be able to just
-    # join subfields, not sure. 
+    # join subfields, not sure.
     #
     # WILL strip trailing period from generated string, contrary to some LCSH practice.
     # Our data is inconsistent on whether it has period or not, this was
-    # the easiest way to standardize. 
+    # the easiest way to standardize.
     #
-    # Default subdivision seperator is em-dash with spaces, set to '--' if you want. 
+    # Default subdivision seperator is em-dash with spaces, set to '--' if you want.
     #
     # Cite: "Dash (-) that precedes a subdivision in an extended 600 subject heading
     # is not carried in the MARC record. It may be system generated as a display constant
