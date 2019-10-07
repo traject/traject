@@ -2,7 +2,7 @@
 
 ## Next
 
-*
+* `Traject::Macros::Marc21Semantics.publication_date` now gets date from 264 before 260. https://github.com/traject/traject/pull/233
 
 *
 
