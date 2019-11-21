@@ -6,6 +6,8 @@
 
 *
 
+* Allow `http` gem 4.x versions. https://github.com/traject/traject/pull/236
+
 *
 
 ## 3.2.0
