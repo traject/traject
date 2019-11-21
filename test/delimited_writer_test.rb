@@ -24,40 +24,40 @@ describe "Delimited/CSV Writers" do
 
     it "creates a dw with defaults" do
       dw = Traject::DelimitedWriter.new(@settings)
-      dw.delimiter.must_equal "\t"
-      dw.internal_delimiter.must_equal '|'
-      dw.edelim.must_equal ' '
-      dw.eidelim.must_equal '\\|'
+      assert_equal dw.delimiter, "\t"
+      assert_equal dw.internal_delimiter, '|'
+      assert_equal dw.edelim, ' '
+      assert_equal dw.eidelim, '\\|'
     end
 
     it "respects different delimiter" do
       @settings['delimited_writer.delimiter'] = '^'
       dw                                      = Traject::DelimitedWriter.new(@settings)
-      dw.delimiter.must_equal '^'
-      dw.edelim.must_equal '\\^'
-      dw.internal_delimiter.must_equal '|'
+      assert_equal dw.delimiter, '^'
+      assert_equal dw.edelim, '\\^'
+      assert_equal dw.internal_delimiter, '|'
     end
 
     it "outputs a header if asked to" do
       Traject::DelimitedWriter.new(@settings)
-      @out.string.chomp.must_equal %w[four one two].join("\t")
+      assert_equal @out.string.chomp, %w[four one two].join("\t")
     end
 
     it "doesn't output a header if asked not to" do
       @settings['delimited_writer.header'] = 'false'
       Traject::DelimitedWriter.new(@settings)
-      @out.string.must_be_empty
+      assert_empty @out.string
     end
 
     it "deals with multiple values" do
       dw = Traject::DelimitedWriter.new(@settings)
       dw.put @context
-      @out.string.split("\n").last.must_equal ['four', 'one', 'two1|two2'].join(dw.delimiter)
+      assert_equal @out.string.split("\n").last, ['four', 'one', 'two1|two2'].join(dw.delimiter)
     end
 
     it "bails if delimited_writer.fields isn't set" do
       @settings.delete 'delimited_writer.fields'
-      proc { Traject::DelimitedWriter.new(@settings) }.must_raise(ArgumentError)
+      assert_raises(ArgumentError)  { Traject::DelimitedWriter.new(@settings) }
     end
 
   end
@@ -65,18 +65,18 @@ describe "Delimited/CSV Writers" do
   describe "Traject::CSVWriter" do
     it "unsets the delimiter" do
       cw = Traject::CSVWriter.new(@settings)
-      cw.delimiter.must_be_nil
+      assert_nil cw.delimiter
     end
 
     it "writes the header" do
       Traject::CSVWriter.new(@settings)
-      @out.string.chomp.must_equal 'four,one,two'
+      assert_equal @out.string.chomp, 'four,one,two'
     end
 
     it "uses the internal delimiter" do
       cw = Traject::CSVWriter.new(@settings)
       cw.put @context
-      @out.string.split("\n").last.must_equal ['four', 'one', 'two1|two2'].join(',')
+      assert_equal @out.string.split("\n").last, ['four', 'one', 'two1|two2'].join(',')
     end
 
     it "produces complex output" do
@@ -97,8 +97,6 @@ describe "Delimited/CSV Writers" do
       traject_csvwriter_output = @out.string.split("\n").last.chomp
 
       assert_equal(csv_output, traject_csvwriter_output)
-
     end
-
   end
 end
