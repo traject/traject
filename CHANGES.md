@@ -4,7 +4,7 @@
 
 * `Traject::Macros::Marc21Semantics.publication_date` now gets date from 264 before 260. https://github.com/traject/traject/pull/233
 
-*
+* Allow hashie 4.x in gemspec https://github.com/traject/traject/pull/234
 
 * Allow `http` gem 4.x versions. https://github.com/traject/traject/pull/236
 
