@@ -25,6 +25,7 @@ describe "Class-level configuration of Indexer sub-class" do
     end
   end
 
+
   before do
     @indexer = TestIndexerSubclass.new
   end
@@ -45,6 +46,28 @@ describe "Class-level configuration of Indexer sub-class" do
     result = @indexer.map_record(Object.new)
     assert_equal ['value', 'from-instance-config'], result['field']
     assert_equal ['from-instance-config'], result["instance_field"]
+  end
+
+  describe "multiple class-level configure" do
+    class MultipleConfigureIndexer < Traject::Indexer
+      configure do
+        to_field "field", literal("value")
+      end
+      configure do
+        to_field "field", literal("value from second configure")
+        to_field "second_call", literal("value from second configure")
+      end
+    end
+
+    before do
+      @indexer = MultipleConfigureIndexer.new
+    end
+
+    it "lets you call class-level configure multiple times and aggregates" do
+      result = @indexer.map_record(Object.new)
+      assert_equal ['value', 'value from second configure'], result['field']
+      assert_equal ['value from second configure'], result['second_call']
+    end
   end
 
   describe "with multi-level subclass" do
