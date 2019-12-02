@@ -2,13 +2,21 @@
 
 ## Next
 
+*
+
+*
+
+*
+
+## 3.3.0
+
 * `Traject::Macros::Marc21Semantics.publication_date` now gets date from 264 before 260. https://github.com/traject/traject/pull/233
 
 * Allow hashie 4.x in gemspec https://github.com/traject/traject/pull/234
 
 * Allow `http` gem 4.x versions. https://github.com/traject/traject/pull/236
 
-*
+* Can now call class-level Indexer.configure multiple times https://github.com/sciencehistory/scihist_digicoll/pull/525
 
 ## 3.2.0
 
