@@ -190,7 +190,7 @@ class Traject::Indexer
     instance_eval(&block)
   end
 
-  ## Class level configure block accepted too, and applied at instantiation
+  ## Class level configure block(s) accepted too, and applied at instantiation
   #  before instance-level configuration.
   #
   #  EXPERIMENTAL, implementation may change in ways that effect some uses.
@@ -199,8 +199,14 @@ class Traject::Indexer
   #  Note that settings set by 'provide' in subclass can not really be overridden
   #  by 'provide' in a next level subclass. Use self.default_settings instead, with
   #  call to super.
+  #
+  #  You can call this .configure multiple times, blocks are added to a list, and
+  #  will be used to initialize an instance in order.
+  #
+  #  The main downside of this workaround implementation is performance, even though
+  #  defined at load-time on class level, blocks are all executed on every instantiation.
   def self.configure(&block)
-    @class_configure_block = block
+    (@class_configure_blocks ||= []) << block
   end
 
   def self.apply_class_configure_block(instance)
@@ -208,8 +214,10 @@ class Traject::Indexer
     if self.superclass.respond_to?(:apply_class_configure_block)
       self.superclass.apply_class_configure_block(instance)
     end
-    if @class_configure_block
-      instance.configure(&@class_configure_block)
+    if @class_configure_blocks && !@class_configure_blocks.empty?
+      @class_configure_blocks.each do |block|
+        instance.configure(&block)
+      end
     end
   end
 
