@@ -10,18 +10,21 @@ ady: Adygei
 afa: Afroasiatic (Other)
 afh: Afrihili (Artificial language)
 afr: Afrikaans
-ajm: Aljamia
+ain: Ainu
+ajm: Aljamía
 aka: Akan
 akk: Akkadian
 alb: Albanian
 ale: Aleut
 alg: Algonquian (Other)
+alt: Altai
 amh: Amharic
-ang: English, Old (ca. 450-1100)
+ang: "English, Old (ca. 450-1100)"
+anp: Angika
 apa: Apache languages
 ara: Arabic
 arc: Aramaic
-arg: Aragonese Spanish
+arg: Aragonese
 arm: Armenian
 arn: Mapuche
 arp: Arapaho
@@ -36,7 +39,7 @@ ave: Avestan
 awa: Awadhi
 aym: Aymara
 aze: Azerbaijani
-bad: Banda
+bad: Banda languages
 bai: Bamileke languages
 bak: Bashkir
 bal: Baluchi
@@ -51,7 +54,7 @@ bem: Bemba
 ben: Bengali
 ber: Berber (Other)
 bho: Bhojpuri
-bih: Bihari
+bih: Bihari (Other)
 bik: Bikol
 bin: Edo
 bis: Bislama
@@ -65,6 +68,7 @@ bua: Buriat
 bug: Bugis
 bul: Bulgarian
 bur: Burmese
+byn: Bilin
 cad: Caddo
 cai: Central American Indian (Other)
 cam: Khmer
@@ -78,7 +82,7 @@ chb: Chibcha
 che: Chechen
 chg: Chagatai
 chi: Chinese
-chk: Truk
+chk: Chuukese
 chm: Mari
 chn: Chinook jargon
 cho: Choctaw
@@ -88,15 +92,17 @@ chu: Church Slavic
 chv: Chuvash
 chy: Cheyenne
 cmc: Chamic languages
+cnr: Montenegrin
 cop: Coptic
 cor: Cornish
 cos: Corsican
-cpe: Creoles and Pidgins, English-based (Other)
-cpf: Creoles and Pidgins, French-based (Other)
-cpp: Creoles and Pidgins, Portuguese-based (Other)
+cpe: "Creoles and Pidgins, English-based (Other)"
+cpf: "Creoles and Pidgins, French-based (Other)"
+cpp: "Creoles and Pidgins, Portuguese-based (Other)"
 cre: Cree
 crh: Crimean Tatar
 crp: Creoles and Pidgins (Other)
+csb: Kashubian
 cus: Cushitic (Other)
 cze: Czech
 dak: Dakota
@@ -104,14 +110,15 @@ dan: Danish
 dar: Dargwa
 day: Dayak
 del: Delaware
-den: Slave
+den: Slavey
 dgr: Dogrib
 din: Dinka
 div: Divehi
 doi: Dogri
 dra: Dravidian (Other)
+dsb: Lower Sorbian
 dua: Duala
-dum: Dutch, Middle (ca. 1050-1350)
+dum: "Dutch, Middle (ca. 1050-1350)"
 dut: Dutch
 dyu: Dyula
 dzo: Dzongkha
@@ -120,7 +127,7 @@ egy: Egyptian
 eka: Ekajuk
 elx: Elamite
 eng: English
-enm: English, Middle (1100-1500)
+enm: "English, Middle (1100-1500)"
 epo: Esperanto
 esk: Eskimo languages
 esp: Esperanto
@@ -133,18 +140,21 @@ fao: Faroese
 far: Faroese
 fat: Fanti
 fij: Fijian
+fil: Filipino
 fin: Finnish
 fiu: Finno-Ugrian (Other)
 fon: Fon
 fre: French
 fri: Frisian
-frm: French, Middle (ca. 1400-1600)
-fro: French, Old (ca. 842-1400)
+frm: "French, Middle (ca. 1300-1600)"
+fro: "French, Old (ca. 842-1300)"
+frr: North Frisian
+frs: East Frisian
 fry: Frisian
 ful: Fula
 fur: Friulian
-gaa: Ga
-gae: Scottish Gaelic
+gaa: Gã
+gae: Scottish Gaelix
 gag: Galician
 gal: Oromo
 gay: Gayo
@@ -158,15 +168,16 @@ gla: Scottish Gaelic
 gle: Irish
 glg: Galician
 glv: Manx
-gmh: German, Middle High (ca. 1050-1500)
-goh: German, Old High (ca. 750-1050)
+gmh: "German, Middle High (ca. 1050-1500)"
+goh: "German, Old High (ca. 750-1050)"
 gon: Gondi
 gor: Gorontalo
 got: Gothic
 grb: Grebo
-grc: Greek, Ancient (to 1453)
-gre: Greek, Modern (1453- )
+grc: "Greek, Ancient (to 1453)"
+gre: "Greek, Modern (1453-)"
 grn: Guarani
+gsw: Swiss German
 gua: Guarani
 guj: Gujarati
 gwi: Gwich'in
@@ -177,11 +188,13 @@ haw: Hawaiian
 heb: Hebrew
 her: Herero
 hil: Hiligaynon
-him: Himachali
+him: Western Pahari languages
 hin: Hindi
 hit: Hittite
 hmn: Hmong
 hmo: Hiri Motu
+hrv: Croatian
+hsb: Upper Sorbian
 hun: Hungarian
 hup: Hupa
 iba: Iban
@@ -205,16 +218,17 @@ iri: Irish
 iro: Iroquoian (Other)
 ita: Italian
 jav: Javanese
+jbo: Lojban (Artificial language)
 jpn: Japanese
 jpr: Judeo-Persian
 jrb: Judeo-Arabic
 kaa: Kara-Kalpak
 kab: Kabyle
 kac: Kachin
-kal: Kalatdlisut
+kal: Kalâtdlisut
 kam: Kamba
 kan: Kannada
-kar: Karen
+kar: Karen languages
 kas: Kashmiri
 kau: Kanuri
 kaw: Kawi
@@ -232,19 +246,21 @@ kok: Konkani
 kom: Komi
 kon: Kongo
 kor: Korean
-kos: Kusaie
+kos: Kosraean
 kpe: Kpelle
-kro: Kru
+krc: Karachay-Balkar
+krl: Karelian
+kro: Kru (Other)
 kru: Kurukh
 kua: Kuanyama
 kum: Kumyk
 kur: Kurdish
 kus: Kusaie
-kut: Kutenai
+kut: Kootenai
 lad: Ladino
-lah: Lahnda
-lam: Lamba
-lan: Occitan (post-1500)
+lah: Lahndā
+lam: Lamba (Zambia and Congo)
+lan: Occitan (post 1500)
 lao: Lao
 lap: Sami
 lat: Latin
@@ -255,11 +271,11 @@ lin: Lingala
 lit: Lithuanian
 lol: Mongo-Nkundu
 loz: Lozi
-ltz: Letzeburgesch
+ltz: Luxembourgish
 lua: Luba-Lulua
 lub: Luba-Katanga
 lug: Ganda
-lui: Luiseno
+lui: Luiseño
 lun: Lunda
 luo: Luo (Kenya and Tanzania)
 lus: Lushai
@@ -274,12 +290,13 @@ man: Mandingo
 mao: Maori
 map: Austronesian (Other)
 mar: Marathi
-mas: Masai
+mas: Maasai
 max: Manx
 may: Malay
+mdf: Moksha
 mdr: Mandar
 men: Mende
-mga: Irish, Middle (ca. 1100-1550)
+mga: "Irish, Middle (ca. 1100-1550)"
 mic: Micmac
 min: Minangkabau
 mis: Miscellaneous languages
@@ -293,12 +310,14 @@ mno: Manobo languages
 moh: Mohawk
 mol: Moldavian
 mon: Mongolian
-mos: Moore
+mos: Mooré
 mul: Multiple languages
 mun: Munda (Other)
 mus: Creek
+mwl: Mirandese
 mwr: Marwari
 myn: Mayan languages
+myv: Erzya
 nah: Nahuatl
 nai: North American Indian (Other)
 nap: Neapolitan Italian
@@ -314,12 +333,14 @@ nia: Nias
 nic: Niger-Kordofanian (Other)
 niu: Niuean
 nno: Norwegian (Nynorsk)
-nob: Norwegian (Bokmal)
+nob: Norwegian (Bokmål)
 nog: Nogai
 non: Old Norse
 nor: Norwegian
+nqo: N'Ko
 nso: Northern Sotho
 nub: Nubian languages
+nwc: "Newari, Old"
 nya: Nyanja
 nym: Nyamwezi
 nyn: Nyankole
@@ -331,7 +352,7 @@ ori: Oriya
 orm: Oromo
 osa: Osage
 oss: Ossetic
-ota: Turkish, Ottoman
+ota: "Turkish, Ottoman"
 oto: Otomian languages
 paa: Papuan (Other)
 pag: Pangasinan
@@ -346,10 +367,10 @@ phi: Philippine (Other)
 phn: Phoenician
 pli: Pali
 pol: Polish
-pon: Ponape
+pon: Pohnpeian
 por: Portuguese
 pra: Prakrit languages
-pro: Provencal (to 1500)
+pro: Provençal (to 1500)
 pus: Pushto
 que: Quechua
 raj: Rajasthani
@@ -360,6 +381,7 @@ roh: Raeto-Romance
 rom: Romani
 rum: Romanian
 run: Rundi
+rup: Aromanian
 rus: Russian
 sad: Sandawe
 sag: Sango (Ubangi Creole)
@@ -372,11 +394,12 @@ sao: Samoan
 sas: Sasak
 sat: Santali
 scc: Serbian
+scn: Sicilian Italian
 sco: Scots
 scr: Croatian
 sel: Selkup
 sem: Semitic (Other)
-sga: Irish, Old (to 1100)
+sga: "Irish, Old (to 1100)"
 sgn: Sign languages
 shn: Shan
 sho: Shona
@@ -404,6 +427,8 @@ son: Songhai
 sot: Sotho
 spa: Spanish
 srd: Sardinian
+srn: Sranan
+srp: Serbian
 srr: Serer
 ssa: Nilo-Saharan (Other)
 sso: Sotho
@@ -415,7 +440,8 @@ sux: Sumerian
 swa: Swahili
 swe: Swedish
 swz: Swazi
-syr: Syriac
+syc: Syriac
+syr: "Syriac, Modern"
 tag: Tagalog
 tah: Tahitian
 tai: Tai (Other)
@@ -431,10 +457,11 @@ tgk: Tajik
 tgl: Tagalog
 tha: Thai
 tib: Tibetan
-tig: Tigre
+tig: Tigré
 tir: Tigrinya
 tiv: Tiv
 tkl: Tokelauan
+tlh: Klingon (Artificial language)
 tli: Tlingit
 tmh: Tamashek
 tog: Tonga (Nyasa)
@@ -464,17 +491,17 @@ uzb: Uzbek
 vai: Vai
 ven: Venda
 vie: Vietnamese
-vol: Volapuk
+vol: Volapük
 vot: Votic
 wak: Wakashan languages
-wal: Walamo
+wal: Wolayta
 war: Waray
-was: Washo
+was: Washoe
 wel: Welsh
-wen: Sorbian languages
+wen: Sorbian (Other)
 wln: Walloon
 wol: Wolof
-xal: Kalmyk
+xal: Oirat
 xho: Xhosa
 yao: Yao (Africa)
 yap: Yapese
@@ -482,9 +509,11 @@ yid: Yiddish
 yor: Yoruba
 ypk: Yupik languages
 zap: Zapotec
+zbl: Blissymbolics
 zen: Zenaga
 zha: Zhuang
-znd: Zande
+znd: Zande languages
 zul: Zulu
 zun: Zuni
-# zxx: null
+# zxx: No linguistic content
+zza: Zaza
