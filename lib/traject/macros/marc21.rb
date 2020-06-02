@@ -42,11 +42,11 @@ module Traject::Macros
     #
     # * :translation_map => String: translate with named translation map looked up in load
     #       path, uses Tranject::TranslationMap.new(translation_map_arg).
-    #       **Instead**, use `extract_marc(whatever), translation_map(translation_map_arg)
+    #       **Instead**, use `extract_marc(whatever), translation_map(translation_map_arg)`
     #
     # * :trim_punctuation => true; trims leading/trailing punctuation using standard algorithms that
     #     have shown themselves useful with Marc, using Marc21.trim_punctuation. **Instead**, use
-    #    `extract_marc(whatever), trim_punctuation
+    #    `extract_marc(whatever), trim_punctuation`
     #
     # * :default => String: if otherwise empty, add default value. **Instead**, use `extract_marc(whatever), default("default value")`
     #
