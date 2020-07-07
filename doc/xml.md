@@ -72,6 +72,16 @@ You can use all the standard transforation macros in Traject::Macros::Transforma
 to_field "something", extract_xpath("//value"), first_only, translation_map("some_map"), default("no value")
 ```
 
+### selecting attribute values
+
+Just works, using xpath syntax for selecting an attribute:
+
+
+```ruby
+# gets status value in:  <oai:header status="something">
+to_field "status", extract_xpath("//oai:record/oai:header/@status")
+```
+
 
 ### selecting non-text nodes
 

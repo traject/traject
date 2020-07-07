@@ -26,9 +26,15 @@ module Traject
             # Make sure to avoid text content that was all blank, which is "between the children"
             # whitespace.
             result = result.collect do |n|
-              n.xpath('.//text()').collect(&:text).tap do |arr|
-                arr.reject! { |s| s =~ (/\A\s+\z/) }
-              end.join(" ")
+              if n.kind_of?(Nokogiri::XML::Attr)
+                # attribute value
+                n.value
+              else
+                # text from node
+                n.xpath('.//text()').collect(&:text).tap do |arr|
+                  arr.reject! { |s| s =~ (/\A\s+\z/) }
+                end.join(" ")
+              end
             end
           else
             # just put all matches in accumulator as Nokogiri::XML::Node's
