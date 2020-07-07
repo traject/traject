@@ -2,11 +2,13 @@
 
 ## Next
 
+*
+
+*
+
+## 3.4.0
+
 * XML-mode `extract_xpath` now supports extracting attribute values with xpath @attr syntax.
-
-*
-
-*
 
 ## 3.3.0
 
