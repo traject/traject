@@ -2,9 +2,9 @@ require 'traject/marc_extractor_spec'
 
 module Traject
   # MarcExtractor is a class for extracting lists of strings from a MARC::Record,
-  # according to specifications. See #parse_string_spec for description of string
-  # string arguments used to specify extraction. See #initialize for options
-  # that can be set controlling extraction.
+  # according to specifications. See Traject::MarcExtractor::Spec for description
+  # of string string arguments used to specify extraction. See #initialize for
+  # options that can be set controlling extraction.
   #
   # Examples:
   #
