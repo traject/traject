@@ -9,7 +9,7 @@ Traject can also be generalized to a set of tools for getting structured data fr
 **Traject is stable, mature software, that is already being used in production by its authors and several other institutions.**
 
 [![Gem Version](https://badge.fury.io/rb/traject.png)](http://badge.fury.io/rb/traject)
-[![CI Status](https://github.com/traject/traject/workflows/CI/badge.svg)](https://githug.com/traject/traject/actions)
+[![CI Status](https://github.com/traject/traject/workflows/CI/badge.svg)](https://github.com/traject/traject/actions?query=workflow%3ACI+branch%3Amaster)
 
 
 ## Background/Goals
