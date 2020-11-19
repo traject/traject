@@ -19,6 +19,11 @@ describe "Shell out to command line" do
   end
 
 
+  it "can dispaly version" do
+    out, err, result = execute_with_args("-v")
+    assert_equal err, "traject version #{Traject::VERSION}\n"
+  end
+
   it "can display help text" do
     out, err, result = execute_with_args("-h")
 
