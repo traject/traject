@@ -1,9 +1,11 @@
 # we mostly unit test with a Traject::Indexer itself and lower-level, but
 # we need at least some basic top-level integration actually command line tests,
 # this is a start, we can add more.
+#
+# Should we be testing Traject::CommandLine as an object instead of/in addition to
+# actually testing shell-out to command line call? Maybe.
 
 require 'test_helper'
-require 'byebug'
 
 describe "Shell out to command line" do
   # just encapsuluate using the minitest capture helper, but also
