@@ -15,7 +15,7 @@ module Traject::Macros
     # field/substring specification.
     #
     # First argument is a string spec suitable for the MarcExtractor, see
-    # MarcExtractor::parse_string_spec.
+    # Traject::MarcExtractor::Spec.
     #
     # Second arg is optional options, including options valid on MarcExtractor.new,
     # and others. By default, will de-duplicate results, but see :allow_duplicates
