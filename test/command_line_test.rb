@@ -22,12 +22,14 @@ describe "Shell out to command line" do
   it "can dispaly version" do
     out, err, result = execute_with_args("-v")
     assert_equal err, "traject version #{Traject::VERSION}\n"
+    assert result.success?
   end
 
   it "can display help text" do
     out, err, result = execute_with_args("-h")
 
     assert err.start_with?("traject [options] -c configuration.rb [-c config2.rb] file.mrc")
+    assert result.success?
   end
 end
 

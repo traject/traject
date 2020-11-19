@@ -40,11 +40,11 @@ module Traject
     def execute
       if options[:version]
         self.console.puts "traject version #{Traject::VERSION}"
-        return
+        return true
       end
       if options[:help]
         self.console.puts slop.help
-        return
+        return true
       end
 
 
