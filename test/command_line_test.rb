@@ -39,5 +39,13 @@ describe "Shell out to command line" do
 
     assert err.start_with?("Error: Unknown options -no-such-arg\nExiting...\n")
   end
+
+  it "does basic dry run" do
+    out, err, result = execute_with_args("--debug-mode -s one=two -s three=four -c test/test_support/demo_config.rb test/test_support/emptyish_record.marc")
+
+    assert result.success?
+    assert_includes err, "executing with: `--debug-mode -s one=two -s three=four"
+    assert_match /bib_1000165 +author_sort +Collection la/, out
+  end
 end
 
