@@ -31,5 +31,13 @@ describe "Shell out to command line" do
     assert err.start_with?("traject [options] -c configuration.rb [-c config2.rb] file.mrc")
     assert result.success?
   end
+
+  it "handles bad argument" do
+    out, err, result = execute_with_args("-no-such-arg")
+
+    refute result.success?
+
+    assert err.start_with?("Error: Unknown options -no-such-arg\nExiting...\n")
+  end
 end
 
