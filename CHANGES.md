@@ -2,6 +2,8 @@
 
 ## Next
 
+* `traject -v` and `traject -h` correctly return 0 exit code for success.
+
 *
 
 *
