@@ -101,11 +101,20 @@ class Traject::SolrJsonWriter
   def initialize(argSettings)
     @settings = Traject::Indexer::Settings.new(argSettings)
 
+
     # Set max errors
     @max_skipped = (@settings['solr_writer.max_skipped'] || DEFAULT_MAX_SKIPPED).to_i
     if @max_skipped < 0
       @max_skipped = nil
     end
+
+
+    # Figure out where to send updates
+    @solr_update_url = self.determine_solr_update_url
+
+    parsed_uri          = URI.parse(@solr_update_url)
+    basic_auth_user     = @settings["solr_writer.basic_auth_user"] || parsed_uri.user
+    basic_auth_password = @settings["solr_writer.basic_auth_password"] || parsed_uri.password
 
     @http_client = if @settings["solr_json_writer.http_client"]
       @settings["solr_json_writer.http_client"]
@@ -115,9 +124,8 @@ class Traject::SolrJsonWriter
         client.connect_timeout = client.receive_timeout = client.send_timeout = @settings["solr_writer.http_timeout"]
       end
 
-      if @settings["solr_writer.basic_auth_user"] &&
-          @settings["solr_writer.basic_auth_password"]
-        client.set_auth(@settings["solr.url"], @settings["solr_writer.basic_auth_user"], @settings["solr_writer.basic_auth_password"])
+      if basic_auth_user || basic_auth_password
+        client.set_auth(@solr_update_url, basic_auth_user, basic_auth_password)
       end
 
       client
@@ -143,8 +151,6 @@ class Traject::SolrJsonWriter
     # this the new default writer.
     @commit_on_close = (settings["solr_writer.commit_on_close"] || settings["solrj_writer.commit_on_close"]).to_s == "true"
 
-    # Figure out where to send updates
-    @solr_update_url = self.determine_solr_update_url
 
     @solr_update_args = settings["solr_writer.solr_update_args"]
     @commit_solr_update_args = settings["solr_writer.commit_solr_update_args"]

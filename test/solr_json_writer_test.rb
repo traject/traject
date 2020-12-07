@@ -185,10 +185,27 @@ describe "Traject::SolrJsonWriter" do
       "solr_writer.basic_auth_password" => "bar",
     }
 
+    # testing with some internal implementation of HTTPClient sorry
+
     writer = Traject::SolrJsonWriter.new(settings)
     auth = writer.instance_variable_get("@http_client")
       .www_auth.basic_auth.instance_variable_get("@auth")
     assert(!auth.empty?)
+    assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
+  end
+
+  it "supports basic auth from solr.url" do
+    settings = {
+      "solr.url" => "http://foo:bar@example.com/solr/foo",
+    }
+
+    # testing with some internal implementation of HTTPClient sorry
+
+    writer = Traject::SolrJsonWriter.new(settings)
+    auth = writer.instance_variable_get("@http_client")
+      .www_auth.basic_auth.instance_variable_get("@auth")
+    assert(!auth.empty?)
+    assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
   end
 
   describe "commit" do
