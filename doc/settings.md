@@ -83,7 +83,8 @@ settings are applied first of all. It's recommended you use `provide`.
 ### Writing to solr
 
 * `json_writer.pretty_print`: used by the JsonWriter, if set to true, will output pretty printed json (with added whitespace) for easier human readability. Default false.
-* `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`.
+
+* `solr.url`: URL to connect to a solr instance for indexing, eg http://example.org:8983/solr . Command-line short-cut `-u`. (Can include embedded HTTP basic auth as eg `http://user:pass@example.org/solr`)
 
 * `solr.version`: Set to eg "1.4.0", "4.3.0"; currently un-used, but in the future will control some default settings, and/or sanity check and warn you if you're doing something that might not work with that version of solr. Set now for help in the future.
 
@@ -93,7 +94,8 @@ settings are applied first of all. It's recommended you use `provide`.
 
 * `solr_writer.thread_pool`: defaults to 1 (single bg thread). A thread pool is used for submitting docs to solr. Set to 0 or nil to disable threading. Set to 1, there will still be a single bg thread doing the adds. May make sense to set higher than number of cores on your indexing machine, as these threads will mostly be waiting on Solr. Speed/capacity of your solr might be more relevant. Note that processing_thread_pool threads can end up submitting to solr too, if solr_json_writer.thread_pool is full.
 
-* `solr_writer.basic_auth_user`, `solr_writer.basic_auth_password`: Not set by default but when both are set the default writer is configured with basic auth.
+* `solr_writer.basic_auth_user`, `solr_writer.basic_auth_password`: Not set by default but when both are set the default writer is configured with basic auth. You can also just embed basic
+auth credentials in `solr.url` using standard URI syntax.
 
 
 ### Dealing with MARC data

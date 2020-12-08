@@ -41,10 +41,12 @@ require 'concurrent' # for atomic_fixnum
 #
 # ## Relevant settings
 #
-# * solr.url (optional if solr.update_url is set) The URL to the solr core to index into
+# * solr.url (optional if solr.update_url is set) The URL to the solr core to index into.
+#   (Can include embedded HTTP basic auth as eg `http://user:pass@host/solr`)
 #
 # * solr.update_url: The actual update url. If unset, we'll first see if
-#   "#{solr.url}/update/json" exists, and if not use "#{solr.url}/update"
+#   "#{solr.url}/update/json" exists, and if not use "#{solr.url}/update". (Can include
+#   embedded HTTP basic auth as eg `http://user:pass@host/solr)
 #
 # * solr_writer.batch_size: How big a batch to send to solr. Default is 100.
 #   My tests indicate that this setting doesn't change overall index speed by a ton.
