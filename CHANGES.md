@@ -6,7 +6,7 @@
 
 * upgrade to slop gem  4.x; slightly different format of human-readable command-line arg errors.
 
-*
+* the SolrJsonWriter now supports `solr.url` or `solr.update_url` including HTTP basic auth credentials, eg `http://user:pass@example.org/solr` https://github.com/traject/traject/pull/262
 
 *
 
