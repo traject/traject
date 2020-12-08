@@ -41,10 +41,12 @@ require 'concurrent' # for atomic_fixnum
 #
 # ## Relevant settings
 #
-# * solr.url (optional if solr.update_url is set) The URL to the solr core to index into
+# * solr.url (optional if solr.update_url is set) The URL to the solr core to index into.
+#   (Can include embedded HTTP basic auth as eg `http://user:pass@host/solr`)
 #
 # * solr.update_url: The actual update url. If unset, we'll first see if
-#   "#{solr.url}/update/json" exists, and if not use "#{solr.url}/update"
+#   "#{solr.url}/update/json" exists, and if not use "#{solr.url}/update". (Can include
+#   embedded HTTP basic auth as eg `http://user:pass@host/solr)
 #
 # * solr_writer.batch_size: How big a batch to send to solr. Default is 100.
 #   My tests indicate that this setting doesn't change overall index speed by a ton.
@@ -101,11 +103,16 @@ class Traject::SolrJsonWriter
   def initialize(argSettings)
     @settings = Traject::Indexer::Settings.new(argSettings)
 
+
     # Set max errors
     @max_skipped = (@settings['solr_writer.max_skipped'] || DEFAULT_MAX_SKIPPED).to_i
     if @max_skipped < 0
       @max_skipped = nil
     end
+
+
+    # Figure out where to send updates, and if with basic auth
+    @solr_update_url, basic_auth_user, basic_auth_password = self.determine_solr_update_url
 
     @http_client = if @settings["solr_json_writer.http_client"]
       @settings["solr_json_writer.http_client"]
@@ -115,9 +122,8 @@ class Traject::SolrJsonWriter
         client.connect_timeout = client.receive_timeout = client.send_timeout = @settings["solr_writer.http_timeout"]
       end
 
-      if @settings["solr_writer.basic_auth_user"] &&
-          @settings["solr_writer.basic_auth_password"]
-        client.set_auth(@settings["solr.url"], @settings["solr_writer.basic_auth_user"], @settings["solr_writer.basic_auth_password"])
+      if basic_auth_user || basic_auth_password
+        client.set_auth(@solr_update_url, basic_auth_user, basic_auth_password)
       end
 
       client
@@ -143,13 +149,11 @@ class Traject::SolrJsonWriter
     # this the new default writer.
     @commit_on_close = (settings["solr_writer.commit_on_close"] || settings["solrj_writer.commit_on_close"]).to_s == "true"
 
-    # Figure out where to send updates
-    @solr_update_url = self.determine_solr_update_url
 
     @solr_update_args = settings["solr_writer.solr_update_args"]
     @commit_solr_update_args = settings["solr_writer.commit_solr_update_args"]
 
-    logger.info("   #{self.class.name} writing to '#{@solr_update_url}' in batches of #{@batch_size} with #{@thread_pool_size} bg threads")
+    logger.info("   #{self.class.name} writing to '#{@solr_update_url}' #{"(with HTTP basic auth)" if basic_auth_user || basic_auth_password}in batches of #{@batch_size} with #{@thread_pool_size} bg threads")
   end
 
 
@@ -368,13 +372,27 @@ class Traject::SolrJsonWriter
   end
 
 
-  # Relatively complex logic to determine if we have a valid URL and what it is
+  # Relatively complex logic to determine if we have a valid URL and what it is,
+  # and if we have basic_auth info
+  #
+  # Empties out user and password embedded in URI returned, to help avoid logging it.
+  #
+  # @returns [update_url, basic_auth_user, basic_auth_password]
   def determine_solr_update_url
-    if settings['solr.update_url']
+    url = if settings['solr.update_url']
       check_solr_update_url(settings['solr.update_url'])
     else
       derive_solr_update_url_from_solr_url(settings['solr.url'])
     end
+
+    parsed_uri                            = URI.parse(url)
+    user_from_uri, password_from_uri      = parsed_uri.user, parsed_uri.password
+    parsed_uri.user, parsed_uri.password  = nil, nil
+
+    basic_auth_user     = @settings["solr_writer.basic_auth_user"] || user_from_uri
+    basic_auth_password = @settings["solr_writer.basic_auth_password"] || password_from_uri
+
+    return [parsed_uri.to_s, basic_auth_user, basic_auth_password]
   end
 
 
