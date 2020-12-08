@@ -178,34 +178,52 @@ describe "Traject::SolrJsonWriter" do
     assert(auth.empty?)
   end
 
-  it "allows basic authentication setup" do
-    settings = {
-      "solr.url" => "http://example.com/solr/foo",
-      "solr_writer.basic_auth_user" => "foo",
-      "solr_writer.basic_auth_password" => "bar",
-    }
+  describe "HTTP basic auth" do
 
-    # testing with some internal implementation of HTTPClient sorry
+    it "supports basic authentication settings" do
+      settings = {
+        "solr.url" => "http://example.com/solr/foo",
+        "solr_writer.basic_auth_user" => "foo",
+        "solr_writer.basic_auth_password" => "bar",
+      }
 
-    writer = Traject::SolrJsonWriter.new(settings)
-    auth = writer.instance_variable_get("@http_client")
-      .www_auth.basic_auth.instance_variable_get("@auth")
-    assert(!auth.empty?)
-    assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
-  end
+      # testing with some internal implementation of HTTPClient sorry
 
-  it "supports basic auth from solr.url" do
-    settings = {
-      "solr.url" => "http://foo:bar@example.com/solr/foo",
-    }
+      writer = Traject::SolrJsonWriter.new(settings)
 
-    # testing with some internal implementation of HTTPClient sorry
+      auth = writer.instance_variable_get("@http_client")
+        .www_auth.basic_auth.instance_variable_get("@auth")
+      assert(!auth.empty?)
+      assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
+    end
 
-    writer = Traject::SolrJsonWriter.new(settings)
-    auth = writer.instance_variable_get("@http_client")
-      .www_auth.basic_auth.instance_variable_get("@auth")
-    assert(!auth.empty?)
-    assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
+    it "supports basic auth from solr.url" do
+      settings = {
+        "solr.url" => "http://foo:bar@example.com/solr/foo",
+      }
+
+      # testing with some internal implementation of HTTPClient sorry
+
+      writer = Traject::SolrJsonWriter.new(settings)
+      auth = writer.instance_variable_get("@http_client")
+        .www_auth.basic_auth.instance_variable_get("@auth")
+      assert(!auth.empty?)
+      assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
+    end
+
+    it "does not log basic auth from solr.url" do
+      string_io = StringIO.new
+      settings = {
+        "solr.url" => "http://secret_username:secret_password@example.com/solr/foo",
+        "logger"   => Logger.new(string_io)
+      }
+
+
+      writer = Traject::SolrJsonWriter.new(settings)
+
+      refute_includes string_io.string, "secret_username:secret_password"
+      assert_includes string_io.string, "(with HTTP basic auth)"
+    end
   end
 
   describe "commit" do

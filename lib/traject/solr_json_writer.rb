@@ -109,12 +109,8 @@ class Traject::SolrJsonWriter
     end
 
 
-    # Figure out where to send updates
-    @solr_update_url = self.determine_solr_update_url
-
-    parsed_uri          = URI.parse(@solr_update_url)
-    basic_auth_user     = @settings["solr_writer.basic_auth_user"] || parsed_uri.user
-    basic_auth_password = @settings["solr_writer.basic_auth_password"] || parsed_uri.password
+    # Figure out where to send updates, and if with basic auth
+    @solr_update_url, basic_auth_user, basic_auth_password = self.determine_solr_update_url
 
     @http_client = if @settings["solr_json_writer.http_client"]
       @settings["solr_json_writer.http_client"]
@@ -155,7 +151,7 @@ class Traject::SolrJsonWriter
     @solr_update_args = settings["solr_writer.solr_update_args"]
     @commit_solr_update_args = settings["solr_writer.commit_solr_update_args"]
 
-    logger.info("   #{self.class.name} writing to '#{@solr_update_url}' in batches of #{@batch_size} with #{@thread_pool_size} bg threads")
+    logger.info("   #{self.class.name} writing to '#{@solr_update_url}' #{"(with HTTP basic auth)" if basic_auth_user || basic_auth_password}in batches of #{@batch_size} with #{@thread_pool_size} bg threads")
   end
 
 
@@ -374,13 +370,27 @@ class Traject::SolrJsonWriter
   end
 
 
-  # Relatively complex logic to determine if we have a valid URL and what it is
+  # Relatively complex logic to determine if we have a valid URL and what it is,
+  # and if we have basic_auth info
+  #
+  # Empties out user and password embedded in URI returned, to help avoid logging it.
+  #
+  # @returns [update_url, basic_auth_user, basic_auth_password]
   def determine_solr_update_url
-    if settings['solr.update_url']
+    url = if settings['solr.update_url']
       check_solr_update_url(settings['solr.update_url'])
     else
       derive_solr_update_url_from_solr_url(settings['solr.url'])
     end
+
+    parsed_uri                            = URI.parse(url)
+    user_from_uri, password_from_uri      = parsed_uri.user, parsed_uri.password
+    parsed_uri.user, parsed_uri.password  = nil, nil
+
+    basic_auth_user     = @settings["solr_writer.basic_auth_user"] || user_from_uri
+    basic_auth_password = @settings["solr_writer.basic_auth_password"] || password_from_uri
+
+    return [parsed_uri.to_s, basic_auth_user, basic_auth_password]
   end
 
 
