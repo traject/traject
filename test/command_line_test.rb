@@ -20,8 +20,7 @@ describe "Shell out to command line" do
     return out, err, $?
   end
 
-
-  it "can dispaly version" do
+  it "can display version" do
     out, err, result = execute_with_args("-v")
     assert_equal err, "traject version #{Traject::VERSION}\n"
     assert result.success?
@@ -35,11 +34,10 @@ describe "Shell out to command line" do
   end
 
   it "handles bad argument" do
-    out, err, result = execute_with_args("-no-such-arg")
-
+    out, err, result = execute_with_args("--no-such-arg")
     refute result.success?
 
-    assert err.start_with?("Error: Unknown options -no-such-arg\nExiting...\n")
+    assert err.start_with?("Error: unknown option `--no-such-arg'\nExiting...\n")
   end
 
   it "does basic dry run" do
