@@ -29,10 +29,10 @@ module Traject
       self.console = $stderr
 
       self.orig_argv      = argv.dup
-      self.remaining_argv = argv
 
-      self.slop    = create_slop!
-      self.options = parse_options(self.remaining_argv)
+      self.slop    = create_slop!(argv)
+      self.options = self.slop
+      self.remaining_argv = self.slop.arguments
     end
 
     # Returns true on success or false on failure; may also raise exceptions;
@@ -43,7 +43,7 @@ module Traject
         return true
       end
       if options[:help]
-        self.console.puts slop.help
+        self.console.puts slop.to_s
         return true
       end
 
@@ -179,11 +179,11 @@ module Traject
     end
 
     def arg_check!
-      if options[:command] == "process" && (options[:conf].nil? || options[:conf].length == 0)
+      if options[:command] == "process" && (!options[:conf] || options[:conf].length == 0)
         self.console.puts "Error: Missing required configuration file"
         self.console.puts "Exiting..."
         self.console.puts
-        self.console.puts self.slop.help
+        self.console.puts self.slop.to_s
         exit 2
       end
     end
@@ -234,28 +234,36 @@ module Traject
     end
 
 
-    def create_slop!
-      return Slop.new(:strict => true) do
-        banner "traject [options] -c configuration.rb [-c config2.rb] file.mrc"
+    def create_slop!(argv)
+      options = Slop::Options.new do |o|
+        o.banner = "traject [options] -c configuration.rb [-c config2.rb] file.mrc"
 
-        on 'v', 'version', "print version information to stderr"
-        on 'd', 'debug', "Include debug log, -s log.level=debug"
-        on 'h', 'help', "print usage information to stderr"
-        on 'c', 'conf', 'configuration file path (repeatable)', :argument => true, :as => Array
-        on :i, 'indexer', "Traject indexer class name or shortcut", :argument => true, default: "marc"
-        on :s, :setting, "settings: `-s key=value` (repeatable)", :argument => true, :as => Array
-        on :r, :reader, "Set reader class, shortcut for -s reader_class_name=", :argument => true
-        on :o, "output_file", "output file for Writer classes that write to files", :argument => true
-        on :w, :writer, "Set writer class, shortcut for -s writer_class_name=", :argument => true
-        on :u, :solr, "Set solr url, shortcut for -s solr.url=", :argument => true
-        on :t, :marc_type, "xml, json or binary. shortcut for -s marc_source.type=", :argument => true
-        on :I, "load_path", "append paths to ruby $LOAD_PATH", :argument => true, :as => Array, :delimiter => ":"
+        o.on '-v', '--version', "print version information to stderr"
+        o.on '-d', '--debug', "Include debug log, -s log.level=debug"
+        o.on '-h', '--help', "print usage information to stderr"
+        o.array '-c', '--conf', 'configuration file path (repeatable)', :delimiter => nil
+        o.string "-i", '--indexer', "Traject indexer class name or shortcut", :default => "marc"
+        o.array "-s", "--setting", "settings: `-s key=value` (repeatable)", :delimiter => nil
+        o.string "-r", "--reader", "Set reader class, shortcut for -s reader_class_name="
+        o.string "-o", "--output_file", "output file for Writer classes that write to files"
+        o.string "-w", "--writer", "Set writer class, shortcut for -s writer_class_name="
+        o.string "-u", "--solr", "Set solr url, shortcut for -s solr.url="
+        o.string "-t", "--marc_type", "xml, json or binary. shortcut for -s marc_source.type="
+        o.array "-I", "--load_path", "append paths to ruby $LOAD_PATH", :delimiter => ":"
 
-        on :x, "command", "alternate traject command: process (default); marcout; commit", :argument => true, :default => "process"
+        o.string "-x", "--command", "alternate traject command: process (default); marcout; commit", :default => "process"
 
-        on "stdin", "read input from stdin"
-        on "debug-mode", "debug logging, single threaded, output human readable hashes"
+        o.on "--stdin", "read input from stdin"
+        o.on "--debug-mode", "debug logging, single threaded, output human readable hashes"
       end
+
+      options.parse(argv)
+    rescue Slop::Error => e
+      self.console.puts "Error: #{e.message}"
+      self.console.puts "Exiting..."
+      self.console.puts
+      self.console.puts options.to_s
+      exit 1
     end
 
     def initialize_indexer!
@@ -267,22 +275,5 @@ module Traject
 
       return indexer
     end
-
-    def parse_options(argv)
-
-      begin
-        self.slop.parse!(argv)
-      rescue Slop::Error => e
-        self.console.puts "Error: #{e.message}"
-        self.console.puts "Exiting..."
-        self.console.puts
-        self.console.puts slop.help
-        exit 1
-      end
-
-      return self.slop.to_hash
-    end
-
-
   end
 end

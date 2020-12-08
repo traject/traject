@@ -4,6 +4,8 @@
 
 * `traject -v` and `traject -h` correctly return 0 exit code for success.
 
+* upgrade to slop gem  4.x; slightly different format of human-readable command-line arg errors.
+
 *
 
 *
