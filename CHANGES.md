@@ -2,13 +2,20 @@
 
 ## Next
 
-* `traject -v` and `traject -h` correctly return 0 exit code for success.
-
-* upgrade to slop gem  4.x; slightly different format of human-readable command-line arg errors.
-
-* the SolrJsonWriter now supports `solr.url` or `solr.update_url` including HTTP basic auth credentials, eg `http://user:pass@example.org/solr` https://github.com/traject/traject/pull/262
+*
 
 *
+
+*
+
+## 3.5.0
+
+* `traject -v` and `traject -h` correctly return 0 exit code indicating success.
+
+* upgrade to slop gem  4.x, which carries with it a slightly different format of human-readable command-line arg errors, should be otherwise invisible.
+
+* the SolrJsonWriter now supports HTTP basic auth credentials embedded in `solr.url` or `solr.update_url`, eg `http://user:pass@example.org/solr` https://github.com/traject/traject/pull/262
+
 
 ## 3.4.0
 
