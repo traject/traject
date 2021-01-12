@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module Traject
   # A Trajet reader which reads XML, and yields zero to many Nokogiri::XML::Document
   # objects as source records in the traject pipeline.

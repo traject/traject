@@ -4,7 +4,7 @@
 
 *
 
-*
+* Tiny backward compat changes for ruby 3.0 compat. https://github.com/traject/traject/pull/263
 
 *
 

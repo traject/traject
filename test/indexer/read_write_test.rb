@@ -7,7 +7,8 @@ memory_writer_class = Class.new do
       # store them in a class variable so we can test em later
       # Supress the warning message
       original_verbose, $VERBOSE = $VERBOSE, nil
-      @@last_writer_settings = @settings = settings
+      @settings = settings
+      self.class.store_last_writer_settings(@settings)
       # Activate warning messages again.
       $VERBOSE = original_verbose
       @settings["memory_writer.added"] = []
@@ -19,6 +20,16 @@ memory_writer_class = Class.new do
 
     def close
       @settings["memory_writer.closed"] = true
+    end
+
+    private
+
+    def self.store_last_writer_settings(settings)
+      @last_writer_settings = settings
+    end
+
+    def self.last_writer_settings
+      @last_writer_settings
     end
   end
 
@@ -53,7 +64,7 @@ describe "Traject::Indexer#process" do
 
     # Grab the settings out of a class variable where we left em,
     # as a convenient place to store outcomes so we can test em.
-    writer_settings = memory_writer_class.class_variable_get("@@last_writer_settings")
+    writer_settings = memory_writer_class.last_writer_settings
 
     assert writer_settings["memory_writer.added"]
     assert_equal 30, writer_settings["memory_writer.added"].length
@@ -146,7 +157,7 @@ describe "Traject::Indexer#process" do
     it "parses and loads" do
       @indexer.process([@file1, @file2])
       # kinda ridic, yeah.
-      output_hashes = memory_writer_class.class_variable_get("@@last_writer_settings")["memory_writer.added"].collect(&:output_hash)
+      output_hashes = memory_writer_class.last_writer_settings["memory_writer.added"].collect(&:output_hash)
 
       assert_length 2, output_hashes
       assert output_hashes.all? { |hash| hash["title"].length > 0 }
