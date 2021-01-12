@@ -6,7 +6,7 @@
 
 * upgrade to slop gem  4.x; slightly different format of human-readable command-line arg errors.
 
-*
+* Tiny backward compat changes for ruby 3.0 compat. https://github.com/traject/traject/pull/263
 
 *
 
