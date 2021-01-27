@@ -118,6 +118,29 @@ end
 
 If you call with `to_text: false`, and just leave the `Nokogiri::XML::Node`s on the accumulator, the default SolrJsonWriter will end up casting the to strings with `to_s`, which will serialize them to XML, which may be just what you want if you want to put serialized XML into a Solr field. To have more control over the serialization, you may want to use a transforation step similar to above.
 
+## A small but complete example
+
+To process an XML with the structure shown in [./examples/xml/tiny.xml](./examples/xml/tiny.xml) you can use the following configuration:
+
+```
+settings do
+  provide "nokogiri.namespaces", {
+    "slim" => "http://www.loc.gov/MARC21/slim"
+  }
+
+  provide "nokogiri.each_record_xpath", "//slim:record"
+end
+
+to_field "leader", extract_xpath("//slim:leader")
+to_field "title", extract_xpath("//slim:datafield[@tag='245']/slim:subfield[@code='a']")
+```
+
+To process the XML file you would run:
+
+```
+traject -i xml -w Traject::DebugWriter -c traject_config.rb tiny.xml
+```
+
 ## The OaiPmhReader
 
 [OAI-PMH](http://www.openarchives.org/OAI/openarchivesprotocol.html) input seems to be a common use case for XML with traject.
