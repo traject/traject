@@ -120,25 +120,20 @@ If you call with `to_text: false`, and just leave the `Nokogiri::XML::Node`s on 
 
 ## A small but complete example
 
-To process an XML with the structure shown in [./examples/xml/tiny.xml](./examples/xml/tiny.xml) you can use the following configuration:
+To process a MARC XML file with the structure shown in [./examples/xml/tiny.xml](./examples/xml/tiny.xml) you can use the following configuration:
 
 ```
 settings do
-  provide "nokogiri.namespaces", {
-    "slim" => "http://www.loc.gov/MARC21/slim"
-  }
-
-  provide "nokogiri.each_record_xpath", "//slim:record"
+  provide "marc_source.type", "xml"
 end
 
-to_field "leader", extract_xpath("//slim:leader")
-to_field "title", extract_xpath("//slim:datafield[@tag='245']/slim:subfield[@code='a']")
+to_field 'title', extract_marc('245a', first: true)
 ```
 
-To process the XML file you would run:
+To process the MARC XML file you would run:
 
 ```
-traject -i xml -w Traject::DebugWriter -c traject_config.rb tiny.xml
+traject -w Traject::DebugWriter -c traject_config.rb tiny.xml
 ```
 
 ## The OaiPmhReader
