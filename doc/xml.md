@@ -4,6 +4,8 @@ The [NokogiriIndexer](../lib/traject/nokogiri_indexer.md) is a Traject::Indexer 
 
 It by default uses the NokogiriReader to read XML and read Nokogiri::XML::Documents, and includes the NokogiriMacros mix-in, with some macros for operating on Nokogiri::XML::Documents.
 
+Plese notice that the recommened mechanism to parse MARC XML files with Traject is via the `-t` parameter (or the via the `provide "marc_source.type", "xml"` setting). The documentation in this page is for those parsing other (non MARC) XML files.
+
 ## On the command-line
 
 You can tell the traject command-line to use the NokogiriIndexer with the `-i xml` flag:
@@ -117,24 +119,6 @@ end
 ```
 
 If you call with `to_text: false`, and just leave the `Nokogiri::XML::Node`s on the accumulator, the default SolrJsonWriter will end up casting the to strings with `to_s`, which will serialize them to XML, which may be just what you want if you want to put serialized XML into a Solr field. To have more control over the serialization, you may want to use a transforation step similar to above.
-
-## A small but complete example
-
-To process a MARC XML file with the structure shown in [./examples/xml/tiny.xml](./examples/xml/tiny.xml) you can use the following configuration:
-
-```
-settings do
-  provide "marc_source.type", "xml"
-end
-
-to_field 'title', extract_marc('245a', first: true)
-```
-
-To process the MARC XML file you would run:
-
-```
-traject -w Traject::DebugWriter -c traject_config.rb tiny.xml
-```
 
 ## The OaiPmhReader
 
