@@ -62,7 +62,7 @@ All records are assumed to have a unique id. You can set which field to look in 
   def serialize(context)
     h       = context.output_hash
     rec_key = record_number(context)
-    lines   = h.keys.sort.map { |k| @format % [rec_key, k, h[k].join(' | ')] }
+    lines   = h.keys.sort.map { |k| @format % [rec_key, k, (h[k] || []).join(' | ')] }
     lines.push "\n"
     lines.join("\n")
   end
