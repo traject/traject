@@ -73,6 +73,19 @@ describe 'Simple output' do
 
   end
 
+  it "deals ok with nil values" do
+    record_with_nil_value = {"id"=>["2710183"], "title"=>["Manufacturing consent : the political economy of the mass media /"], "xyz"=>nil}
+    @writer.put Traject::Indexer::Context.new(:output_hash => record_with_nil_value)
+    expected = [
+      "#{@id} id #{@id}",
+      "#{@id} title #{@title}",
+      "#{@id} xyz",
+      "\n"
+    ]
+    assert_equal expected.join("\n").gsub(/\s/, ''), @io.string.gsub(/\s/, '')
+    @writer.close
+
+  end
 end
 
 
