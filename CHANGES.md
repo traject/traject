@@ -4,6 +4,10 @@
 
 *
 
+*
+
+## 3.6.0
+
 * Tiny backward compat changes for ruby 3.0 compat. https://github.com/traject/traject/pull/263
 
 * Allow gem `http` 5.x in gemspec. https://github.com/traject/traject/pull/269
