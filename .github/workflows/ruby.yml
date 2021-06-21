@@ -16,10 +16,19 @@ jobs:
     name: Ruby ${{ matrix.ruby }}
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
+
+    - name: set JAVA_OPTS for jruby-9.1
+      run: echo 'JAVA_OPTS="--add-opens java.base/java.security.cert=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.util.zip=ALL-UNNAMED"' >> $GITHUB_ENV
+      if: ${{ matrix.ruby == 'jruby-9.1' }}
+      # https://github.com/jruby/jruby/issues/4834
+      # Still seems to be an issue in jruby-9.1, but not 9.2
+      # https://github.community/t/conditional-setting-of-env-variables-in-gh-actions/179650
+
     - name: Install dependencies
       run: bundle install --jobs 4 --retry 3
     - name: Run tests
