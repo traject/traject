@@ -22,15 +22,16 @@ describe "Shell out to command line" do
 
   it "can display version" do
     out, err, result = execute_with_args("-v")
+
+    assert result.success?, "Expected subprocess exit code to be success.\nSTDERR:\n#{err}\n\nSTDOUT:\n#{out}"
     assert_equal err, "traject version #{Traject::VERSION}\n"
-    assert result.success?
   end
 
   it "can display help text" do
     out, err, result = execute_with_args("-h")
 
+    assert result.success?, "Expected subprocess exit code to be success.\nSTDERR:\n#{err}\n\nSTDOUT:\n#{out}"
     assert err.start_with?("traject [options] -c configuration.rb [-c config2.rb] file.mrc")
-    assert result.success?
   end
 
   it "handles bad argument" do
@@ -43,7 +44,7 @@ describe "Shell out to command line" do
   it "does basic dry run" do
     out, err, result = execute_with_args("--debug-mode -s one=two -s three=four -c test/test_support/demo_config.rb test/test_support/emptyish_record.marc")
 
-    assert result.success?
+    assert result.success?, "Expected subprocess exit code to be success.\nSTDERR:\n#{err}\n\nSTDOUT:\n#{out}"
     assert_includes err, "executing with: `--debug-mode -s one=two -s three=four"
     assert_match /bib_1000165 +author_sort +Collection la/, out
   end
