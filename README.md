@@ -468,6 +468,22 @@ Also see `-I load_path` option and suggestions for Bundler use under Extending W
 See also [Hints for batch and cronjob use](./doc/batch_execution.md) of traject.
 
 
+## A small but complete example
+
+To process a MARC XML file with the data shown in [./examples/marc/tiny.xml](./examples/marc/tiny.xml) you can use save the following configuration as `config.rb`:
+
+```
+to_field 'title', extract_marc('245a', first: true)
+```
+
+and run Traject as follows:
+
+```
+traject -t xml -c config.rb -w Traject::DebugWriter tiny.xml
+```
+
+`-t xml` indicates that the file is a MARC XML file. `-w Traject::DebugWriter` outputs the results to the console (e.g. without saving to Solr).
+
 ## Extending With Your Own Code
 
 Traject config files are full live ruby files, where you can do anything,

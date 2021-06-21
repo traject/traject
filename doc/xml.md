@@ -4,6 +4,8 @@ The [NokogiriIndexer](../lib/traject/nokogiri_indexer.md) is a Traject::Indexer 
 
 It by default uses the NokogiriReader to read XML and read Nokogiri::XML::Documents, and includes the NokogiriMacros mix-in, with some macros for operating on Nokogiri::XML::Documents.
 
+Plese notice that the recommened mechanism to parse MARC XML files with Traject is via the `-t` parameter (or the via the `provide "marc_source.type", "xml"` setting). The documentation in this page is for those parsing other (non MARC) XML files.
+
 ## On the command-line
 
 You can tell the traject command-line to use the NokogiriIndexer with the `-i xml` flag:

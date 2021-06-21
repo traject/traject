@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<collection xmlns="http://www.loc.gov/MARC21/slim" xmlns:marc="http://www.loc.gov/MARC21/slim">
+ <record>
+  <leader>01352cam a2200349 a 4500</leader>
+  <datafield tag="245" ind1="0" ind2="0">
+   <subfield code="6">880-01</subfield>
+   <subfield code="a">Kazoku kankei no shakai shinrigaku /</subfield>
+   <subfield code="c">Osada Masayoshi hen.</subfield>
+  </datafield>
+ </record>
+ <record>
+  <leader>01121ccm a2200289z  4500</leader>
+  <datafield tag="245" ind1="1" ind2="0">
+   <subfield code="a">Powhatan&#39;s daughter :</subfield>
+   <subfield code="b">march</subfield>
+  </datafield>
+  <datafield tag="100" ind1="1" ind2=" ">
+   <subfield code="a">Sousa, John Philip,</subfield>
+   <subfield code="d">1854-1932,</subfield>
+   <subfield code="e">composer.</subfield>
+  </datafield>
+ </record>
+ <record>
+  <leader>01137cam a2200301 a 4500</leader>
+  <datafield tag="245" ind1="1" ind2="0">
+   <subfield code="a">Two pieces /</subfield>
+   <subfield code="c">by Frank O&#39;Hara.</subfield>
+  </datafield>
+  <datafield tag="100" ind1="1" ind2=" ">
+   <subfield code="a">O&#39;Hara, Frank,</subfield>
+   <subfield code="d">1926-1966.</subfield>
+   <subfield code="0">http://id.loc.gov/authorities/names/n79042130</subfield>
+  </datafield>
+ </record>
+</collection>
