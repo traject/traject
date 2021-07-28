@@ -327,7 +327,11 @@ module Traject::Macros
       if field008 && field008.length >= 11
         date_type = field008.slice(6)
         date1_str = field008.slice(7,4)
-        date2_str = field008.slice(11, 4) if field008.length > 15
+        if field008.length > 15
+          date2_str = field008.slice(11, 4)
+        else
+          date2_str = date1_str
+        end
 
         # for date_type q=questionable, we have a range.
         if (date_type == 'q')
