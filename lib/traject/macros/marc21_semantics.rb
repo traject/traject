@@ -333,8 +333,8 @@ module Traject::Macros
           date2_str = date1_str
         end
 
-        # for date_type q=questionable, we have a range.
-        if (date_type == 'q')
+        # for date_type q=questionable, we expect to have a range.
+        if date_type == 'q' and date1_str != date2_str
           # make unknown digits at the beginning or end of range,
           date1 = date1_str.sub("u", "0").to_i
           date2 = date2_str.sub("u", "9").to_i
