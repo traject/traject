@@ -209,6 +209,10 @@ describe "Traject::Macros::Marc21Semantics" do
       @record = MARC::Reader.new(support_file_path  "date_type_r_missing_date2.marc").to_a.first
       assert_equal 1957, Marc21Semantics.publication_date(@record)
     end
+    it "provides a fallback for a missing second date" do
+      @record = MARC::Reader.new(support_file_path  "missing-second-date.marc").to_a.first
+      assert_equal 1678, Marc21Semantics.publication_date(@record)
+    end
 
     it "works correctly with date type 'q'" do
       val = @record['008'].value
