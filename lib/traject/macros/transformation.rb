@@ -157,6 +157,26 @@ module Traject
           acc.collect! { |v| v.gsub(pattern, replace) }
         end
       end
+
+      def delete_if(arg)
+        p = if arg.respond_to? :include?
+              proc { |v| arg.include?(v) }
+            else
+              proc { |v| arg === v }
+            end
+
+        ->(_, acc) { acc.delete_if(&p) }
+      end
+
+      def select(arg)
+        p = if arg.respond_to? :include?
+              proc { |v| arg.include?(v) }
+            else
+              proc { |v| arg === v }
+            end
+
+        ->(_, acc) { acc.select!(&p) }
+      end
     end
   end
 end

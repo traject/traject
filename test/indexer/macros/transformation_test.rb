@@ -174,4 +174,114 @@ describe "Traject::Macros::Transformation" do
     end
   end
 
+  describe "delete_if" do
+
+    describe "argument is an Array" do
+      it "filters out selected values from accumulatd values" do
+        arg = [ "one", "three"]
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), delete_if(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["two"], output["test"]
+      end
+    end
+
+    describe "argument is a Set" do
+      it "filters out selected values from accumulatd values" do
+        arg = [ "one", "three"].to_set
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), delete_if(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["two"], output["test"]
+      end
+    end
+
+    describe "argument is a Regex" do
+      it "filters out selected values from accumulatd values" do
+        arg = /^t/
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), delete_if(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["one"], output["test"]
+      end
+    end
+
+    describe "argument is a Procedure or Lambda" do
+      it "filters out selected values from accumulatd values" do
+        arg = ->(v) { v == "one" }
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), delete_if(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["two", "three"], output["test"]
+      end
+    end
+  end
+
+  describe "select" do
+
+    describe "argument is an Array" do
+      it "selects a subset of values from accumulatd values" do
+        arg = [ "one", "three", "four"]
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), select(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["one", "three"], output["test"]
+      end
+    end
+
+    describe "argument is a Set" do
+      it "selects a subset of values from accumulatd values" do
+        arg = [ "one", "three", "four"].to_set
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), select(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["one", "three"], output["test"]
+      end
+    end
+
+    describe "argument is a Regex" do
+      it "selects a subset of values from accumulatd values" do
+        arg = /^t/
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), select(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["two", "three"], output["test"]
+      end
+    end
+
+    describe "argument is a Procedure or Lambda" do
+      it "selects a subset of values from accumulatd values" do
+        arg = ->(v) { v != "one" }
+
+        @indexer.configure do
+          to_field "test", literal("one"), literal("two"), literal("three"), select(arg)
+        end
+
+        output = @indexer.map_record(@record)
+        assert_equal ["two", "three"], output["test"]
+      end
+    end
+  end
+
 end
