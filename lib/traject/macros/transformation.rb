@@ -159,22 +159,12 @@ module Traject
       end
 
       def delete_if(arg)
-        p = if arg.respond_to? :include?
-              proc { |v| arg.include?(v) }
-            else
-              proc { |v| arg === v }
-            end
-
+        p = proc { |v| arg.include?(v) rescue arg === v }
         ->(_, acc) { acc.delete_if(&p) }
       end
 
       def select(arg)
-        p = if arg.respond_to? :include?
-              proc { |v| arg.include?(v) }
-            else
-              proc { |v| arg === v }
-            end
-
+        p = proc { |v| arg.include?(v) rescue arg === v }
         ->(_, acc) { acc.select!(&p) }
       end
     end
