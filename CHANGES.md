@@ -1,10 +1,14 @@
 # Changes
 
-## Next
-
-* Add two new transformation macros, `Traject::Macros::Transformation.delete_if` and `Traject::Macros::Transformations.select`.
+## NEXT
 
 *
+
+*
+
+## 3.7.0
+
+* Add two new transformation macros, `Traject::Macros::Transformation.delete_if` and `Traject::Macros::Transformations.select`.
 
 ## 3.6.0
 
