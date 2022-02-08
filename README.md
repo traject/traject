@@ -177,6 +177,11 @@ TranslationMap use above is just one example of a transformation macro, that tra
 * `split(" ")`: take values and split them, possibly result in multiple values.
 * `transform(proc)`: transform each existing macro using a proc, kind of like `map`.
    eg `to_field "something", extract_xml("//author"), transform( ->(author) { "#{author.last}, #{author.first}" })
+* `delete_if(["a", "b"])`: remove a value from accumulated values if it is included in the passed in argumet.
+    * Can also take a string, proc or regex as an argument. See [tests](test/indexer/macros/transformation_test.rb) for full functionality.
+* `select(proc)`: selects (keeps) values from accumulated values if proc evaluates to true for specifc value.
+    * Can also take a arrays, sets and regex as an argument. See [tests](test/indexer/macros/transformation_test.rb) for full functionality.
+
 
 You can add on as many transformation macros as you want, they will be applied to output in order.
 

@@ -157,6 +157,36 @@ module Traject
           acc.collect! { |v| v.gsub(pattern, replace) }
         end
       end
+
+      # Run ruby `delete_if` on the accumulator for values that include or are equal to arg.
+      # It will also accept an array, set, regex pattern, proc or lambda as an arugment.
+      #
+      # @example
+      #   to_field "creator_facet", extract_marc("100abcdq"), delete_if(/foo/)
+      def delete_if(arg)
+        p = if arg.respond_to? :include?
+              proc { |v| arg.include?(v) }
+            else
+              proc { |v| arg === v }
+            end
+
+        ->(_, acc) { acc.delete_if(&p) }
+      end
+
+      # Run ruby `select!` on the accumulator for values that include or are equal to arg.
+      # It accepts an array, set, regex pattern, proc or lambda as an arugument.
+      #
+      # @example
+      #   to_field "creator_facet", extract_marc("100abcdq"), select(->(v) { v != "foo" })
+      def select(arg)
+        p = if arg.respond_to? :include?
+              proc { |v| arg.include?(v) }
+            else
+              proc { |v| arg === v }
+            end
+
+        ->(_, acc) { acc.select!(&p) }
+      end
     end
   end
 end

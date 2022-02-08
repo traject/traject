@@ -2,7 +2,7 @@
 
 ## Next
 
-*
+* Add two new transformation macros, `Traject::Macros::Transformation.delete_if` and `Traject::Macros::Transformations.select`.
 
 *
 
