@@ -431,8 +431,26 @@ class Traject::SolrJsonWriter
     attr_reader :response
 
     def initialize(msg, response = nil) # :nodoc:
+      solr_error = find_solr_error(response)
+      msg += ": #{solr_error}" if solr_error
+
       super(msg)
+
       @response = response
+    end
+
+    private
+
+    # If we can get the error out of a JSON response, please do,
+    # to include in error message.
+    def find_solr_error(response)
+      return nil unless response && response.body && response.content_type&.start_with?("application/json")
+
+      parsed = JSON.parse(response.body)
+
+      parsed && parsed.dig("error", "msg")
+    rescue JSON::ParserError
+      return nil
     end
   end
 

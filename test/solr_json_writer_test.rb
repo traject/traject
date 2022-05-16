@@ -19,7 +19,7 @@ describe "Traject::SolrJsonWriter" do
   class FakeHTTPClient
     # Always reply with this status, normally 200, can
     # be reset for testing error conditions.
-    attr_accessor :response_status
+    attr_accessor :response_status, :body, :content_type
 
     def initialize(*args)
       @post_args = []
@@ -33,10 +33,7 @@ describe "Traject::SolrJsonWriter" do
         @post_args << args
       end
 
-      resp = HTTP::Message.new_response("")
-      resp.status = self.response_status
-
-      return resp
+      return faked_response
     end
 
     def get(*args)
@@ -44,10 +41,7 @@ describe "Traject::SolrJsonWriter" do
         @get_args << args
       end
 
-      resp = HTTP::Message.new_response("")
-      resp.status = self.response_status
-
-      return resp
+      return faked_response
     end
 
     def post_args
@@ -64,6 +58,16 @@ describe "Traject::SolrJsonWriter" do
 
     # Everything else, just return nil please
     def method_missing(*args)
+    end
+
+    private
+
+    def faked_response
+      resp = HTTP::Message.new_response(self.body || "")
+      resp.status = self.response_status
+      resp.content_type = self.content_type if self.content_type
+
+      resp
     end
   end
 
@@ -155,6 +159,26 @@ describe "Traject::SolrJsonWriter" do
     individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
     assert_length 1, JSON.parse(individual_update1[1])
     assert_length 1, JSON.parse(individual_update2[1])
+  end
+
+  it "includes Solr reported error in base error message" do
+    @writer = create_writer("solr_writer.batch_size" => 1, "solr_writer.max_skipped" => 0)
+    @fake_http_client.response_status = 400
+    @fake_http_client.content_type = "application/json;charset=utf-8"
+    @fake_http_client.body =
+      { "responseHeader"=>{"status"=>400, "QTime"=>0},
+        "error"=>{
+          "metadata"=>["error-class", "org.apache.solr.common.SolrException", "root-error-class", "org.apache.solr.common.SolrException"],
+          "msg"=>"ERROR: this is a solr error",
+          "code"=>400
+        }
+      }.to_json
+
+    error = assert_raises(Traject::SolrJsonWriter::MaxSkippedRecordsExceeded) {
+      @writer.put context_with({"id" => "doc_1", "key" => "value"})
+      @writer.close
+    }
+    assert_match(/ERROR: this is a solr error/, error.message)
   end
 
   it "can #flush" do
