@@ -86,6 +86,9 @@ require 'concurrent' # for atomic_fixnum
 # * solr_json_writer.http_client Mainly intended for testing, set your own HTTPClient
 #   or mock object to be used for HTTP.
 #
+# * solr_json_writer.use_packaged_certs: unlikely to be needed, set to true for legacy
+#   behavior, to use packaged HTTPClient gem ssl certs. https://github.com/nahi/httpclient/issues/445
+#
 class Traject::SolrJsonWriter
   include Traject::QualifiedConstGet
 
@@ -118,6 +121,15 @@ class Traject::SolrJsonWriter
       @settings["solr_json_writer.http_client"]
     else
       client = HTTPClient.new
+
+      # By default we'll use teh host OS SSL certs, but you can use
+      # setting solr_json_writer.use_packaged_certs to true or "true"
+      # to go back to previous behavior if you have a perverse reason to.
+      # https://github.com/nahi/httpclient/issues/445
+      unless @settings["solr_json_writer.use_packaged_certs"].to_s == "true"
+        client.ssl_config.set_default_paths
+      end
+
       if @settings["solr_writer.http_timeout"]
         client.connect_timeout = client.receive_timeout = client.send_timeout = @settings["solr_writer.http_timeout"]
       end
