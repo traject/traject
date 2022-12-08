@@ -6,6 +6,16 @@
 
 *
 
+## 3.8.0
+
+SolrJsonWriter: HTTPClient should use OS certs instead of packaged ones
+
+HTTPClient, for whatever reason, prefers its own packaged certs, which are now years out of date
+and don't work with Let's Encrypt.
+
+This changes the code to prefer the OS certs, which can be overridden by setting
+`solr_json_writer.use_packaged_certs` to `true` or `"true"`. 
+
 ## 3.7.0
 
 * Add two new transformation macros, `Traject::Macros::Transformation.delete_if` and `Traject::Macros::Transformations.select`.
