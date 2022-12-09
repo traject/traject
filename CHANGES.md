@@ -6,6 +6,10 @@
 
 *
 
+## 3.8.1
+
+Ugh. Forgot about Jruby 9.1 problem with bundler 2. Changing the requirement back. 
+
 ## 3.8.0
 
 SolrJsonWriter: HTTPClient should use OS certs instead of packaged ones
