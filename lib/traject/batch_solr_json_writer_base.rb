@@ -36,6 +36,12 @@ require 'concurrent' # for atomic_fixnum
 #    wouldn't be able to handle installing extra optional dependencies, in bundler
 #    early days.
 #
+# * Note: I'm not sure this really needs teh ability to have more than 1 writer-threads,
+#   I haven't found it's useful for performance myself... but since it needs to be
+#   thread-safe for multi-threaded callers anyway, I'm not sure it saves any complexity
+#   to fix writer thread pool to max 1.
+#
+#
 
 
 # Write to Solr using the JSON interface; only works for Solr >= 3.2
@@ -149,7 +155,8 @@ class Traject::BatchSolrJsonWriterBase
      raise "Sub-class needs to override"
   end
 
-
+  # Do HTTP post and return one of our local HttpResponse value objects.
+  #
   # Has to be overridden to send request to solr WITH header "Content-type" => "application/json"
   # we assume responses will be json!
   #
