@@ -38,7 +38,7 @@ class Traject::SolrJsonWriterHttpRb < Traject::BatchSolrJsonWriterBase
     end
 
     if @basic_auth_user || @basic_auth_password
-      http_base = http_base.basic_auth(:user => @basic_auth_user, :password => @basic_auth_password)
+      http_base = http_base.basic_auth(:user => @basic_auth_user, :pass => @basic_auth_password)
     end
 
     if persistent
