@@ -15,11 +15,26 @@ require 'concurrent' # for atomic_fixnum
 # NOTE: This is work-in-progress refactoring to allow sub-classes with different http
 #       clients.
 #
+#  This base class has common logic for BATCHING solr adds, in a THREAD-SAFE way (can be called
+#  from multiple threads), dealing with error reporting etc.,
+#  WITHOUT dealing with actual http client directly. Methods are present that need to be overridden to do that.
+#
 # TODO: (non-exhaustive)
-#  * DOCS
+#  * DOCS need to be totally refactored/rewritten
+#
 #  * the error class that below is now Traject::BatchSolrJsonWriterBase::BadHttpResponse
 #    actually needs to remain Traject::SolrJsonWriter::BadHttpResponse for backwards compat.
+#
 #  * How we appraoch tests needs to be refactored here
+#
+#  * Sub-classes are accessing iVars directly, we should make attr_reader accessors for
+#    any of them instead, sub-classes accessing iVars set in superclass directly is not
+#    a good inheritance API.
+#
+#  * If we really include multiple adapters, we include dependencies in gemspec for all
+#    of them?  Pro's/con's either way, traject was originally meant for people who
+#    wouldn't be able to handle installing extra optional dependencies, in bundler
+#    early days.
 #
 
 
@@ -137,6 +152,10 @@ class Traject::BatchSolrJsonWriterBase
 
   def do_http_post(url:, body:"", headers:{}, timeout: nil)
     raise "Sub-class needs to override"
+  end
+
+  def implementation_specific_close
+    raise "Sub=-class needs to override"
   end
 
   def self.implementation_skippable_exceptions
@@ -358,6 +377,8 @@ class Traject::BatchSolrJsonWriterBase
     if @commit_on_close
       commit
     end
+
+    implementation_specific_close
   end
 
 

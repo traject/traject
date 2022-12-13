@@ -47,4 +47,10 @@ class Traject::SolrJsonWriter < Traject::BatchSolrJsonWriterBase
     # code, may be no way to override timeout per-request for HTTPClient?
     @http_client.receive_timeout = original_timeout if original_timeout
   end
+
+  def implementation_specific_close
+    # we don't need one in this implementation, we don't think
+  end
+
+
 end
