@@ -150,7 +150,21 @@ class Traject::BatchSolrJsonWriterBase
   end
 
 
-  def do_http_post(url:, body:"", headers:{}, timeout: nil)
+  # Has to be overridden to send request to solr WITH header "Content-type" => "application/json"
+  # we assume responses will be json!
+  #
+  # exact url and body are given in arguments -- but it's assumed they will
+  # all be to the SAME http host, to allow implementations to do persistent
+  # HTTP connections with same host.
+  #
+  # Not all http adapters allow you to set headers on a per-request basis when used
+  # with persistent connections.
+  #
+  # The timeout arg is meant to set a per-request timeout to be different than default
+  # timeout. We use it to increase timeouts for `commit` requests... but not all implementations
+  # can really do per-request timeouts well, it may result in a separate HTTP connection
+  # being used for anythin with non-nil timeout.
+  def do_http_post(url:, body:"", timeout: nil)
     raise "Sub-class needs to override"
   end
 
@@ -252,7 +266,7 @@ class Traject::BatchSolrJsonWriterBase
     json_package = JSON.generate(batch.map { |c| c.output_hash })
 
     begin
-      response = do_http_post(url: solr_update_url_with_query(@solr_update_args), body: json_package, headers: { "Content-type" => "application/json" })
+      response = do_http_post(url: solr_update_url_with_query(@solr_update_args), body: json_package)
     rescue StandardError => exception
     end
 
@@ -279,7 +293,7 @@ class Traject::BatchSolrJsonWriterBase
     begin
       post_url = solr_update_url_with_query(@solr_update_args)
 
-      response = do_http_post url: post_url, body: json_package, headers: { "Content-type" => "application/json" }
+      response = do_http_post url: post_url, body: json_package
 
       unless response.http_status == 200
         raise BadHttpResponse.new("Unexpected HTTP response status #{response.http_status} from POST #{post_url}", response)
@@ -325,7 +339,7 @@ class Traject::BatchSolrJsonWriterBase
     logger.debug("#{self.class.name}: Sending delete to Solr for #{id}")
 
     json_package = {delete: id}
-    response = do_http_post(url: solr_update_url_with_query(@solr_update_args), body: JSON.generate(json_package), headers: { "Content-type" => "application/json" })
+    response = do_http_post(url: solr_update_url_with_query(@solr_update_args), body: JSON.generate(json_package))
     if response.http_status != 200
       raise RuntimeError.new("Could not delete #{id.inspect}, http response #{response.http_status}: #{response.http_body}")
     end

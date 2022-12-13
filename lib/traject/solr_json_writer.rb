@@ -39,7 +39,7 @@ class Traject::SolrJsonWriter < Traject::BatchSolrJsonWriterBase
     original_timeout = @http_client.receive_timeout
     @http_client.receive_timeout = timeout if timeout
 
-    response = @http_client.post url, body, headers
+    response = @http_client.post url, body, { "Content-type" => "application/json" }
     return HttpResponse.new(http_status: response.status, http_body: response.body, http_headers: response.headers)
   ensure
     # this handling of per-request timeout isn't actually thread-safe, we're resetting timeout
