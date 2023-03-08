@@ -127,6 +127,14 @@ describe "Traject::Macros::Marc21Semantics" do
       assert_equal({}, @indexer.map_record(empty_record))
 
     end
+    it "can handle ISO 639-3 language codes" do
+      @record = MARC::Reader.new(support_file_path  "iso639-3_lang.marc").to_a.first
+      output = @indexer.map_record(@record)
+
+      assert_equal ["Norwegian", "English", "Norwegian (Bokmål)"], output["languages"]
+      assert_equal({}, @indexer.map_record(empty_record))
+
+    end
   end
 
   describe "marc_instrumentation_humanized" do
