@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: [ '2.4', '2.5', '2.6', '2.7', '3.0', '3.1', 'jruby-9.1', 'jruby-9.2' ]
+        ruby: [ '2.4', '2.5', '2.6', '2.7', '3.0', '3.1', 'jruby-9.1', 'jruby-9.2', 'jruby-9.3', 'jruby-9.4']
     name: Ruby ${{ matrix.ruby }}
     steps:
     - uses: actions/checkout@v2
@@ -21,6 +21,7 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
 
     - name: set JAVA_OPTS for jruby-9.1
       run: echo 'JAVA_OPTS="--add-opens java.base/java.security.cert=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.util.zip=ALL-UNNAMED"' >> $GITHUB_ENV
