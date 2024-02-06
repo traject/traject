@@ -167,7 +167,13 @@ module Traject::Macros
       # (b) include the first subfield in the record
 
       subs = spec.subfields
-      return str unless subs && subs.include?(field.subfields[0].code)
+
+      # Get the code for the first alphabetic subfield, which would be
+      # the one getting characters shifted off
+
+      first_alpha_code = field.subfields.first{|sf| sf.code =~ /[a-z]/}.code
+
+      return str unless subs && subs.include?(first_alpha_code)
 
       # OK. If we got this far we actually need to strip characters off the string
 

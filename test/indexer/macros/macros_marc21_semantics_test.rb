@@ -87,8 +87,9 @@ describe "Traject::Macros::Marc21Semantics" do
 
       assert_equal ["Business renaissance quarterly [electronic resource]."], output["author_sort"]
       assert_equal [""], @indexer.map_record(empty_record)['author_sort']
-
     end
+
+
   end
 
   describe "marc_sortable_title" do
@@ -107,6 +108,16 @@ describe "Traject::Macros::Marc21Semantics" do
 
       assert_equal ["Business renaissance quarterly"], output["title_sort"]
     end
+
+    it "respects non-filing when the first subfield isn't alphabetic" do
+      @record = MARC::Reader.new(support_file_path  "the_business_ren.marc").first
+      @record.fields("245").first.subfields.unshift MARC::Subfield.new("6", "245-03")
+      output = @indexer.map_record(@record)
+      assert_equal ["Business renaissance quarterly"], output["title_sort"]
+
+
+    end
+
     it "works with a record with no 245$ab" do
       @record = MARC::Reader.new(support_file_path  "245_no_ab.marc").to_a.first
       output = @indexer.map_record(@record)
