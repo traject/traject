@@ -4,7 +4,14 @@
 
 *
 
-*
+## 3.8.2
+
+Bug fix for the `#filing_version` logic, which was incorrectly assuming the 
+first subfield in a field would hold content (e.g., `$a`) and thus failed
+when it held a pointer to a linking field (e.g., `$6 245-01`)
+
+```
+
 
 ## 3.8.1
 
