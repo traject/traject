@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
 
 
   spec.add_dependency "concurrent-ruby", ">= 0.8.0"
+  spec.add_dependency "csv"
   spec.add_dependency "marc", "~> 1.0"
 
   spec.add_dependency "hashie", ">= 3.1", "< 6" # used for Indexer#settings
