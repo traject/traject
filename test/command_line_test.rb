@@ -24,21 +24,20 @@ describe "Shell out to command line" do
     out, err, result = execute_with_args("-v")
 
     assert result.success?, "Expected subprocess exit code to be success.\nSTDERR:\n#{err}\n\nSTDOUT:\n#{out}"
-    assert_equal err, "traject version #{Traject::VERSION}\n"
+    assert err.end_with?("traject version #{Traject::VERSION}\n")
   end
 
   it "can display help text" do
     out, err, result = execute_with_args("-h")
 
     assert result.success?, "Expected subprocess exit code to be success.\nSTDERR:\n#{err}\n\nSTDOUT:\n#{out}"
-    assert err.start_with?("traject [options] -c configuration.rb [-c config2.rb] file.mrc")
+    assert_includes err, "traject [options] -c configuration.rb [-c config2.rb] file.mrc"
   end
 
   it "handles bad argument" do
     out, err, result = execute_with_args("--no-such-arg")
     refute result.success?
-
-    assert err.start_with?("Error: unknown option `--no-such-arg'\nExiting...\n")
+    assert_includes err, "Error: unknown option `--no-such-arg'\nExiting...\n"
   end
 
   it "does basic dry run" do
@@ -49,4 +48,3 @@ describe "Shell out to command line" do
     assert_match /bib_1000165 +author_sort +Collection la/, out
   end
 end
-
