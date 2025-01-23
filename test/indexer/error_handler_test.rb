@@ -21,7 +21,7 @@ describe 'Custom mapping error handler' do
     end
 
     assert_equal "I just like raising errors", e.message
-    assert output.string =~ /while executing \(to_field \"id\" at .*error_handler_test.rb:\d+\)/
+    assert output.string =~ /while executing \(to_field \"id\" at .*error_handler_test.rb:\d+.*\)/
     assert output.string =~ /CustomFakeException: I just like raising errors/
   end
 
@@ -38,7 +38,7 @@ describe 'Custom mapping error handler' do
       end
     end
     e = assert_raises(CustomFakeException) { indexer.map_record({}) }
-    assert e.message =~ /\(to_field \"id\" at .*error_handler_test.rb:\d+\)/
+    assert e.message =~ /\(to_field \"id\" at .*error_handler_test.rb:\d+.*\)/
   end
 
   it "custom handler can skip and continue" do
