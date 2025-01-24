@@ -162,7 +162,19 @@ describe "Traject::NokogiriReader" do
       # nokogiri makes it so hard to reliably get an Element to serialize to XML with all
       # it's inherited namespace declerations. :(  We're only doing this for testing purposes
       # anyway.  This may not handle everything, but handles what we need in the test right now
-      if node.namespace
+      #
+      # Update billdueber 2025.01.07 Github CI has started erroring out on the namespace
+      # stuff again on the most recent-at-this-time jruby-9.4.9. Java XML is complaining
+      # about trying to manipulate a namespaces that (according to jruby-nokogiri in
+      # this particular context) doesn't exist yet, throwing a
+      #  > Java::OrgW3cDom::DOMException: NAMESPACE_ERR: An attempt is made to create or
+      #  > change an object in a way which is incorrect with regard to namespaces
+      # The rabbit hole to try
+      # to figure it out is too deep, and the actual data is well-tested by
+      # #ns_semantic_equivalent_xml? (below), so I'm just going to skip the
+      # attempts to add the namespace under JRuby.
+
+      if node.namespace and !Traject::Util::is_jruby?
         node["xmlns"] = node.namespace.href
       end
     end

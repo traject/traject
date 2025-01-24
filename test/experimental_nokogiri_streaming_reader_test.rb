@@ -143,14 +143,18 @@ describe "Traject::ExperimentalNokogiriStreamingReader" do
       # nokogiri makes it so hard to reliably get an Element to serialize to XML with all
       # it's inherited namespace declerations. :(  We're only doing this for testing purposes
       # anyway.  This may not handle everything, but handles what we need in the test right now
-      if node.namespace
+      if node.namespace and !Traject::Util::is_jruby?
         node["xmlns"] = node.namespace.href
       end
     end
 
     assert_length manually_extracted.size, yielded_records
     assert yielded_records.all? {|r| r.kind_of? Nokogiri::XML::Document }
-    assert_equal manually_extracted.collect(&:to_xml), yielded_records.collect(&:root).collect(&:to_xml)
+
+    # See comment about jruby and namespaces in nokogiri_reader_test.rb
+    unless Traject::Util::is_jruby?
+      assert_equal manually_extracted.collect(&:to_xml), yielded_records.collect(&:root).collect(&:to_xml)
+    end
   end
 
   describe "without each_record_xpath" do
