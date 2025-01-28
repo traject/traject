@@ -1,17 +1,22 @@
 # Changes
 
-## NEXT
+## 3.8.3 Compatibility release for ruby 3.4
 
-*
+Note that some gems, `ruby-marc` in particular, will throw zillions of
+warnings about literal strings being frozen in future versions of ruby. 
+
+- Update CI testing matrix
+  - removed MRI ruby 2.4, 2.5, 2.6, and jruby-9.2
+  - added MRI ruby 3.4
+- Add gem dependencies for `csv` and `mutex_m`, both of which were 
+  part of the standard library prior to ruby 3.4
+
 
 ## 3.8.2
 
 Bug fix for the `#filing_version` logic, which was incorrectly assuming the 
 first subfield in a field would hold content (e.g., `$a`) and thus failed
 when it held a pointer to a linking field (e.g., `$6 245-01`)
-
-```
-
 
 ## 3.8.1
 
