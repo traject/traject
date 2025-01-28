@@ -1,11 +1,20 @@
 # Changes
 
-## 3.8.3 Compatibility release for ruby 3.4
+## Next
+
+Work will continue to lessen dependence on `http-client` (which is
+unsupported) while making sure to not break anything or lose 
+important characteristics like keepAlive and multi threading. 
+
+## 3.8.3
+
+Compatibility release for ruby 3.4
 
 [Incorporates work from @jrochkind and @jcoyne]
 
 Note that some gems, `ruby-marc` in particular, will throw zillions of
-warnings about literal strings being frozen in future versions of ruby. 
+warnings about literal strings being frozen in future versions of ruby 
+when running under ruby 3.4. 
 
 - Update CI testing matrix
   - removed MRI ruby 2.4, 2.5, 2.6, and jruby-9.2
