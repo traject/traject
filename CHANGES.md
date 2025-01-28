@@ -2,6 +2,8 @@
 
 ## 3.8.3 Compatibility release for ruby 3.4
 
+[Incorporates work from @jrochkind and @jcoyne]
+
 Note that some gems, `ruby-marc` in particular, will throw zillions of
 warnings about literal strings being frozen in future versions of ruby. 
 
