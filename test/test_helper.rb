@@ -6,6 +6,7 @@ require 'webmock/minitest'
 
 require 'traject'
 require 'marc'
+require 'debug'
 
 # keeps things from complaining about "yell-1.4.0/lib/yell/adapters/io.rb:66 warning: syswrite for buffered IO"
 # for reasons I don't entirely understand, involving yell using syswrite and tests sometimes

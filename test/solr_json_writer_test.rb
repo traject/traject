@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'httpclient'
 require 'traject/solr_json_writer'
 require 'thread'
 require 'json'
@@ -54,6 +53,10 @@ describe "Traject::SolrJsonWriter" do
       @mutex.synchronize do
         @get_args.dup
       end
+    end
+
+    def headers(**)
+      self
     end
 
     # Everything else, just return nil please
@@ -157,8 +160,8 @@ describe "Traject::SolrJsonWriter" do
     assert_length 2, JSON.parse(batch_update[1])
 
     individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
-    assert_length 1, JSON.parse(individual_update1[1])
-    assert_length 1, JSON.parse(individual_update2[1])
+    assert_length 1, JSON.parse(individual_update1.dig(1, :body))
+    assert_length 1, JSON.parse(individual_update2.dig(1, :body))
   end
 
   it "includes Solr reported error in base error message" do
@@ -197,9 +200,8 @@ describe "Traject::SolrJsonWriter" do
   it "defaults to not setting basic authentication" do
     settings = { "solr.url" => "http://example.com/solr/foo" }
     writer = Traject::SolrJsonWriter.new(settings)
-    auth = writer.instance_variable_get("@http_client")
-      .www_auth.basic_auth.instance_variable_get("@auth")
-    assert(auth.empty?)
+    headers = writer.instance_variable_get("@http_client").default_options.headers
+    assert(headers.empty?)
   end
 
   describe "HTTP basic auth" do
@@ -211,14 +213,11 @@ describe "Traject::SolrJsonWriter" do
         "solr_writer.basic_auth_password" => "bar",
       }
 
-      # testing with some internal implementation of HTTPClient sorry
-
       writer = Traject::SolrJsonWriter.new(settings)
 
-      auth = writer.instance_variable_get("@http_client")
-        .www_auth.basic_auth.instance_variable_get("@auth")
-      assert(!auth.empty?)
-      assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
+      headers = writer.instance_variable_get("@http_client").default_options.headers
+      assert(!headers.empty?)
+      assert_equal(headers['Authorization'].split(' ').last, Base64.encode64("foo:bar").chomp)
     end
 
     it "supports basic auth from solr.url" do
@@ -226,13 +225,10 @@ describe "Traject::SolrJsonWriter" do
         "solr.url" => "http://foo:bar@example.com/solr/foo",
       }
 
-      # testing with some internal implementation of HTTPClient sorry
-
       writer = Traject::SolrJsonWriter.new(settings)
-      auth = writer.instance_variable_get("@http_client")
-        .www_auth.basic_auth.instance_variable_get("@auth")
-      assert(!auth.empty?)
-      assert_equal(auth.values.first, Base64.encode64("foo:bar").chomp)
+      headers = writer.instance_variable_get("@http_client").default_options.headers
+      assert(!headers.empty?)
+      assert_equal(headers['Authorization'].split(' ').last, Base64.encode64("foo:bar").chomp)
     end
 
     it "does not log basic auth from solr.url" do
@@ -435,7 +431,7 @@ describe "Traject::SolrJsonWriter" do
 
       post_args = @fake_http_client.post_args.first
       assert_equal "http://example.com/solr/update/json", post_args[0]
-      assert_equal JSON.generate({"delete" => id}), post_args[1]
+      assert_equal JSON.generate({"delete" => id}), post_args.dig(1, :body)
     end
 
     it "raises on non-200 http response" do
@@ -451,7 +447,7 @@ describe "Traject::SolrJsonWriter" do
       @writer.delete_all!
       post_args = @fake_http_client.post_args.first
       assert_equal "http://example.com/solr/update/json", post_args[0]
-      assert_equal JSON.generate({"delete" => { "query" => "*:*"}}), post_args[1]
+      assert_equal JSON.generate({"delete" => { "query" => "*:*"}}), post_args.dig(1, :body)
     end
   end
 end

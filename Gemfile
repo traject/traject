@@ -7,10 +7,7 @@ group :development do
   gem "webmock", "~> 3.4"
 end
 
-group :debug do
-  gem "ruby-debug", :platform => "jruby"
-  gem "byebug", :platform => "mri"
-end
+gem 'debug'
 
 # ruby-marc stopped supporting ruby 2.3 and 2.4 in newer 1.x versions,
 # while we would still like to support those old versions. When running
