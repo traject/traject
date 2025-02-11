@@ -10,6 +10,7 @@ require 'traject/indexer/step'
 require 'traject/marc_reader'
 require 'traject/json_writer'
 require 'traject/solr_json_writer'
+require 'traject/solr_json_writer2'
 require 'traject/debug_writer'
 require 'traject/array_writer'
 
