@@ -49,6 +49,7 @@ You can keep your settings and indexing rules in one config file, or split them 
 
 There are two main categories of directives in your configuration files: _Settings_, and _Indexing Rules_.
 
+
 ## Settings
 
 Settings are a flat list of key/value pairs, where the keys are always strings and the values usually are too. They look like this in a config file:
@@ -86,6 +87,11 @@ You can also use `store` if you want to force-set: last set wins.
 See, docs page on [Settings](./doc/settings.md) for list
 of all standardized settings.
 
+## Note: New writer coming
+
+The default writer, `Traject::SolrJsonWriter` uses the [http gem](https://github.com/httprb/http) for HTTP.  We will be in the future switching to use [httpx](https://github.com/HoneyryderChuck/httpx) for the default writer.
+
+To opt into the new httpx-based writer now, either set the shell ENV variable `SOLR_JSON_WRITER=2`, or set configuration `provide "writer_class_name", "Traject::SolrJsonWriter2"`
 
 ## Indexing rules: 'to_field'
 
