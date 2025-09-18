@@ -7,85 +7,18 @@ require 'stringio'
 require 'logger'
 
 
+require "httpx/adapters/webmock"
+WebMock.enable! # not sure why we need this
+
+
 # Some basic tests, using a mocked http client so we can see what it did --
 # these tests do not run against a real solr server at present.
 describe "Traject::SolrJsonWriter2" do
-
+  TEST_SOLR_URL = "http://example.com/solr"
 
   #######
-  # A bunch of utilities to help testing
+  # utilities to help testing
   #######
-
-  class FakeHTTPClient2
-    # Always reply with this status, normally 200, can
-    # be reset for testing error conditions.
-    attr_accessor :response_status, :body, :content_type
-
-    def initialize(*args)
-      @post_args = []
-      @get_args  = []
-      @response_status = 200
-      @mutex = Monitor.new
-      @with_args = {}
-    end
-
-    def with(**args)
-      @mutex.synchronize do
-        @with_args.merge!(args)
-      end
-
-      return self
-    end
-
-    def post(*args)
-      @mutex.synchronize do
-        @post_args << args
-      end
-
-      return faked_response
-    end
-
-    def get(*args)
-      @mutex.synchronize do
-        @get_args << args
-      end
-
-      return faked_response
-    end
-
-    def post_args
-      @mutex.synchronize do
-        @post_args.dup
-      end
-    end
-
-    def get_args
-      @mutex.synchronize do
-        @get_args.dup
-      end
-    end
-
-    def with_args
-      @mutex.synchronize do
-        @with_args.dup
-      end
-    end
-
-    # Everything else, just return nil please
-    def method_missing(*args)
-    end
-
-    private
-
-    def faked_response
-      resp = HTTP::Message.new_response(self.body || "")
-      resp.status = self.response_status
-      resp.content_type = self.content_type if self.content_type
-
-      resp
-    end
-  end
-
 
   def context_with(hash)
     Traject::Indexer::Context.new(:output_hash => hash)
@@ -93,14 +26,10 @@ describe "Traject::SolrJsonWriter2" do
 
   def create_writer(settings = {})
     settings = {
-      "solr.url" => "http://example.com/solr",
-      "solr_json_writer.http_client" => FakeHTTPClient2.new
+      "solr.url" => TEST_SOLR_URL,
       }.merge!(settings)
-    @fake_http_client = settings["solr_json_writer.http_client"]
 
-    writer = Traject::SolrJsonWriter2.new(settings)
-
-    return writer
+    Traject::SolrJsonWriter2.new(settings)
   end
 
   # strio = StringIO.new
@@ -126,39 +55,50 @@ describe "Traject::SolrJsonWriter2" do
   end
 
   it "adds a document" do
+    stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_return(status: 200)
+
     @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
     @writer.close
 
-    post_args = @fake_http_client.post_args.first
-
-    refute_nil post_args
-
-    assert_equal "http://example.com/solr/update/json", post_args[0]
-
-    refute_nil post_args[1]
-    posted_json = JSON.parse(post_args[1][:body])
-
-    assert_equal [{"id" => "one", "key" => ["value1", "value2"]}], posted_json
+    assert_requested :post, "#{TEST_SOLR_URL}/update/json" do |request|
+      posted_json = JSON.parse(request.body)
+      assert_equal [{"id" => "one", "key" => ["value1", "value2"]}], posted_json
+    end
   end
 
   it "adds more than a batch in batches" do
+    stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_return(status: 200)
+
     (Traject::SolrJsonWriter2::DEFAULT_BATCH_SIZE + 1).times do |i|
       doc = {"id" => "doc_#{i}", "key" => "value"}
       @writer.put context_with(doc)
     end
     @writer.close
 
-    post_args = @fake_http_client.post_args
+    assert_requested(:post, "#{TEST_SOLR_URL}/update/json", times: 2)
 
-    assert_length 2, post_args, "Makes two posts to Solr for two batches"
+    # first batch with 100
+    assert_requested(:post, "#{TEST_SOLR_URL}/update/json") do |request|
+      posted_json = JSON.parse(request.body)
+      posted_json.length == Traject::SolrJsonWriter2::DEFAULT_BATCH_SIZE
+    end
 
-    assert_length Traject::SolrJsonWriter2::DEFAULT_BATCH_SIZE, JSON.parse(post_args[0][1][:body]), "first batch posted with batch size docs"
-    assert_length 1, JSON.parse(post_args[1][1][:body]), "second batch posted with last remaining doc"
+    # second batch with just one
+    assert_requested(:post, "#{TEST_SOLR_URL}/update/json") do |request|
+      posted_json = JSON.parse(request.body)
+      posted_json.length == 1
+    end
   end
 
   it "retries batch as individual records on failure" do
+    # capture post bodies for easier testing
+    post_bodies = []
+    stub_request(:post, "#{TEST_SOLR_URL}/update/json").with { |request|
+      post_bodies << JSON.parse(request.body)
+      true
+    }.to_return(status: 500)
+
     @writer = create_writer("solr_writer.batch_size" => 2, "solr_writer.max_skipped" => 10)
-    @fake_http_client.response_status = 500
 
     2.times do |i|
       @writer.put context_with({"id" => "doc_#{i}", "key" => "value"})
@@ -166,29 +106,33 @@ describe "Traject::SolrJsonWriter2" do
     @writer.close
 
     # 1 batch, then 2 for re-trying each individually
-    assert_length 3, @fake_http_client.post_args
+    assert_requested(:post, "#{TEST_SOLR_URL}/update/json", times: 3)
 
-    batch_update = @fake_http_client.post_args.first
+    batch_update = post_bodies.first
 
-    assert_length 2, JSON.parse(batch_update[1][:body])
+    assert_length 2, batch_update
 
-    individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
-    assert_length 1, JSON.parse(individual_update1[1][:body])
-    assert_length 1, JSON.parse(individual_update2[1][:body])
+    individual_update1, individual_update2 = post_bodies[1], post_bodies[2]
+    assert_length 1, individual_update1
+    assert_length 1, individual_update2
   end
 
   it "includes Solr reported error in base error message" do
+    stub_request(:post, "#{TEST_SOLR_URL}/update/json").
+      to_return(
+        status: 400,
+        headers: { content_type: "application/json;charset=utf-8" },
+        body: { "responseHeader"=>{"status"=>400, "QTime"=>0},
+                "error"=>{
+                  "metadata"=>["error-class", "org.apache.solr.common.SolrException", "root-error-class", "org.apache.solr.common.SolrException"],
+                  "msg"=>"ERROR: this is a solr error",
+                  "code"=>400
+                }
+              }.to_json
+      )
+
+
     @writer = create_writer("solr_writer.batch_size" => 1, "solr_writer.max_skipped" => 0)
-    @fake_http_client.response_status = 400
-    @fake_http_client.content_type = "application/json;charset=utf-8"
-    @fake_http_client.body =
-      { "responseHeader"=>{"status"=>400, "QTime"=>0},
-        "error"=>{
-          "metadata"=>["error-class", "org.apache.solr.common.SolrException", "root-error-class", "org.apache.solr.common.SolrException"],
-          "msg"=>"ERROR: this is a solr error",
-          "code"=>400
-        }
-      }.to_json
 
     error = assert_raises(Traject::SolrJsonWriter2::MaxSkippedRecordsExceeded) {
       @writer.put context_with({"id" => "doc_1", "key" => "value"})
@@ -198,16 +142,20 @@ describe "Traject::SolrJsonWriter2" do
   end
 
   it "can #flush" do
+    stub_request(:post, "#{TEST_SOLR_URL}/update/json")
+
     2.times do |i|
       doc = {"id" => "doc_#{i}", "key" => "value"}
       @writer.put context_with(doc)
     end
 
-    assert_length 0, @fake_http_client.post_args, "Hasn't yet written"
+    # Hasn't yet written
+    assert_not_requested(:post, "#{TEST_SOLR_URL}/update/json")
 
     @writer.flush
 
-    assert_length 1, @fake_http_client.post_args, "Has flushed to solr"
+    # Has flushed to solr
+    assert_requested(:post, "#{TEST_SOLR_URL}/update/json")
   end
 
   it "defaults to not setting basic authentication" do
@@ -231,7 +179,6 @@ describe "Traject::SolrJsonWriter2" do
       # testing with some internal implementation of HTTPClient sorry
 
       writer = Traject::SolrJsonWriter2.new(settings)
-
       headers = writer.instance_variable_get("@http_client")
         .send(:default_options).headers.to_h
       assert(!headers.empty?)
@@ -270,64 +217,71 @@ describe "Traject::SolrJsonWriter2" do
 
   describe "commit" do
     it "commits on close when set" do
-      @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_on_close" => "true")
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json")
+      stub_request(:get, "#{TEST_SOLR_URL}/update/json?commit=true")
+
+      @writer = create_writer("solr.url" => TEST_SOLR_URL, "solr_writer.commit_on_close" => "true")
       @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
       @writer.close
 
-      last_solr_get = @fake_http_client.get_args.last
-
-      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
+      assert_requested(:get, "#{TEST_SOLR_URL}/update/json?commit=true")
     end
 
     it "commits on close with commit_solr_update_args" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json")
+      stub_request(:get, "#{TEST_SOLR_URL}/update/json?softCommit=true")
+
       @writer = create_writer(
-        "solr.url" => "http://example.com",
+        "solr.url" => TEST_SOLR_URL,
         "solr_writer.commit_on_close" => "true",
         "solr_writer.commit_solr_update_args" => { softCommit: true }
       )
       @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
       @writer.close
 
-      last_solr_get = @fake_http_client.get_args.last
-
-      assert_equal "http://example.com/update/json?softCommit=true", last_solr_get[0]
+      assert_requested(:get, "#{TEST_SOLR_URL}/update/json?softCommit=true")
     end
 
     it "can manually send commit" do
-      @writer = create_writer("solr.url" => "http://example.com")
+      stub_request(:get, "#{TEST_SOLR_URL}/update/json?commit=true")
+
+      @writer = create_writer("solr.url" => TEST_SOLR_URL)
       @writer.commit
 
-      last_solr_get = @fake_http_client.get_args.last
-      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
+      assert_requested(:get, "#{TEST_SOLR_URL}/update/json?commit=true")
     end
 
     it "can manually send commit with specified args" do
-      @writer = create_writer("solr.url" => "http://example.com", "solr_writer.commit_solr_update_args" => { softCommit: true })
+      stub_request(:get, "#{TEST_SOLR_URL}/update/json?commit=true&optimize=true&waitFlush=false")
+
+      @writer = create_writer("solr.url" => TEST_SOLR_URL, "solr_writer.commit_solr_update_args" => { softCommit: true })
       @writer.commit(commit: true, optimize: true, waitFlush: false)
-      last_solr_get = @fake_http_client.get_args.last
-      assert_equal "http://example.com/update/json?commit=true&optimize=true&waitFlush=false", last_solr_get[0]
+
+      assert_requested(:get, "#{TEST_SOLR_URL}/update/json?commit=true&optimize=true&waitFlush=false")
     end
 
     it "uses commit_solr_update_args settings by default" do
+      stub_request(:get, "#{TEST_SOLR_URL}/update/json?softCommit=true")
+
       @writer = create_writer(
-        "solr.url" => "http://example.com",
+        "solr.url" => TEST_SOLR_URL,
         "solr_writer.commit_solr_update_args" => { softCommit: true }
       )
       @writer.commit
 
-      last_solr_get = @fake_http_client.get_args.last
-      assert_equal "http://example.com/update/json?softCommit=true", last_solr_get[0]
+      assert_requested(:get, "#{TEST_SOLR_URL}/update/json?softCommit=true")
     end
 
     it "overrides commit_solr_update_args with method arg" do
+      stub_request(:get, "#{TEST_SOLR_URL}/update/json?commit=true")
+
       @writer = create_writer(
-        "solr.url" => "http://example.com",
+        "solr.url" => TEST_SOLR_URL,
         "solr_writer.commit_solr_update_args" => { softCommit: true, foo: "bar" }
       )
       @writer.commit(commit: true)
 
-      last_solr_get = @fake_http_client.get_args.last
-      assert_equal "http://example.com/update/json?commit=true", last_solr_get[0]
+      assert_requested(:get, "#{TEST_SOLR_URL}/update/json?commit=true")
     end
   end
 
@@ -337,34 +291,31 @@ describe "Traject::SolrJsonWriter2" do
     end
 
     it "sends update args" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json?softCommit=true")
+
       @writer.put context_with({"id" => "one", "key" => ["value1", "value2"]})
       @writer.close
 
-      assert_equal 1, @fake_http_client.post_args.count
-
-      post_args = @fake_http_client.post_args.first
-
-      assert_equal "http://example.com/solr/update/json?softCommit=true", post_args[0]
+      assert_requested(:post, "#{TEST_SOLR_URL}/update/json?softCommit=true")
     end
 
     it "sends update args with delete" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json?softCommit=true")
+
       @writer.delete("test-id")
       @writer.close
 
-      assert_equal 1, @fake_http_client.post_args.count
-
-      post_args = @fake_http_client.post_args.first
-
-      assert_equal "http://example.com/solr/update/json?softCommit=true", post_args[0]
+      assert_requested(:post, "#{TEST_SOLR_URL}/update/json?softCommit=true", times: 1)
     end
 
     it "sends update args on individual-retry after batch failure" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json?softCommit=true").to_return(status: 500)
+
       @writer = create_writer(
         "solr_writer.batch_size" => 2,
         "solr_writer.max_skipped" => 10,
         "solr_writer.solr_update_args" => { softCommit: true }
       )
-      @fake_http_client.response_status = 500
 
       2.times do |i|
         @writer.put context_with({"id" => "doc_#{i}", "key" => "value"})
@@ -372,19 +323,16 @@ describe "Traject::SolrJsonWriter2" do
       @writer.close
 
       # 1 batch, then 2 for re-trying each individually
-      assert_length 3, @fake_http_client.post_args
-
-      individual_update1, individual_update2 = @fake_http_client.post_args[1], @fake_http_client.post_args[2]
-      assert_equal "http://example.com/solr/update/json?softCommit=true", individual_update1[0]
-      assert_equal "http://example.com/solr/update/json?softCommit=true", individual_update2[0]
+      assert_requested(:post, "#{TEST_SOLR_URL}/update/json?softCommit=true", times: 3)
     end
   end
 
   describe "skipped records" do
     it "skips and reports under max_skipped" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_return(status: 500)
+
       strio = StringIO.new
       @writer = create_writer("solr_writer.max_skipped" => 10, "logger" => logger_to_strio(strio))
-      @fake_http_client.response_status = 500
 
       10.times do |i|
         @writer.put context_with("id" => "doc_#{i}", "key" => "value")
@@ -401,8 +349,9 @@ describe "Traject::SolrJsonWriter2" do
     end
 
     it "raises when skipped more than max_skipped" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_return(status: 500)
+
       @writer = create_writer("solr_writer.max_skipped" => 5)
-      @fake_http_client.response_status = 500
 
       e = assert_raises(RuntimeError) do
         6.times do |i|
@@ -415,8 +364,9 @@ describe "Traject::SolrJsonWriter2" do
     end
 
     it "raises on one skipped record when max_skipped is 0" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_return(status: 500)
+
       @writer = create_writer("solr_writer.max_skipped" => 0)
-      @fake_http_client.response_status = 500
 
       _e = assert_raises(RuntimeError) do
         @writer.put context_with("id" => "doc_1", "key" => "value")
@@ -426,17 +376,15 @@ describe "Traject::SolrJsonWriter2" do
 
 
     it "when catching additional skip errors, raise RuntimeError" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_raise(ArgumentError.new('bad stuff'))
+
       strio = StringIO.new
       @writer = create_writer(
         "solr_writer.max_skipped" => 0,
         "logger" => logger_to_strio(strio),
         "solr_writer.skippable_exceptions" => [ArgumentError]
       )
-      @fake_http_client.response_status = 200
-       # Stub an error to be raised
-      def @fake_http_client.post(*args)
-        raise ArgumentError.new('bad stuff')
-      end
+
        _e = assert_raises(Traject::SolrJsonWriter2::MaxSkippedRecordsExceeded) do
         @writer.put context_with("id" => "doc_1", "key" => "value")
         @writer.close
@@ -448,16 +396,17 @@ describe "Traject::SolrJsonWriter2" do
 
   describe "#delete" do
     it "deletes" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json")
+
       id = "123456"
       @writer.delete(id)
 
-      post_args = @fake_http_client.post_args.first
-      assert_equal "http://example.com/solr/update/json", post_args[0]
-      assert_equal JSON.generate({"delete" => id}), post_args[1]
+      assert_requested(:post, "#{TEST_SOLR_URL}/update/json", body: JSON.generate({"delete" => id}))
     end
 
     it "raises on non-200 http response" do
-      @fake_http_client.response_status = 500
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_return(status: 500)
+
       assert_raises(RuntimeError) do
         @writer.delete("12345")
       end
@@ -466,10 +415,11 @@ describe "Traject::SolrJsonWriter2" do
 
   describe "#delete_all!" do
     it "deletes all" do
+      stub_request(:post, "#{TEST_SOLR_URL}/update/json")
+
       @writer.delete_all!
-      post_args = @fake_http_client.post_args.first
-      assert_equal "http://example.com/solr/update/json", post_args[0]
-      assert_equal JSON.generate({"delete" => { "query" => "*:*"}}), post_args[1]
+
+      assert_requested(:post, "#{TEST_SOLR_URL}/update/json", body: JSON.generate({"delete" => { "query" => "*:*"}}))
     end
   end
 end

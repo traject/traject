@@ -127,7 +127,9 @@ class Traject::SolrJsonWriter2
     else
       # Persistent connections prob important for performance
       # https://honeyryderchuck.gitlab.io/httpx/wiki/Persistent
-      client = HTTPX.plugin(:persistent)
+      #
+      # Our local defined-below error-raising plugins
+      client = HTTPX.plugin(:persistent).plugin(HttpxRaiseErrorPlugin)
 
       if @settings["solr_writer.http_timeout"]
         # https://honeyryderchuck.gitlab.io/httpx/wiki/Timeouts
@@ -287,7 +289,7 @@ class Traject::SolrJsonWriter2
     logger.debug("#{self.class.name}: Sending delete to Solr for #{id}")
 
     json_package = {delete: id}
-    resp = @http_client.post(solr_update_url_with_query(@solr_update_args), JSON.generate(json_package), headers: {"Content-type" => "application/json"})
+    resp = @http_client.post(solr_update_url_with_query(@solr_update_args), body: JSON.generate(json_package), headers: {"Content-type" => "application/json"})
     if resp.status != 200
       raise RuntimeError.new("Could not delete #{id.inspect}, http response #{resp.status}: #{resp.body}")
     end
@@ -452,9 +454,9 @@ class Traject::SolrJsonWriter2
     # If we can get the error out of a JSON response, please do,
     # to include in error message.
     def find_solr_error(response)
-      return nil unless response && response.body && response.content_type&.start_with?("application/json")
+      return nil unless response&.content_type&.mime_type&.start_with?("application/json") && response.body && !response.body.empty?
 
-      parsed = JSON.parse(response.body)
+      parsed = JSON.parse(response.body.to_s)
 
       parsed && parsed.dig("error", "msg")
     rescue JSON::ParserError
@@ -467,4 +469,31 @@ class Traject::SolrJsonWriter2
   def skippable_exceptions
     @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTPX::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter2::BadHttpResponse])
   end
+
+  # HTTPX has really weird annoying error handling.
+  # https://honeyryderchuck.gitlab.io/httpx/wiki/Error-Handling
+  #
+  # We add a custom plugin to make errors raise more ruby way.
+  # https://honeyryderchuck.gitlab.io/httpx/wiki/Custom-Plugins
+  #
+  # Works as long as we're not doing multiple parallel requests in one call,
+  # which we aren't, DRY's up our error handling.
+  module HttpxRaiseErrorPlugin
+    module InstanceMethods
+      def fetch_response(...)
+        super.tap do |response|
+          # we don't want to raise on 4xx and 5xx responses, just actual errors with no response!
+          response.raise_for_status if response&.error && !response&.error.kind_of?(HTTPX::HTTPError)
+        end
+      end
+
+      def send_requests(*requests)
+        if requests.length > 1
+          raise ArgumentError.new("HttpxRaiseErrorPlugin only supports one request arg at a time, got #{requests.length}")
+        end
+        super
+      end
+    end
+  end
+
 end

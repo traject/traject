@@ -3,6 +3,7 @@ require 'minitest/autorun'
 require 'minitest/spec'
 
 require 'webmock/minitest'
+require "httpx/adapters/webmock"
 
 require 'traject'
 require 'marc'
