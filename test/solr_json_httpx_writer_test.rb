@@ -1,6 +1,6 @@
 require 'test_helper'
 require 'httpx'
-require 'traject/solr_json_writer2'
+require 'traject/solr_json_httpx_writer'
 require 'thread'
 require 'json'
 require 'stringio'
@@ -13,7 +13,7 @@ WebMock.enable! # not sure why we need this
 
 # Some basic tests, using a mocked http client so we can see what it did --
 # these tests do not run against a real solr server at present.
-describe "Traject::SolrJsonWriter2" do
+describe "Traject::SolrJsonHttpxWriter" do
   TEST_SOLR_URL = "http://example.com/solr"
 
   #######
@@ -29,7 +29,7 @@ describe "Traject::SolrJsonWriter2" do
       "solr.url" => TEST_SOLR_URL,
       }.merge!(settings)
 
-    Traject::SolrJsonWriter2.new(settings)
+    Traject::SolrJsonHttpxWriter.new(settings)
   end
 
   # strio = StringIO.new
@@ -69,7 +69,7 @@ describe "Traject::SolrJsonWriter2" do
   it "adds more than a batch in batches" do
     stub_request(:post, "#{TEST_SOLR_URL}/update/json").to_return(status: 200)
 
-    (Traject::SolrJsonWriter2::DEFAULT_BATCH_SIZE + 1).times do |i|
+    (Traject::SolrJsonHttpxWriter::DEFAULT_BATCH_SIZE + 1).times do |i|
       doc = {"id" => "doc_#{i}", "key" => "value"}
       @writer.put context_with(doc)
     end
@@ -80,7 +80,7 @@ describe "Traject::SolrJsonWriter2" do
     # first batch with 100
     assert_requested(:post, "#{TEST_SOLR_URL}/update/json") do |request|
       posted_json = JSON.parse(request.body)
-      posted_json.length == Traject::SolrJsonWriter2::DEFAULT_BATCH_SIZE
+      posted_json.length == Traject::SolrJsonHttpxWriter::DEFAULT_BATCH_SIZE
     end
 
     # second batch with just one
@@ -134,7 +134,7 @@ describe "Traject::SolrJsonWriter2" do
 
     @writer = create_writer("solr_writer.batch_size" => 1, "solr_writer.max_skipped" => 0)
 
-    error = assert_raises(Traject::SolrJsonWriter2::MaxSkippedRecordsExceeded) {
+    error = assert_raises(Traject::SolrJsonHttpxWriter::MaxSkippedRecordsExceeded) {
       @writer.put context_with({"id" => "doc_1", "key" => "value"})
       @writer.close
     }
@@ -160,7 +160,7 @@ describe "Traject::SolrJsonWriter2" do
 
   it "defaults to not setting basic authentication" do
     settings = { "solr.url" => "http://example.com/solr/foo" }
-    writer = Traject::SolrJsonWriter2.new(settings)
+    writer = Traject::SolrJsonHttpxWriter.new(settings)
 
     headers = writer.instance_variable_get("@http_client")
       .send(:default_options).headers.to_h
@@ -178,7 +178,7 @@ describe "Traject::SolrJsonWriter2" do
 
       # testing with some internal implementation of HTTPClient sorry
 
-      writer = Traject::SolrJsonWriter2.new(settings)
+      writer = Traject::SolrJsonHttpxWriter.new(settings)
       headers = writer.instance_variable_get("@http_client")
         .send(:default_options).headers.to_h
       assert(!headers.empty?)
@@ -192,7 +192,7 @@ describe "Traject::SolrJsonWriter2" do
 
       # testing with some internal implementation of HTTPClient sorry
 
-      writer = Traject::SolrJsonWriter2.new(settings)
+      writer = Traject::SolrJsonHttpxWriter.new(settings)
       headers = writer.instance_variable_get("@http_client")
         .send(:default_options).headers.to_h
 
@@ -208,7 +208,7 @@ describe "Traject::SolrJsonWriter2" do
       }
 
 
-      writer = Traject::SolrJsonWriter2.new(settings)
+      writer = Traject::SolrJsonHttpxWriter.new(settings)
 
       refute_includes string_io.string, "secret_username:secret_password"
       assert_includes string_io.string, "(with HTTP basic auth)"
@@ -385,7 +385,7 @@ describe "Traject::SolrJsonWriter2" do
         "solr_writer.skippable_exceptions" => [ArgumentError]
       )
 
-       _e = assert_raises(Traject::SolrJsonWriter2::MaxSkippedRecordsExceeded) do
+       _e = assert_raises(Traject::SolrJsonHttpxWriter::MaxSkippedRecordsExceeded) do
         @writer.put context_with("id" => "doc_1", "key" => "value")
         @writer.close
       end

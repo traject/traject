@@ -92,7 +92,7 @@ require 'concurrent' # for atomic_fixnum
 #   plugin you surely want for performance.
 #
 #
-class Traject::SolrJsonWriter2
+class Traject::SolrJsonHttpxWriter
   include Traject::QualifiedConstGet
 
   URI_REGEXP = URI::Parser.new.make_regexp.freeze
@@ -467,7 +467,7 @@ class Traject::SolrJsonWriter2
   private
 
   def skippable_exceptions
-    @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTPX::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter2::BadHttpResponse])
+    @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTPX::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonHttpxWriter::BadHttpResponse])
   end
 
   # HTTPX has really weird annoying error handling.

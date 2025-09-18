@@ -10,7 +10,7 @@ require 'traject/indexer/step'
 require 'traject/marc_reader'
 require 'traject/json_writer'
 require 'traject/solr_json_writer'
-require 'traject/solr_json_writer2'
+require 'traject/solr_json_httpx_writer'
 require 'traject/debug_writer'
 require 'traject/array_writer'
 
@@ -283,7 +283,7 @@ class Traject::Indexer
   def self.default_settings
     @default_settings ||= {
         # Writer defaults
-        "writer_class_name"       => ENV['TRAJECT_SOLR_JSON_WRITER'] == '2' ? "Traject::SolrJsonWriter" : "Traject::SolrJsonWriter2",
+        "writer_class_name"       => ENV['TRAJECT_DEFAULT_WRITER'] == 'SolrJsonHttpxWriter' ? "Traject::SolrJsonHttpxWriter" : "Traject::SolrJsonWriter2",
         "solr_writer.batch_size"  => 100,
         "solr_writer.thread_pool" => 1,
 

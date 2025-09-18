@@ -91,7 +91,7 @@ of all standardized settings.
 
 The default writer, `Traject::SolrJsonWriter` uses the [http gem](https://github.com/httprb/http) for HTTP.  We will be in the future switching to use [httpx](https://github.com/HoneyryderChuck/httpx) for the default writer.
 
-To opt into the new httpx-based writer now, either set the shell ENV variable `SOLR_JSON_WRITER=2`, or set configuration `provide "writer_class_name", "Traject::SolrJsonWriter2"`
+To opt into the new httpx-based writer now, either set the shell ENV variable `TRAJECT_DEFAULT_WRITER=SolrJsonHttpxWriter`, or set configuration `provide "writer_class_name", "Traject::SolrJsonHttpxWriter"`
 
 ## Indexing rules: 'to_field'
 
