@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Represents the context of a specific record being indexed, passed
 # to indexing logic blocks
 #
@@ -57,7 +59,7 @@ class Traject::Indexer
     # a string label that can be used to refer to a particular record in log messages and
     # exceptions. Includes various parts depending on what we got.
     def record_inspect
-      str = "<"
+      str = +"<"
 
       str << "record ##{position}" if position
 
