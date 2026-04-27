@@ -1,4 +1,5 @@
 # Encoding: UTF-8
+# frozen_string_literal: true
 
 require 'traject/marc_extractor'
 
@@ -570,7 +571,7 @@ module Traject::Macros
     # associated with the content of subfield $v, $x, $y, and $z."
     # http://www.loc.gov/marc/bibliographic/bd600.html
     def self.assemble_lcsh(marc_field, subd_separator = " — ", other_separator = " ")
-      str = ""
+      str = +""
       subd_prefix_codes = %w{v x y z}
 
 
