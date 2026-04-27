@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "httpclient", "~> 2.5"
   spec.add_dependency "mutex_m"  # httpclient has an undelcared dep needed in ruby 3.4+, not yet released. https://github.com/nahi/httpclient/pull/455
 
-  spec.add_dependency "http", ">= 3.0", "< 6" # used in oai_pmh_reader, may use more extensively in future instead of httpclient
+  spec.add_dependency "http", ">= 3.0", "< 7" # used in oai_pmh_reader, may use more extensively in future instead of httpclient
   spec.add_dependency 'marc-fastxmlwriter', '~>1.0' # fast marc->xml
   spec.add_dependency "nokogiri", "~> 1.9" # NokogiriIndexer
 
