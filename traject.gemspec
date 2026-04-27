@@ -42,4 +42,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "rspec-mocks", '~> 3.4'
+  # rspec-mocks no longer includes rspec-core as a dependency, we need to include it.
+  spec.add_development_dependency "rspec-core", '~> 3.4'
 end
