@@ -20,7 +20,7 @@ require 'traject/line_writer'
 # escape delimiters/internal_delimiters in the following way:
 #  * If the delimiter is a tab, replace tabs in values with a single space
 #  * If the delimiter is anything else, prefix it with a backslash
-
+#
 class Traject::DelimitedWriter < Traject::LineWriter
 
   attr_reader :delimiter,  :internal_delimiter, :edelim, :eidelim
@@ -83,6 +83,11 @@ class Traject::DelimitedWriter < Traject::LineWriter
   # Escape the delimiters in whatever way has been defined
   def escape(x)
     x = x.to_s
+
+    if x.frozen?
+      x = x.dup
+    end
+
     x.gsub! @delimiter, @edelim if @delimiter
     x.gsub! @internal_delimiter, @eidelim
     x
