@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "dot-properties", ">= 0.1.1" # reading java style .properties
   spec.add_dependency "httpclient", "~> 2.5"
   spec.add_dependency "mutex_m"  # httpclient has an undelcared dep needed in ruby 3.4+, not yet released. https://github.com/nahi/httpclient/pull/455
+  spec.add_dependency "base64" # no longer inlcuded in stdlib
 
   spec.add_dependency "http", ">= 3.0", "< 7" # used in oai_pmh_reader, may use more extensively in future instead of httpclient
   spec.add_dependency 'marc-fastxmlwriter', '~>1.0' # fast marc->xml
@@ -41,4 +42,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "rspec-mocks", '~> 3.4'
+  # rspec-mocks no longer includes rspec-core as a dependency, we need to include it.
+  spec.add_development_dependency "rspec-core", '~> 3.4'
 end
