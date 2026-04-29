@@ -5,7 +5,6 @@ require 'csv'
 # Use DelimitedWriter for non-CSV lines (e.g., tab-delimited)
 #
 #
-
 class Traject::CSVWriter < Traject::DelimitedWriter
 
   def initialize(*args)
@@ -26,6 +25,11 @@ class Traject::CSVWriter < Traject::DelimitedWriter
   # Let CSV take care of the comma escaping
   def escape(x)
     x = x.to_s
+
+    if x.frozen?
+      x = x.dup
+    end
+
     x.gsub! internal_delimiter, @eidelim
     x
   end

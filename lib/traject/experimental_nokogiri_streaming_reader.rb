@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Traject
   # An EXPERIMENTAL HALF-FINISHED implementation of a streaming/pull reader using Nokogiri.
   # Not ready for use, not stable API, could go away.
@@ -134,7 +136,7 @@ module Traject
         @inverted_namespaces  = namespaces.invert
         @clipboard = clipboard
         # We're guessing using a string will be more efficient than an array
-        @current_path         = ""
+        @current_path         = +""
         @floating             = false
 
         @path_spec, @floating = parse_path(str_spec)
