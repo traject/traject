@@ -1,5 +1,4 @@
 require 'uri'
-require 'cgi'
 require 'http'
 
 module Traject
@@ -54,7 +53,7 @@ module Traject
     end
 
     def start_url_verb
-      @start_url_verb ||= (array = CGI.parse(URI.parse(start_url).query)["verb"]) && array.first
+      @start_url_verb ||= URI.decode_www_form(URI.parse(start_url).query).to_h["verb"]
     end
 
     def extra_xpath_hooks
@@ -94,7 +93,7 @@ module Traject
       # resumption URL is just original verb with resumption token, that seems to be
       # the oai-pmh spec.
       parsed_uri = URI.parse(start_url)
-      parsed_uri.query = "verb=#{CGI.escape start_url_verb}&resumptionToken=#{CGI.escape resumption_token}"
+      parsed_uri.query = "verb=#{URI.encode_www_form_component start_url_verb}&resumptionToken=#{URI.encode_www_form_component resumption_token}"
       parsed_uri.to_s
     end
 
