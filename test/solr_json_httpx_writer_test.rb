@@ -158,46 +158,49 @@ describe "Traject::SolrJsonHttpxWriter" do
     assert_requested(:post, "#{TEST_SOLR_URL}/update/json")
   end
 
-  it "defaults to not setting basic authentication" do
-    settings = { "solr.url" => "http://example.com/solr/foo" }
-    writer = Traject::SolrJsonHttpxWriter.new(settings)
+  # We check the header on an actual (mocked) request, rather than looking at
+  # the httpx client's configured options -- httpx 1.7 moved basic auth out of
+  # the client's default headers and into an option only applied at request time.
+  AUTH_TEST_URL = "http://example.com/solr/foo"
 
-    headers = writer.instance_variable_get("@http_client")
-      .send(:default_options).headers.to_h
-    assert(headers.empty?)
+  def write_one_doc(writer)
+    writer.put context_with({"id" => "one"})
+    writer.close
+  end
+
+  it "defaults to not setting basic authentication" do
+    stub_request(:post, "#{AUTH_TEST_URL}/update/json")
+
+    write_one_doc Traject::SolrJsonHttpxWriter.new("solr.url" => AUTH_TEST_URL)
+
+    assert_requested(:post, "#{AUTH_TEST_URL}/update/json") do |request|
+      request.headers["Authorization"].nil?
+    end
   end
 
   describe "HTTP basic auth" do
+    let(:expected_auth_header) { "Basic #{Base64.strict_encode64("foo:bar")}" }
 
     it "supports basic authentication settings" do
-      settings = {
-        "solr.url" => "http://example.com/solr/foo",
+      stub_request(:post, "#{AUTH_TEST_URL}/update/json")
+
+      write_one_doc Traject::SolrJsonHttpxWriter.new(
+        "solr.url" => AUTH_TEST_URL,
         "solr_writer.basic_auth_user" => "foo",
         "solr_writer.basic_auth_password" => "bar",
-      }
+      )
 
-      # testing with some internal implementation of HTTPClient sorry
-
-      writer = Traject::SolrJsonHttpxWriter.new(settings)
-      headers = writer.instance_variable_get("@http_client")
-        .send(:default_options).headers.to_h
-      assert(!headers.empty?)
-      assert_equal(headers['authorization']&.split(' ')&.last, Base64.encode64("foo:bar").chomp)
+      assert_requested(:post, "#{AUTH_TEST_URL}/update/json",
+        headers: { "Authorization" => expected_auth_header })
     end
 
     it "supports basic auth from solr.url" do
-      settings = {
-        "solr.url" => "http://foo:bar@example.com/solr/foo",
-      }
+      stub_request(:post, "#{AUTH_TEST_URL}/update/json")
 
-      # testing with some internal implementation of HTTPClient sorry
+      write_one_doc Traject::SolrJsonHttpxWriter.new("solr.url" => "http://foo:bar@example.com/solr/foo")
 
-      writer = Traject::SolrJsonHttpxWriter.new(settings)
-      headers = writer.instance_variable_get("@http_client")
-        .send(:default_options).headers.to_h
-
-      assert(!headers.empty?)
-      assert_equal(headers['authorization']&.split(' ')&.last, Base64.encode64("foo:bar").chomp)
+      assert_requested(:post, "#{AUTH_TEST_URL}/update/json",
+        headers: { "Authorization" => expected_auth_header })
     end
 
     it "does not log basic auth from solr.url" do
