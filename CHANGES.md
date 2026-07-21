@@ -3,8 +3,18 @@
 ## Next
 
 Work will continue to lessen dependence on `http-client` (which is
-unsupported) while making sure to not break anything or lose 
-important characteristics like keepAlive and multi threading. 
+unsupported) while making sure to not break anything or lose
+important characteristics like keepAlive and multi threading.
+
+##
+
+## 3.9.0
+
+* add SolrJsonWriter2 using httpx client instead of httpclient [@jrochkind] https://github.com/traject/traject/pull/307
+* Eliminate frozen string literal warnings in latest rubies. [@jrochkind]
+* Update marc language and geographic maps from LOC [@maxkadel]
+* Support http gem 6.x [@cbeer]
+* Replace CGI.* methods removed from ruby 4.0 with URI.* methods [@jrochkind]
 
 ## 3.8.3
 
@@ -13,25 +23,25 @@ Compatibility release for ruby 3.4
 [Incorporates work from @jrochkind and @jcoyne]
 
 Note that some gems, `ruby-marc` in particular, will throw zillions of
-warnings about literal strings being frozen in future versions of ruby 
-when running under ruby 3.4. 
+warnings about literal strings being frozen in future versions of ruby
+when running under ruby 3.4.
 
 - Update CI testing matrix
   - removed MRI ruby 2.4, 2.5, 2.6, and jruby-9.2
   - added MRI ruby 3.4
-- Add gem dependencies for `csv` and `mutex_m`, both of which were 
+- Add gem dependencies for `csv` and `mutex_m`, both of which were
   part of the standard library prior to ruby 3.4
 
 
 ## 3.8.2
 
-Bug fix for the `#filing_version` logic, which was incorrectly assuming the 
+Bug fix for the `#filing_version` logic, which was incorrectly assuming the
 first subfield in a field would hold content (e.g., `$a`) and thus failed
 when it held a pointer to a linking field (e.g., `$6 245-01`)
 
 ## 3.8.1
 
-Ugh. Forgot about Jruby 9.1 problem with bundler 2. Changing the requirement back. 
+Ugh. Forgot about Jruby 9.1 problem with bundler 2. Changing the requirement back.
 
 ## 3.8.0
 
@@ -41,7 +51,7 @@ HTTPClient, for whatever reason, prefers its own packaged certs, which are now y
 and don't work with Let's Encrypt.
 
 This changes the code to prefer the OS certs, which can be overridden by setting
-`solr_json_writer.use_packaged_certs` to `true` or `"true"`. 
+`solr_json_writer.use_packaged_certs` to `true` or `"true"`.
 
 ## 3.7.0
 
