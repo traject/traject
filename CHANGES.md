@@ -8,6 +8,10 @@ important characteristics like keepAlive and multi threading.
 
 ##
 
+## 3.9.1
+
+* Fix typo in default solr writer class name. https://github.com/traject/traject/pull/316
+
 ## 3.9.0
 
 * add SolrJsonWriter2 using httpx client instead of httpclient [@jrochkind] https://github.com/traject/traject/pull/307
