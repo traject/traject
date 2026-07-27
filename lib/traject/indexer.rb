@@ -283,7 +283,7 @@ class Traject::Indexer
   def self.default_settings
     @default_settings ||= {
         # Writer defaults
-        "writer_class_name"       => ENV['TRAJECT_DEFAULT_WRITER'] == 'SolrJsonHttpxWriter' ? "Traject::SolrJsonHttpxWriter" : "Traject::SolrJsonWriter2",
+        "writer_class_name"       => ENV['TRAJECT_DEFAULT_WRITER'] == 'SolrJsonHttpxWriter' ? "Traject::SolrJsonHttpxWriter" : "Traject::SolrJsonWriter",
         "solr_writer.batch_size"  => 100,
         "solr_writer.thread_pool" => 1,
 

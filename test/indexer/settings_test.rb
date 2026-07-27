@@ -19,6 +19,11 @@ describe "Traject::Indexer#settings" do
     assert_equal Traject::Indexer.default_settings, @indexer.settings
   end
 
+  it "can instantiate default writer" do
+    @indexer.settings["solr.url"] = "http://example.com/solr"
+    @indexer.writer!
+  end
+
   it "doesn't overwrite with fill_in_defaults!" do
     key = Traject::Indexer.default_settings.keys.first
     @indexer.settings[ key  ] = "MINE KEEP IT"
