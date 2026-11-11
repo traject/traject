@@ -5,7 +5,6 @@ require 'traject/qualified_const_get'
 require 'traject/thread_pool'
 
 require 'json'
-require 'httpclient'
 
 require 'uri'
 require 'thread'     # for Mutex/Queue
@@ -60,7 +59,7 @@ require 'concurrent' # for atomic_fixnum
 #
 # * solr_writer.skippable_exceptions: List of classes that will be rescued internal to
 #   SolrJsonWriter, and handled with max_skipped logic. Defaults to
-#   `[HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter::BadHttpResponse]`
+#   `[HTTP::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter::BadHttpResponse]`
 #
 # * solr_writer.solr_update_args: A _hash_ of query params to send to solr update url.
 #   Will be sent with every update request. Eg `{ softCommit: true }` or `{ commitWithin: 1000 }`.
@@ -76,18 +75,14 @@ require 'concurrent' # for atomic_fixnum
 #   want commits to happen when SolrJsonWriter tries to commit! But can be used to switch to softCommits
 #   (hard commits default), or specify additional params like optimize etc.
 #
-# * solr_writer.http_timeout: Value in seconds, will be set on the httpclient as connect/receive/send
-#   timeout. No way to set them individually at present. Default nil, use HTTPClient defaults
-#   (60 for connect/recieve, 120 for send).
+# * solr_writer.http_timeout: Value in seconds, will be set on the http client as connect/receive/send
+#   timeout. No way to set them individually at present. Default nil, use HTTP.rb defaults
 #
 # * solr_writer.commit_timeout: If commit_on_close, how long to wait for Solr before
 #   giving up as a timeout (http client receive_timeout). Default 10 minutes. Solr can be slow at commits. Overrides solr_writer.timeout
 #
-# * solr_json_writer.http_client Mainly intended for testing, set your own HTTPClient
+# * solr_json_writer.http_client Mainly intended for testing, set your own HTTP client
 #   or mock object to be used for HTTP.
-#
-# * solr_json_writer.use_packaged_certs: unlikely to be needed, set to true for legacy
-#   behavior, to use packaged HTTPClient gem ssl certs. https://github.com/nahi/httpclient/issues/445
 #
 class Traject::SolrJsonWriter
   include Traject::QualifiedConstGet
@@ -120,22 +115,18 @@ class Traject::SolrJsonWriter
     @http_client = if @settings["solr_json_writer.http_client"]
       @settings["solr_json_writer.http_client"]
     else
-      client = HTTPClient.new
+      client = HTTP
 
-      # By default we'll use teh host OS SSL certs, but you can use
-      # setting solr_json_writer.use_packaged_certs to true or "true"
-      # to go back to previous behavior if you have a perverse reason to.
-      # https://github.com/nahi/httpclient/issues/445
-      unless @settings["solr_json_writer.use_packaged_certs"].to_s == "true"
-        client.ssl_config.set_default_paths
+      if @settings.key? "solr_json_writer.use_packaged_certs"
+        warn("solr_json_writer.use_packaged_certs is obsolete and can be removed")
       end
 
       if @settings["solr_writer.http_timeout"]
-        client.connect_timeout = client.receive_timeout = client.send_timeout = @settings["solr_writer.http_timeout"]
+        client = client.timeout(@settings["solr_writer.http_timeout"])
       end
 
       if basic_auth_user || basic_auth_password
-        client.set_auth(@solr_update_url, basic_auth_user, basic_auth_password)
+        client = client.basic_auth(user: basic_auth_user, pass: basic_auth_password)
       end
 
       client
@@ -239,7 +230,7 @@ class Traject::SolrJsonWriter
     json_package = JSON.generate([c.output_hash])
     begin
       post_url = solr_update_url_with_query(@solr_update_args)
-      resp = @http_client.post post_url, json_package, "Content-type" => "application/json"
+      resp = @http_client.headers("Content-type" => "application/json").post(post_url, body: json_package)
 
       unless resp.status == 200
         raise BadHttpResponse.new("Unexpected HTTP response status #{resp.status} from POST #{post_url}", resp)
@@ -286,7 +277,8 @@ class Traject::SolrJsonWriter
     logger.debug("#{self.class.name}: Sending delete to Solr for #{id}")
 
     json_package = {delete: id}
-    resp = @http_client.post solr_update_url_with_query(@solr_update_args), JSON.generate(json_package), "Content-type" => "application/json"
+    resp = @http_client.headers("Content-type" => "application/json").post(solr_update_url_with_query(@solr_update_args), body:  JSON.generate(json_package))
+
     if resp.status != 200
       raise RuntimeError.new("Could not delete #{id.inspect}, http response #{resp.status}: #{resp.body}")
     end
@@ -469,6 +461,6 @@ class Traject::SolrJsonWriter
   private
 
   def skippable_exceptions
-    @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter::BadHttpResponse])
+    @skippable_exceptions ||= (settings["solr_writer.skippable_exceptions"] || [HTTP::TimeoutError, SocketError, Errno::ECONNREFUSED, Traject::SolrJsonWriter::BadHttpResponse])
   end
 end
