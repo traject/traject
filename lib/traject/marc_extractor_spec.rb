@@ -45,7 +45,7 @@ module Traject
       end
 
       def specs_for_tag(tag)
-        @hash[tag] || []
+        @hash[tag] || EMPTY
       end
 
       def specs_matching_field(field, use_alternate_script = false)
@@ -53,7 +53,10 @@ module Traject
         if use_alternate_script and (field_tag == ALTERNATE_SCRIPT_TAG)
           field_tag = effective_tag(field)
         end
-        specs_for_tag(field_tag).select { |s| s.matches_indicators?(field) }
+        specs = specs_for_tag(field_tag)
+        # Most specs don't constrain indicators; avoid allocating a filtered copy then.
+        return specs if specs.all?(&:any_indicator?)
+        specs.select { |s| s.matches_indicators?(field) }
       end
 
 
@@ -125,6 +128,11 @@ module Traject
       def matches_indicators?(field)
         return (indicator1.nil? || indicator1 == field.indicator1) &&
             (indicator2.nil? || indicator2 == field.indicator2)
+      end
+
+      # True if this spec places no constraint on either indicator.
+      def any_indicator?
+        indicator1.nil? && indicator2.nil?
       end
 
       # Pass in a string subfield code like 'a'; does this
