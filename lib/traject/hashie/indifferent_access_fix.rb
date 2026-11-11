@@ -8,8 +8,9 @@ module Traject
     # This makes merge(ordinary_hash) on a Hash that has IndifferentAccess included work, without
     # raising. Which we needed.
     #
-    # As of this writing that fix is not available in a Hashie release, if it becomes so
-    # later than this monkey-patch may no longer be required, we can just depend on fixed version.
+    # The fix was released in Hashie 3.6.0 (https://github.com/hashie/hashie/pull/436), so this
+    # patch is only applied to older versions. Hashie 6 renamed the private helper this patch
+    # relied on, so it must not be applied there.
     #
     # See also https://github.com/intridea/hashie/issues/451
     module IndifferentAccessFix
@@ -21,5 +22,7 @@ module Traject
     end
   end
 end
-Hashie::Extensions::IndifferentAccess.include(Traject::Hashie::IndifferentAccessFix)
+if Gem::Version.new(Hashie::VERSION) < Gem::Version.new('3.6.0')
+  Hashie::Extensions::IndifferentAccess.include(Traject::Hashie::IndifferentAccessFix)
+end
 

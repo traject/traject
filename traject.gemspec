@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "csv"
   spec.add_dependency "marc", "~> 1.0"
 
-  spec.add_dependency "hashie", ">= 3.1", "< 6" # used for Indexer#settings
+  spec.add_dependency "hashie", ">= 3.1", "< 7" # used for Indexer#settings
   spec.add_dependency "slop", "~> 4.0" # command line parsing
   spec.add_dependency "yell" # logging
   spec.add_dependency "dot-properties", ">= 0.1.1" # reading java style .properties
