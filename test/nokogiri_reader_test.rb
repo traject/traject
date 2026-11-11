@@ -163,7 +163,13 @@ describe "Traject::NokogiriReader" do
       # it's inherited namespace declerations. :(  We're only doing this for testing purposes
       # anyway.  This may not handle everything, but handles what we need in the test right now
       if node.namespace
-        node["xmlns"] = node.namespace.href
+        if Traject::Util.is_jruby?
+          # JRuby nokogiri (seen with 1.19.7) raises NAMESPACE_ERR when setting an xmlns attribute directly
+          node.add_namespace_definition(nil, node.namespace.href)
+        else
+          # MRI won't serialize an add_namespace_definition that duplicates an inherited one
+          node["xmlns"] = node.namespace.href
+        end
       end
     end
 
