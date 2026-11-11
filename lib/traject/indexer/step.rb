@@ -100,6 +100,8 @@ class Traject::Indexer
       @procs           = procs.freeze
       @block           = block.freeze
       @source_location = source_location.freeze
+      # Computed once, so #execute doesn't allocate a new array per record.
+      @procs_and_block = [*@procs, @block].compact.freeze
 
       validate!
     end
@@ -132,8 +134,7 @@ class Traject::Indexer
       accumulator = []
       source_record = context.source_record
 
-      [*self.procs, self.block].each do |aProc|
-        next unless aProc
+      @procs_and_block.each do |aProc|
         if aProc.arity == 2
           aProc.call(source_record, accumulator)
         else
