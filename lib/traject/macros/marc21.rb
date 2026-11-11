@@ -254,15 +254,22 @@ module Traject::Macros
       # If something went wrong and we got a nil, just return it
       return str unless str
 
+      # Work on a single copy with in-place subs, rather than allocating a new
+      # string for each sub whether or not it matched.
+      str = str.dup
+
       # trailing: comma, slash, semicolon, colon (possibly preceded and followed by whitespace)
-      str = str.sub(/ *[ ,\/;:] *\Z/, '')
+      str.sub!(/ *[ ,\/;:] *\Z/, '')
 
       # trailing period if it is preceded by at least three letters (possibly preceded and followed by whitespace)
-      str = str.sub(/( *[[:word:]]{3,})\. *\Z/, '\1')
+      str.sub!(/( *[[:word:]]{3,})\. *\Z/, '\1')
 
       # single square bracket characters if they are the start and/or end
-      #   chars and there are no internal square brackets.
-      str = str.sub(/\A\[?([^\[\]]+)\]?\Z/, '\1')
+      #   chars and there are no internal square brackets. Without any
+      #   brackets this substitution would be a no-op, so skip it.
+      if str.include?('[') || str.include?(']')
+        str.sub!(/\A\[?([^\[\]]+)\]?\Z/, '\1')
+      end
 
       # trim any leading or trailing whitespace
       str.strip!
