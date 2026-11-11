@@ -54,7 +54,7 @@ module Traject
     end
 
     def start_url_verb
-      @start_url_verb ||= (array = CGI.parse(URI.parse(start_url).query)["verb"]) && array.first
+      @start_url_verb ||= (pair = URI.decode_www_form(URI.parse(start_url).query).assoc("verb")) && pair.last
     end
 
     def extra_xpath_hooks

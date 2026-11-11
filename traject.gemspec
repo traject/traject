@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   spec.extra_rdoc_files = spec.files.grep(%r{^doc/})
 
 
+  spec.add_dependency "base64"
   spec.add_dependency "concurrent-ruby", ">= 0.8.0"
   spec.add_dependency "csv"
   spec.add_dependency "marc", "~> 1.0"
